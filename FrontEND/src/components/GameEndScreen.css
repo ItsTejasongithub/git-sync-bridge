@@ -1,0 +1,713 @@
+.game-end-screen {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: linear-gradient(to bottom,
+    #FF9933 0%,
+    #FF9933 33%,
+    #FFFFFF 33%,
+    #FFFFFF 66%,
+    #138808 66%,
+    #138808 100%
+  );
+  padding: 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.end-screen-content {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  padding: 30px;
+  max-width: 800px;
+  width: 95%;
+  margin: 20px auto;
+  animation: slideUp 0.6s ease-out;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.game-complete-header {
+  text-align: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #138808;
+}
+
+.game-complete-header h1 {
+  font-size: 36px;
+  color: #138808;
+  margin: 0 0 8px 0;
+  font-weight: 800;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.completion-text {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+  font-weight: 600;
+}
+
+/* SOLO MODE RESULTS */
+.solo-results {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.portfolio-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.final-networth-card {
+  background: linear-gradient(135deg, #138808, #0a5c05);
+  color: white;
+  padding: 25px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(19, 136, 8, 0.3);
+}
+
+.final-networth-card h2 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  opacity: 0.95;
+  font-weight: 600;
+}
+
+.networth-amount {
+  font-size: 48px;
+  font-weight: 800;
+  margin: 8px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  letter-spacing: 1px;
+}
+
+.profit-display {
+  margin: 15px 0 10px 0;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 18px;
+  flex-wrap: wrap;
+}
+
+.profit-display.positive {
+  background: rgba(76, 175, 80, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.profit-display.negative {
+  background: rgba(244, 67, 54, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.profit-label {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.profit-amount {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.profit-percentage {
+  font-size: 16px;
+  opacity: 0.95;
+  font-weight: 600;
+}
+
+.starting-amount {
+  margin-top: 12px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.portfolio-breakdown-card {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  padding: 20px;
+  border-radius: 15px;
+  border: 2px solid #dee2e6;
+}
+
+.portfolio-breakdown-card h3 {
+  margin: 0;
+  color: #138808;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.portfolio-header-clickable {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  user-select: none;
+  margin-bottom: 15px;
+}
+
+.portfolio-header-clickable:hover {
+  background-color: rgba(19, 136, 8, 0.05);
+}
+
+.expand-icon {
+  font-size: 18px;
+  color: #138808;
+  font-weight: 700;
+  transition: transform 0.3s ease;
+  padding: 8px 12px;
+  background: rgba(19, 136, 8, 0.1);
+  border-radius: 8px;
+}
+
+.breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 400px;
+  overflow: hidden;
+  padding-right: 5px;
+  transition: max-height 0.4s ease, opacity 0.3s ease;
+}
+
+.breakdown-list.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.breakdown-list.expanded {
+  max-height: 400px;
+  opacity: 1;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.breakdown-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.breakdown-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.breakdown-list::-webkit-scrollbar-thumb {
+  background: #138808;
+  border-radius: 10px;
+}
+
+.breakdown-item {
+  display: grid;
+  grid-template-columns: 8px 110px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.breakdown-item:hover {
+  transform: translateX(3px);
+  box-shadow: 0 3px 10px rgba(19, 136, 8, 0.15);
+}
+
+/* Enhanced Breakdown Item - Consolidated View */
+.breakdown-item-enhanced {
+  background: white;
+  border-radius: 10px;
+  padding: 12px 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.breakdown-item-enhanced:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(19, 136, 8, 0.2);
+}
+
+.breakdown-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.asset-color-indicator {
+  width: 8px;
+  height: 40px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.asset-portfolio-percentage {
+  margin-left: auto;
+  font-size: 16px;
+  font-weight: 700;
+  color: #138808;
+  padding: 4px 12px;
+  background: rgba(19, 136, 8, 0.1);
+  border-radius: 20px;
+}
+
+.breakdown-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #e9ecef;
+}
+
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  font-size: 11px;
+  color: #6c757d;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.detail-value.current {
+  color: #138808;
+}
+
+.detail-value.profit {
+  color: #28a745;
+}
+
+.detail-value.loss {
+  color: #dc3545;
+}
+
+.asset-name {
+  font-weight: 700;
+  color: #2c3e50;
+  text-transform: capitalize;
+  font-size: 14px;
+}
+
+.asset-value-bar {
+  background: #e9ecef;
+  height: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #dee2e6;
+}
+
+.asset-value-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #138808, #0a5c05);
+  border-radius: 10px;
+  transition: width 0.8s ease;
+}
+
+.asset-amount {
+  font-weight: 700;
+  color: #138808;
+  min-width: 110px;
+  text-align: right;
+  font-size: 14px;
+}
+
+.asset-percentage {
+  font-size: 13px;
+  color: #495057;
+  min-width: 48px;
+  text-align: right;
+  font-weight: 600;
+}
+
+/* P&L ANALYSIS CARD */
+.pnl-analysis-card {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  padding: 20px;
+  border-radius: 15px;
+  border: 2px solid #dee2e6;
+}
+
+.pnl-analysis-card h3 {
+  margin: 0 0 15px 0;
+  color: #138808;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pnl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.pnl-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pnl-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.pnl-list::-webkit-scrollbar-thumb {
+  background: #138808;
+  border-radius: 10px;
+}
+
+.pnl-item {
+  display: grid;
+  grid-template-columns: 8px 110px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pnl-item:hover {
+  transform: translateX(3px);
+  box-shadow: 0 3px 10px rgba(19, 136, 8, 0.15);
+}
+
+.pnl-amounts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pnl-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.pnl-label {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.pnl-value {
+  font-size: 13px;
+  color: #138808;
+  font-weight: 700;
+}
+
+.pnl-gain {
+  color: #28a745;
+}
+
+.pnl-loss {
+  color: #dc3545;
+}
+
+/* MULTIPLAYER MODE RESULTS */
+.multiplayer-results {
+  padding: 20px 0;
+}
+
+.multiplayer-results h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 25px;
+  font-size: 28px;
+}
+
+.leaderboard-table {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border-left: 5px solid #667eea;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.leaderboard-row:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-row.rank-1 {
+  border-left-color: #FFD700;
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), #f8f9fa);
+}
+
+.leaderboard-row.rank-2 {
+  border-left-color: #C0C0C0;
+  background: linear-gradient(90deg, rgba(192, 192, 192, 0.1), #f8f9fa);
+}
+
+.leaderboard-row.rank-3 {
+  border-left-color: #CD7F32;
+  background: linear-gradient(90deg, rgba(205, 127, 50, 0.1), #f8f9fa);
+}
+
+.rank-badge {
+  font-size: 32px;
+  min-width: 50px;
+  text-align: center;
+}
+
+.player-info {
+  flex: 1;
+}
+
+.player-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.player-networth {
+  font-size: 24px;
+  font-weight: 800;
+  color: #138808;
+}
+
+.player-breakdown-mini {
+  flex: 2;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  padding-left: 20px;
+  border-left: 2px solid #e0e0e0;
+}
+
+.mini-asset {
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+.mini-asset-name {
+  color: #666;
+  text-transform: capitalize;
+}
+
+.mini-asset-value {
+  font-weight: 600;
+  color: #138808;
+}
+
+.no-leaderboard {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-size: 18px;
+}
+
+/* RETURN BUTTON */
+.return-menu-button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 20px;
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #FF9933, #FF6600);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 153, 51, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.return-menu-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 153, 51, 0.5);
+  background: linear-gradient(135deg, #FF6600, #FF4400);
+}
+
+/* Custom scrollbar for end screen content */
+.end-screen-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.end-screen-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+.end-screen-content::-webkit-scrollbar-thumb {
+  background: #138808;
+  border-radius: 10px;
+}
+
+.end-screen-content::-webkit-scrollbar-thumb:hover {
+  background: #0a5c05;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .portfolio-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .end-screen-content {
+    padding: 20px;
+    width: 98%;
+    margin: 10px auto;
+  }
+
+  .game-complete-header h1 {
+    font-size: 28px;
+  }
+
+  .networth-amount {
+    font-size: 36px;
+  }
+
+  .portfolio-details-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .breakdown-item {
+    grid-template-columns: 6px 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .asset-value-bar {
+    grid-column: 1 / -1;
+  }
+
+  .asset-amount,
+  .asset-percentage {
+    grid-column: 2 / 3;
+    text-align: left;
+  }
+
+  .breakdown-details {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .detail-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pnl-item {
+    grid-template-columns: 6px 1fr;
+  }
+
+  .asset-name,
+  .asset-amount,
+  .asset-percentage {
+    text-align: left;
+  }
+
+  .player-breakdown-mini {
+    grid-template-columns: 1fr;
+    padding-left: 0;
+    border-left: none;
+    padding-top: 10px;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+
+@media (max-width: 480px) {
+  .end-screen-content {
+    padding: 15px;
+  }
+
+  .game-complete-header h1 {
+    font-size: 24px;
+  }
+
+  .completion-text {
+    font-size: 14px;
+  }
+
+  .networth-amount {
+    font-size: 32px;
+  }
+
+  .profit-display {
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px;
+  }
+
+  .profit-amount {
+    font-size: 20px;
+  }
+
+  .return-menu-button {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  .breakdown-list {
+    max-height: 300px;
+  }
+}

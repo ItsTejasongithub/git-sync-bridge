@@ -1,0 +1,527 @@
+.game-screen {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg,
+    #FF9933 0%,
+    #FFFFFF 25%,
+    #138808 50%,
+    #FFFFFF 75%,
+    #FF9933 100%
+  );
+  position: relative;
+}
+
+.game-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/500-currency-note.png');
+  background-repeat: repeat;
+  background-size: 350px auto;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+  transform: rotate(-5deg);
+  animation: floatNotes 60s linear infinite;
+}
+
+@keyframes floatNotes {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 1000px 1000px;
+  }
+}
+
+.sidebar {
+  width: 320px;
+  min-width: 280px;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border-right: 3px solid #FF9933;
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.logo-banner {
+  position: relative;
+  width: 280px;
+  height: 20vh;
+  background-image: url('/BullRun_Icon.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  margin-bottom: 1px;
+  overflow: hidden;
+}
+
+.logo-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+  z-index: 1;
+}
+
+.game-logo {
+  position: relative;
+  z-index: 2;
+  font-size: 40px;
+  font-weight: 900;
+  line-height: 1.2;
+  margin: 0;
+  text-shadow:
+    3px 3px 6px rgba(0, 0, 0, 0.8),
+    0 0 50px rgb(0, 255, 68),
+    0 0 50px rgb(177, 0, 21);
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.game-info {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 15px 0;
+}
+
+.quote {
+  font-size: 15px;
+  line-height: 1.5;
+  font-style: italic;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.pocket-cash {
+  background: linear-gradient(135deg, #FF9933, #FF6600);
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.pocket-label {
+  font-size: px;
+  opacity: 0.9;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.pocket-amount {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.net-worth {
+  background: linear-gradient(135deg, #1865ff, #ffc001);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.net-worth:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.net-worth:hover .net-worth-breakdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.net-worth-label {
+  font-size: 15px;
+  opacity: 9;
+  margin-bottom: 1px;
+  font-weight: bold;
+  color: #ffcc00;
+}
+
+.net-worth-amount {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: #FFFFFF;
+  text-shadow: 0 5px 1px rgba(0,0,0,0.25);
+}
+
+.net-worth-pl {
+  font-size: 14px;
+  font-weight: 500;
+  
+}
+
+.net-worth-breakdown {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 15px;
+  background: rgba(0, 0, 0, 0.95);
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  padding: 15px;
+  min-width: 220px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 9999;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.breakdown-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #FF9933;
+  border-bottom: 1px solid rgba(255, 153, 51, 0.3);
+  padding-bottom: 8px;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.breakdown-item:last-child {
+  border-bottom: none;
+}
+
+.breakdown-name {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.breakdown-percentage {
+  color: #667eea;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.leaderboard {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.leaderboard h3 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #FF9933;
+}
+
+.leaderboard ol {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 12px;
+}
+
+.leaderboard li {
+  margin-bottom: 5px;
+}
+
+.game-timer {
+  background: rgba(19, 136, 8, 0.3);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  border: 2px solid #138808;
+  margin-top: auto;
+}
+
+.game-timer div {
+  margin-bottom: 5px;
+}
+
+.game-timer div:last-child {
+  margin-bottom: 0;
+}
+
+.pause-button {
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #FF9933, #FF6600);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.pause-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 153, 51, 0.4);
+}
+
+.pause-button:active {
+  transform: translateY(0);
+}
+
+.main-content {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* Year-specific layouts - Responsive Grid-Based Approach */
+
+/* ============================================ */
+/* DYNAMIC INTELLIGENT LAYOUT */
+/* Adapts based on unlocked assets, not year */
+/* ============================================ */
+
+.dynamic-assets-layout {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  align-content: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+}
+
+/* When only 1 section exists (Banking only) - Center it vertically and horizontally */
+.dynamic-assets-layout:has(> section:only-child) {
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+}
+
+/* When 2-3 sections exist - Center them vertically and horizontally */
+.dynamic-assets-layout:has(> section:nth-child(1)):has(> section:nth-child(2)):not(:has(> section:nth-child(4))) {
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+}
+
+/* When 4+ sections exist - Center them horizontally, align top */
+.dynamic-assets-layout:has(> section:nth-child(4)) {
+  justify-content: center;
+  align-items: flex-start;
+  align-content: flex-start;
+}
+
+/* Common section styling */
+.banking-section,
+.gold-section,
+.index-section,
+.stocks-section,
+.crypto-section,
+.commodity-section,
+.reit-section {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.35);
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+  flex: 0 1 auto;
+}
+
+/* Specific section widths for proper row layout - ALL DYNAMIC */
+.banking-section,
+.gold-section,
+.index-section,
+.stocks-section,
+.crypto-section,
+.commodity-section,
+.reit-section {
+  width: fit-content;
+  flex: 0 0 auto;
+}
+
+.section-cards {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* Laptop/smaller screens - Make sections stack vertically */
+@media (max-width: 1366px) {
+  .banking-section {
+    min-width: 100%;
+  }
+
+  .gold-section {
+    min-width: 100%;
+  }
+
+  .index-section {
+    min-width: 100%;
+  }
+
+  .crypto-section,
+  .commodity-section,
+  .reit-section {
+    min-width: 100%;
+    flex: 1 1 100%;
+  }
+}
+
+.section-title {
+  width: 100%;
+  font-size: 14px;
+  font-weight: 700;
+  color: #FEFDF8;
+  margin: 0 0 12px 0;
+  padding: 6px 0;
+  background: linear-gradient(135deg, #138808, #0f6606);
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.stocks-grid,
+.crypto-grid,
+.reit-grid {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.unlock-notice {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* ===== RESPONSIVE DESIGN - OPTIMIZED FOR YOUR DISPLAYS ===== */
+
+/* External Display - 1920×1080 */
+@media (min-width: 1600px) {
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+  }
+
+  .logo-banner {
+    width: 250px;
+    height: 100px;
+  }
+}
+
+/* Laptop Screen - 1268×911 */
+@media (max-width: 1599px) {
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    padding: 15px;
+    gap: 15px;
+  }
+
+  .logo-banner {
+    width: 210px;
+    height: 85px;
+  }
+
+  .game-logo {
+    font-size: 36px;
+  }
+
+  .quote {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .pocket-cash,
+  .net-worth {
+    padding: 10px;
+  }
+
+  .pocket-label,
+  .net-worth-label {
+    font-size: 12px;
+  }
+
+  .pocket-amount,
+  .net-worth-amount {
+    font-size: 20px;
+  }
+
+  .net-worth-pl {
+    font-size: 11px;
+  }
+
+  .year-info {
+    font-size: 13px;
+  }
+
+  .pause-button {
+    font-size: 13px;
+    padding: 10px 16px;
+  }
+
+  .main-content {
+    padding: 12px;
+  }
+
+  .section-cards {
+    gap: 12px;
+  }
+
+  .section-title {
+    font-size: 13px;
+  }
+}
+
+/* External Display - 1920×1080 (Default styles apply) */
+/* No media query needed - base styles are optimized for 1920×1080 */

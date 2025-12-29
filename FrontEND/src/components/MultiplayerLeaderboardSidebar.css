@@ -1,0 +1,340 @@
+.multiplayer-leaderboard-sidebar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 15px;
+}
+
+.sidebar-header {
+  padding: 1px 1px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  margin-bottom: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+
+.sidebar-header:hover {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.sidebar-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 0.9em;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-icon {
+  font-size: 1.1em;
+  color: #ffc001;
+}
+
+.expand-indicator {
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.6);
+  transition: transform 0.3s ease;
+}
+
+.expand-indicator.expanded {
+  transform: rotate(180deg);
+}
+
+.leaderboard-count {
+  font-size: 0.75em;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.leaderboard-list-container {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.leaderboard-list-container.expanded {
+  /* Constrain height relative to viewport so there's room for other UI elements */
+  max-height: calc(100vh - 220px);
+  margin-top: 8px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* smooth scrolling on mobile */
+  padding-right: 6px; /* avoid hiding scrollbar over content */
+} 
+
+.leaderboard-list {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px;
+  /* Allow outer container to handle scrolling */
+  max-height: none;
+  height: auto;
+  overflow: visible;
+  backdrop-filter: blur(5px);
+}
+
+.leaderboard-item {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.leaderboard-item.current-player {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+.leaderboard-item.current-player::after {
+  content: 'YOU';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.65em;
+  font-weight: 700;
+  color: #ffffff;
+  background: #3b82f6;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.leaderboard-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.leaderboard-item.current-player:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateX(2px);
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
+}
+
+.leaderboard-item:hover::before {
+  opacity: 1;
+}
+
+.leaderboard-item:not(.current-player):hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateX(2px);
+}
+
+.leaderboard-item:last-child {
+  margin-bottom: 0;
+}
+
+.leaderboard-item.rank-1 {
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.03) 100%);
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.leaderboard-item.rank-1::before {
+  background: linear-gradient(180deg, #ffd700 0%, #ffa500 100%);
+  opacity: 1;
+}
+
+.leaderboard-item.rank-2 {
+  background: linear-gradient(90deg, rgba(192, 192, 192, 0.1) 0%, rgba(192, 192, 192, 0.03) 100%);
+  border-color: rgba(192, 192, 192, 0.3);
+}
+
+.leaderboard-item.rank-2::before {
+  background: linear-gradient(180deg, #c0c0c0 0%, #808080 100%);
+  opacity: 1;
+}
+
+.leaderboard-item.rank-3 {
+  background: linear-gradient(90deg, rgba(205, 127, 50, 0.1) 0%, rgba(205, 127, 50, 0.03) 100%);
+  border-color: rgba(205, 127, 50, 0.3);
+}
+
+.leaderboard-item.rank-3::before {
+  background: linear-gradient(180deg, #cd7f32 0%, #8b4513 100%);
+  opacity: 1;
+}
+
+.rank-number {
+  font-size: 0.9em;
+  font-weight: 700;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.rank-1 .rank-number {
+  background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+  color: #1a1a1a;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+.rank-2 .rank-number {
+  background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%);
+  color: #1a1a1a;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(192, 192, 192, 0.3);
+}
+
+.rank-3 .rank-number {
+  background: linear-gradient(135deg, #cd7f32 0%, #8b4513 100%);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(205, 127, 50, 0.3);
+}
+
+.player-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 50px;
+}
+
+.current-player .player-details {
+  padding-right: 60px;
+}
+
+.multiplayer-leaderboard-sidebar .player-name {
+  font-size: 0.85em;
+  font-weight: 600;
+  margin-bottom: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+} 
+
+/* Make sure player names inside leaderboard are enforced to white (higher specificity) */
+.leaderboard-item .player-name {
+  color: #ffffff;
+}
+
+/* Ensure current player's name is clearly visible */
+.leaderboard-item.current-player .player-name {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.player-networth {
+  font-size: 0.8em;
+  font-weight: 600;
+  color: #ffc001;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.networth-icon {
+  font-size: 0.9em;
+}
+
+.no-data {
+  text-align: center;
+  padding: 30px 10px;
+  opacity: 0.5;
+}
+
+.no-data p {
+  margin: 0;
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+
+/* Scrollbar styling */
+.leaderboard-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.leaderboard-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.leaderboard-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+.leaderboard-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Animation for new items */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.leaderboard-item {
+  animation: slideIn 0.3s ease forwards;
+}
+
+/* Rank badges animation */
+@keyframes shimmer {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.rank-1 .rank-number,
+.rank-2 .rank-number,
+.rank-3 .rank-number {
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}

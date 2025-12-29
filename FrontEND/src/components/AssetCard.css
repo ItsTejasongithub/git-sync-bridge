@@ -1,0 +1,648 @@
+.asset-card {
+  background: linear-gradient(135deg, #E8DCC4 0%, #D4C5A9 100%);
+  border: 3px solid #8B7355;
+  border-radius: 8px;
+  padding: 8px;
+  color: #3D3021;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  width: 300px;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.1s ease;
+}
+
+/* Shake animation for insufficient funds */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+  20%, 40%, 60%, 80% { transform: translateX(8px); }
+}
+
+.asset-card.shake {
+  animation: shake 0.5s;
+  border-color: #A85C5C;
+  box-shadow: 0 4px 12px rgba(168, 92, 92, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.card-title {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stock-card .card-title {
+  font-size: 12px;
+  margin: 0 0 4px 0;
+}
+
+/* Savings Account Specific */
+.savings-card {
+  width: 300px;
+  min-height: 280px;
+}
+
+.balance-display {
+  background: rgba(139, 115, 85, 0.15);
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  margin-top: 40px;
+  border: 1px solid rgba(139, 115, 85, 0.3);
+}
+
+.balance-label {
+  font-size: 10px;
+  opacity: 0.9;
+}
+
+.balance-amount {
+  font-size: 18px;
+  font-weight: bold;
+  margin-top: 2px;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.action-button {
+  flex: 1;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 11px;
+}
+
+.deposit-btn {
+  background: #5D8A66;
+  color: #FEFDF8;
+  border: 2px solid #4A6B52;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.deposit-btn:hover {
+  background: #4A6B52;
+  transform: translateY(-1px);
+}
+
+.withdraw-btn {
+  background: #A85C5C;
+  color: #FEFDF8;
+  border: 2px solid #8B4949;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.withdraw-btn:hover {
+  background: #8B4949;
+  transform: translateY(-1px);
+}
+
+.input-section {
+  margin-top: 12px;
+}
+
+.input-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.amount-input {
+  flex: 1;
+  width: 100%;
+  padding: 8px 60px 8px 8px;
+  border: 2px solid #8B7355;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #FEFDF8;
+  color: #3D3021;
+  box-sizing: border-box;
+}
+
+.max-button {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px 10px;
+  background: #D4A574;
+  color: #3D3021;
+  border: 1px solid #B8935E;
+  border-radius: 3px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 10px;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
+  z-index: 1;
+}
+
+.max-button:hover {
+  background: #B8935E;
+}
+
+.confirm-btn {
+  background: #5D8A66;
+  color: #FEFDF8;
+  border: 2px solid #4A6B52;
+}
+
+.confirm-btn:hover {
+  background: #4A6B52;
+  transform: translateY(-1px);
+}
+
+.cancel-btn {
+  background: #9B8B7E;
+  color: #FEFDF8;
+  border: 2px solid #7D6F64;
+}
+
+.cancel-btn:hover {
+  background: #7D6F64;
+  transform: translateY(-1px);
+}
+
+.interest-info {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* Fixed Deposit Specific */
+.fd-card {
+  min-height: 280px;
+}
+
+.fd-rates {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.rate-item {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rate-label {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+.rate-value {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.duration-selector {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.duration-btn {
+  flex: 1;
+  padding: 8px;
+  background: rgba(139, 115, 85, 0.2);
+  border: 2px solid rgba(139, 115, 85, 0.4);
+  border-radius: 4px;
+  color: #3D3021;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.duration-btn.active {
+  background: rgba(139, 115, 85, 0.4);
+  border-color: #8B7355;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.create-fd-btn {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  margin-bottom: 12px;
+}
+
+.create-fd-btn:hover {
+  background: #0aa230;
+  transform: translateY(-1px);
+}
+
+.fd-list {
+  max-height: 150px;
+}
+
+.fd-item {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fd-item.matured {
+  background: rgba(34, 197, 94, 0.3);
+  border: 2px solid #22c55e;
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fd-info {
+  display: flex;
+  gap: 10px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.collect-btn {
+  background: #5D8A66;
+  color: #FEFDF8;
+  padding: 4px 1px;
+  font-size: 10px;
+  flex-shrink: 0;
+  width: 50px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.collect-btn:hover {
+  background: #4A6B52;
+  transform: translateY(-1px);
+}
+
+.break-btn {
+  background: #A85C5C;
+  color: #FEFDF8;
+  border: 2px solid #8B4949;
+  padding: 4px 1px;
+  font-size: 10px;
+  flex-shrink: 0;
+  width: 50px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.break-btn:hover {
+  background: #8B4949;
+  transform: translateY(-1px);
+}
+
+.max-fd-notice {
+  text-align: center;
+  font-size: 11px;
+  margin-top: 8px;
+  opacity: 0.8;
+}
+
+/* Tradeable Asset Card */
+.tradeable-card {
+  width: 250px;
+  min-height: 280px;
+  gap: 4px;
+}
+
+/* Compact Stock Card */
+.tradeable-card.stock-card {
+  width: 250px;
+  min-height: 280px;
+  padding: 8px;
+  gap: 3px;
+}
+
+.chart-container {
+  margin-top: 20px;
+  height: 80px;
+}
+
+.stock-card .chart-container {
+  height: 70px;
+  margin-bottom: 4px;
+}
+
+.price-info {
+  background: rgba(139, 115, 85, 0.15);
+  padding: 6px;
+  border-radius: 4px;
+  margin-top: 0px;
+  border: 1px solid rgba(139, 115, 85, 0.3);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 60px;
+  box-sizing: border-box;
+}
+
+.stock-card .price-info {
+  padding: 6px;
+  border-radius: 4px;
+  margin-top: 0px;
+  min-height: 60px;
+}
+
+.current-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.price-label {
+  font-size: 9px;
+  opacity: 0.9;
+}
+
+.stock-card .price-label {
+  font-size: 9px;
+}
+
+.price-value {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stock-card .price-value {
+  font-size: 13px;
+}
+
+.price-value.positive {
+  color: #5D8A66;
+}
+
+.price-value.negative {
+  color: #A85C5C;
+}
+
+.price-change {
+  text-align: right;
+  font-size: 10px;
+}
+
+.stock-card .price-change {
+  font-size: 10px;
+}
+
+.price-change .positive {
+  color: #5D8A66;
+}
+
+.price-change .negative {
+  color: #A85C5C;
+}
+
+.holding-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 9px;
+  width: 100%;
+}
+
+.stock-card .holding-info {
+  font-size: 9px;
+}
+
+.holdings-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+}
+
+.holdings-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.holdings-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.holding-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stock-card .holding-row {
+  margin-bottom: 0;
+}
+
+.holding-row:last-child {
+  margin-bottom: 0;
+}
+
+.holding-label {
+  font-size: 8px;
+  opacity: 0.8;
+  margin-bottom: 2px;
+}
+
+.holding-value {
+  font-weight: 600;
+  font-size: 10px;
+}
+
+.pl-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  min-width: 70px;
+}
+
+.pl-display.profit {
+  background: rgba(93, 138, 102, 0.15);
+  color: #5D8A66;
+  border: 1px solid rgba(93, 138, 102, 0.3);
+}
+
+.pl-display.loss {
+  background: rgba(168, 92, 92, 0.15);
+  color: #A85C5C;
+  border: 1px solid rgba(168, 92, 92, 0.3);
+}
+
+.pl-amount {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.pl-percent {
+  font-size: 9px;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+.quantity-selector {
+  display: flex;
+  gap: 4px;
+  margin-top: 20px;
+}
+
+.stock-card .quantity-selector {
+  gap: 2px;
+  margin-bottom: 3px;
+}
+
+.qty-btn {
+  flex: 1;
+  padding: 4px;
+  background: rgba(139, 115, 85, 0.2);
+  border: 1px solid rgba(139, 115, 85, 0.4);
+  border-radius: 4px;
+  color: #3D3021;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 10px;
+}
+
+.stock-card .qty-btn {
+  padding: 3px;
+  font-size: 8px;
+}
+
+.qty-btn.active {
+  background: rgba(139, 115, 85, 0.4);
+  border-color: #8B7355;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.qty-input {
+  flex: 1;
+  padding: 4px;
+  border: 1px solid #8B7355;
+  border-radius: 4px;
+  font-size: 10px;
+  text-align: center;
+  background: #FEFDF8;
+  color: #3D3021;
+}
+
+.max-qty-btn {
+  background: #D4A574;
+  color: #3D3021;
+  border: 1px solid #B8935E;
+}
+
+.max-qty-btn:hover {
+  background: #B8935E;
+}
+
+.buy-btn {
+  background: #5D8A66;
+  color: #FEFDF8;
+  border: 2px solid #4A6B52;
+  padding: 3px 5px;
+  font-size: 9px;
+}
+
+.buy-btn:hover {
+  background: #4A6B52;
+  transform: translateY(-1px);
+}
+
+.sell-btn {
+  background: #A85C5C;
+  color: #FEFDF8;
+  border: 2px solid #8B4949;
+  padding: 4px 8px;
+  font-size: 9px;
+}
+
+.sell-btn:hover {
+  background: #8B4949;
+  transform: translateY(-1px);
+}
+
+/* ============================================ */
+/* RESPONSIVE DESIGN - ONLY YOUR SCREENS */
+/* ============================================ */
+
+/* External Display - 1920x1080 (Default - no media query needed) */
+/* All default values above are optimized for 1920x1080 */
+
+/* Laptop Screen - 1536x864 */
+@media (max-width: 1536px) {
+  .asset-card {
+    width: 220px;
+    min-height: 250px;
+  }
+
+  .savings-card {
+    width: 220px;
+    min-height: 250px;
+  }
+
+  .tradeable-card {
+    width: 220px;
+    min-height: 250px;
+  }
+
+  .tradeable-card.stock-card {
+    width: 220px;
+    min-height: 250px;
+  }
+
+  .fd-card {
+    min-height: 250px;
+  }
+
+  .card-title {
+    font-size: 11px;
+  }
+
+  .balance-amount {
+    font-size: 16px;
+  }
+
+  .action-button {
+    font-size: 10px;
+    padding: 5px 8px;
+  }
+
+  .chart-container {
+    height: 75px;
+  }
+
+  .stock-card .chart-container {
+    height: 65px;
+  }
+
+  .price-value {
+    font-size: 12px;
+  }
+
+  .holding-value {
+    font-size: 9px;
+  }
+}

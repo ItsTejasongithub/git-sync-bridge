@@ -1,0 +1,321 @@
+/* Asset Education Modal - Modern Classic Design */
+.education-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.education-modal {
+  background: linear-gradient(145deg, #2D2416 0%, #3D3021 100%);
+  border: 3px solid #D4A574;
+  border-radius: 16px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 100vh;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6),
+              0 0 40px rgba(212, 165, 116, 0.2);
+  animation: slideUp 0.4s ease;
+  position: relative;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Shake animation for wrong answer */
+.education-modal.shake {
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+  20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+/* Correct answer glow */
+.education-modal.correct {
+  border-color: #4CAF50;
+  box-shadow: 0 20px 60px rgba(76, 175, 80, 0.4),
+              0 0 40px rgba(76, 175, 80, 0.3);
+}
+
+/* Header */
+.education-header {
+  background: linear-gradient(135deg, #3D3021 0%, #4A3D2A 100%);
+  border-bottom: 2px solid #D4A574;
+  padding: 24px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 13px 13px 0 0;
+}
+
+.education-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #D4A574;
+  margin: 0;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.unlock-badge {
+  background: linear-gradient(135deg, #D4A574 0%, #B8935E 100%);
+  color: #2D2416;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.4);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Content */
+.education-content {
+  padding: 10px 32px;
+  border-bottom: 1px solid rgba(212, 165, 116, 0.3);
+}
+
+.education-description {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #E8DCC4;
+  margin: 0;
+}
+
+/* Quiz Section */
+.quiz-section {
+  padding: 5px 32px 32px;
+}
+
+.quiz-question {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 5px;
+  color: #D4A574;
+  text-align: center;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.quiz-option {
+  background: linear-gradient(135deg, #1F1A0F 0%, #2A2318 100%);
+  border: 2px solid #4A3D2A;
+  border-radius: 10px;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #E8DCC4;
+  font-size: 14px;
+}
+
+.quiz-option:hover {
+  border-color: #D4A574;
+  background: linear-gradient(135deg, #2A2318 0%, #3D3021 100%);
+  transform: translateX(4px);
+}
+
+.quiz-option.selected {
+  border-color: #D4A574;
+  background: linear-gradient(135deg, #3D3021 0%, #4A3D2A 100%);
+  box-shadow: 0 0 20px rgba(212, 165, 116, 0.3);
+}
+
+.option-label {
+  background: #D4A574;
+  color: #2D2416;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.option-text {
+  flex: 1;
+  text-align: left;
+}
+
+/* Hint Box */
+.hint-box {
+  background: linear-gradient(135deg, #4A3D2A 0%, #3D3021 100%);
+  border: 2px solid #D4A574;
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hint-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.hint-text {
+  color: #FFD700;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* Submit Button */
+.submit-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #D4A574 0%, #B8935E 100%);
+  color: #2D2416;
+  border: none;
+  border-radius: 10px;
+  padding: 5px 5px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(212, 165, 116, 0.3);
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #E5B685 0%, #C9A46F 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 165, 116, 0.4);
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Attempts Counter */
+.attempts-counter {
+  text-align: center;
+  margin-top: 12px;
+  color: #FF6B6B;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 884px) {
+  .education-modal {
+    max-width: 95%;
+    max-height: 90vh;
+  }
+
+  .education-header {
+    padding: 20px 24px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .education-title {
+    font-size: 22px;
+  }
+
+  .unlock-badge {
+    align-self: flex-end;
+  }
+
+  .education-content,
+  .quiz-section {
+    padding: 10px 10px;
+  }
+
+  .education-description {
+    font-size: 14px;
+  }
+
+  .quiz-question {
+    font-size: 10px;
+  }
+
+  .quiz-option {
+    padding: 14px 16px;
+    font-size: 13px;
+  }
+
+  .option-label {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .education-title {
+    font-size: 18px;
+  }
+
+  .unlock-badge {
+    font-size: 10px;
+    padding: 6px 12px;
+  }
+
+  .quiz-option {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+}

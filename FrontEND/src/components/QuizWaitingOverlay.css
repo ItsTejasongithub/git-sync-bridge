@@ -1,0 +1,134 @@
+.quiz-waiting-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(5px);
+}
+
+.waiting-card {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.waiting-icon {
+  margin-bottom: 20px;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 5px solid #e0e0e0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  margin: 0 auto;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.waiting-card h2 {
+  font-size: 2rem;
+  color: #4caf50;
+  margin: 20px 0 10px;
+  font-weight: bold;
+}
+
+.waiting-message {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.waiting-players-list {
+  background: #f5f5f5;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  text-align: left;
+}
+
+.waiting-players-list h3 {
+  font-size: 1rem;
+  color: #333;
+  margin: 0 0 15px 0;
+  font-weight: 600;
+}
+
+.waiting-players-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.waiting-players-list li {
+  padding: 12px;
+  background: white;
+  margin: 8px 0;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 4px solid #ff9800;
+}
+
+.player-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+}
+
+.quiz-category {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+}
+
+.game-resume-hint {
+  font-size: 0.9rem;
+  color: #999;
+  margin-top: 20px;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .waiting-card {
+    padding: 30px 20px;
+  }
+
+  .waiting-card h2 {
+    font-size: 1.5rem;
+  }
+
+  .waiting-message {
+    font-size: 1rem;
+  }
+}

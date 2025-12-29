@@ -1,0 +1,10 @@
+.player-game-wrapper {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.game-content {
+  flex: 1;
+  overflow-y: auto;
+}

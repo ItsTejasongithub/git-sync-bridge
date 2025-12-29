@@ -1,0 +1,107 @@
+/* Generic asset tooltip wrapper - works for all asset types */
+.asset-tooltip-wrapper,
+.stock-tooltip-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+/* Generic asset tooltip - works for all asset types */
+.asset-tooltip,
+.stock-tooltip {
+  position: absolute;
+  bottom: 105%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #2D2416 0%, #3D3021 100%);
+  color: #FEFDF8;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 2px solid #D4A574;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  min-width: 280px;
+  max-width: 320px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  text-align: left;
+}
+
+.asset-tooltip-wrapper:hover .asset-tooltip,
+.stock-tooltip-wrapper:hover .stock-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-8px);
+}
+
+/* Tooltip arrow */
+.asset-tooltip::after,
+.stock-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-top-color: #D4A574;
+}
+
+.asset-tooltip::before,
+.stock-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #2D2416;
+  z-index: 1;
+  margin-top: -2px;
+}
+
+.tooltip-full-name {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #D4A574;
+  letter-spacing: 0.3px;
+}
+
+.tooltip-sector {
+  font-size: 10px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #B8935E;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tooltip-description {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #E8DCC4;
+  opacity: 0.9;
+}
+
+/* Responsive Design */
+@media (max-width: 1536px) {
+  .stock-tooltip {
+    min-width: 240px;
+    max-width: 280px;
+    padding: 10px 14px;
+  }
+
+  .tooltip-full-name {
+    font-size: 12px;
+  }
+
+  .tooltip-sector {
+    font-size: 9px;
+  }
+
+  .tooltip-description {
+    font-size: 10px;
+  }
+}
