@@ -43,11 +43,19 @@ Double-click: `SYNC_FROM_GITHUB.bat`
 
 ### **On Remote Server:**
 
+**Option 1: With Git (Requires Authentication)**
 1. **Download** `SYNC_FROM_GITHUB.bat` from GitHub
-
 2. **Double-click** `SYNC_FROM_GITHUB.bat`
    - First run will clone the entire repository
    - Automatically installs dependencies
+   - Ready to use!
+
+**Option 2: Without Git (No Authentication Required) - RECOMMENDED**
+1. **Download** `SYNC_FROM_GITHUB_NO_AUTH.bat` from GitHub
+2. **Double-click** `SYNC_FROM_GITHUB_NO_AUTH.bat`
+   - Downloads latest code as ZIP file
+   - No Git or authentication needed
+   - Automatically extracts and installs dependencies
    - Ready to use!
 
 ---
@@ -79,7 +87,7 @@ Run the batch file
 - Handles both `master` and `main` branches automatically
 - Color-coded output for easy reading
 
-### **SYNC_FROM_GITHUB.bat** (Remote Server)
+### **SYNC_FROM_GITHUB.bat** (Remote Server - Requires Git)
 
 **What it does:**
 1. ✓ Checks Git installation
@@ -88,6 +96,16 @@ Run the batch file
 4. ✓ Pulls latest code from GitHub
 5. ✓ Installs BackEND dependencies
 6. ✓ Installs FrontEND dependencies
+
+### **SYNC_FROM_GITHUB_NO_AUTH.bat** (Remote Server - No Auth Required)
+
+**What it does:**
+1. ✓ Downloads latest code as ZIP from GitHub
+2. ✓ Extracts files automatically
+3. ✓ Updates code while preserving local changes
+4. ✓ Installs BackEND dependencies
+5. ✓ Installs FrontEND dependencies
+6. ✓ No Git or authentication needed!
 
 **Example Usage:**
 ```
