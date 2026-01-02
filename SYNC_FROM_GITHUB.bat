@@ -35,6 +35,11 @@ if not exist ".git" (
     goto install_deps
 )
 
+REM Update remote URL to ensure it points to correct repository
+echo [INFO] Verifying remote repository URL...
+git remote set-url origin https://github.com/ItsTejasongithub/git-sync-bridge.git
+echo.
+
 REM Show current status
 echo [1/4] Checking current status...
 echo.
