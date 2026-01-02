@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 echo.
 echo ================================================
-echo    SYNC FROM GITHUB (NO AUTH REQUIRED)
+echo    DOWNLOAD LATEST CODE FROM GITHUB
 echo ================================================
 echo.
 
@@ -20,7 +20,7 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
-echo [1/5] Downloading latest code from GitHub...
+echo [1/3] Downloading latest code from GitHub...
 echo.
 echo Repository: https://github.com/ItsTejasongithub/git-sync-bridge
 echo.
@@ -40,7 +40,7 @@ if %ERRORLEVEL% NEQ 0 (
 echo [OK] Code downloaded successfully!
 echo.
 
-echo [2/5] Extracting files...
+echo [2/3] Extracting files...
 echo.
 
 REM Extract ZIP file using PowerShell
@@ -52,81 +52,45 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
-echo [OK] Files extracted!
+echo [OK] Files extracted successfully!
 echo.
 
-echo [3/5] Updating files (preserving local changes)...
+echo [3/3] Copying files to current directory...
 echo.
 
-REM Copy files from extracted folder to current directory
-REM Exclude node_modules and other unnecessary folders
-xcopy "temp-extract\git-sync-bridge-master\*" "." /E /Y /EXCLUDE:sync-exclude.txt
+REM Copy all files from extracted folder to current directory
+xcopy "temp-extract\git-sync-bridge-master\*" "." /E /Y /I
 
-if %ERRORLEVEL% NEQ 0 (
+if %ERRORLEVEL% EQU 0 (
+    echo [OK] All files copied successfully!
+) else (
     echo [WARN] Some files may not have been copied
 )
 
-echo [OK] Files updated!
 echo.
 
-echo [4/5] Cleaning up temporary files...
-echo.
-
-REM Remove only the temporary extract folder, keep the ZIP file as backup
+REM Clean up temp folder
 rd /S /Q "temp-extract"
 
-echo [OK] Cleanup complete!
-echo.
-echo [INFO] ZIP file kept as backup: latest-code.zip
-echo.
-
-echo [5/5] Installing dependencies...
-echo.
-
-REM Install BackEND dependencies
-if exist "BackEND" (
-    echo [+] Installing BackEND dependencies...
-    cd BackEND
-    call npm install
-    if %ERRORLEVEL% NEQ 0 (
-        echo [WARN] BackEND npm install had issues
-    ) else (
-        echo [OK] BackEND dependencies installed
-    )
-    cd ..
-    echo.
-)
-
-REM Install FrontEND dependencies
-if exist "FrontEND" (
-    echo [+] Installing FrontEND dependencies...
-    cd FrontEND
-    call npm install
-    if %ERRORLEVEL% NEQ 0 (
-        echo [WARN] FrontEND npm install had issues
-    ) else (
-        echo [OK] FrontEND dependencies installed
-    )
-    cd ..
-    echo.
-)
-
 echo.
 echo ================================================
-echo          SYNC SUCCESSFUL!
+echo          DOWNLOAD COMPLETE!
 echo ================================================
 echo.
-echo [SUCCESS] Remote server updated with latest code!
+echo [SUCCESS] Latest code has been downloaded and extracted!
+echo.
+echo ------------------------------------------------
+echo  FILES:
+echo ------------------------------------------------
+echo  - ZIP file saved as: latest-code.zip (backup)
+echo  - All files extracted to current directory
+echo ------------------------------------------------
 echo.
 echo ------------------------------------------------
 echo  NEXT STEPS:
 echo ------------------------------------------------
-echo  1. All dependencies have been installed
+echo  1. Install dependencies if needed (npm install)
 echo  2. Run START_GAME.bat to launch the game
-echo  3. Game will start on configured ports
 echo ------------------------------------------------
-echo.
-echo NOTE: This method does not require Git authentication
-echo For version control, consider setting up Git credentials
 echo.
 pause
