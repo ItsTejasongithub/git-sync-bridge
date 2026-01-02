@@ -72,11 +72,12 @@ echo.
 echo [4/5] Cleaning up temporary files...
 echo.
 
-REM Remove temporary files
+REM Remove only the temporary extract folder, keep the ZIP file as backup
 rd /S /Q "temp-extract"
-del "latest-code.zip"
 
 echo [OK] Cleanup complete!
+echo.
+echo [INFO] ZIP file kept as backup: latest-code.zip
 echo.
 
 echo [5/5] Installing dependencies...
