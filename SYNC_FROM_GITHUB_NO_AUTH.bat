@@ -44,7 +44,7 @@ echo [2/3] Extracting files...
 echo.
 
 REM Extract ZIP file using PowerShell
-powershell -Command "& {Expand-Archive -Path 'latest-code.zip' -DestinationPath 'temp-extract' -Force}"
+powershell -Command "& {Expand-Archive -Path 'latest-code.zip' -DestinationPath '.' -Force}"
 
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Failed to extract files!
@@ -55,22 +55,22 @@ if %ERRORLEVEL% NEQ 0 (
 echo [OK] Files extracted successfully!
 echo.
 
-echo [3/3] Copying files to current directory...
+echo [3/3] Renaming extracted folder...
 echo.
 
-REM Copy all files from extracted folder to current directory
-xcopy "temp-extract\git-sync-bridge-master\*" "." /E /Y /I
-
-if %ERRORLEVEL% EQU 0 (
-    echo [OK] All files copied successfully!
-) else (
-    echo [WARN] Some files may not have been copied
+REM Check if folder already exists and remove it
+if exist "BeautifulGameDesgin-Latest" (
+    rd /S /Q "BeautifulGameDesgin-Latest"
 )
 
-echo.
+REM Rename the extracted folder to a cleaner name
+ren "git-sync-bridge-master" "BeautifulGameDesgin-Latest"
 
-REM Clean up temp folder
-rd /S /Q "temp-extract"
+if %ERRORLEVEL% EQU 0 (
+    echo [OK] Folder renamed to: BeautifulGameDesgin-Latest
+) else (
+    echo [WARN] Folder name: git-sync-bridge-master
+)
 
 echo.
 echo ================================================
@@ -82,15 +82,16 @@ echo.
 echo ------------------------------------------------
 echo  FILES:
 echo ------------------------------------------------
-echo  - ZIP file saved as: latest-code.zip (backup)
-echo  - All files extracted to current directory
+echo  - ZIP file: latest-code.zip (backup)
+echo  - Extracted to: BeautifulGameDesgin-Latest
 echo ------------------------------------------------
 echo.
 echo ------------------------------------------------
 echo  NEXT STEPS:
 echo ------------------------------------------------
-echo  1. Install dependencies if needed (npm install)
-echo  2. Run START_GAME.bat to launch the game
+echo  1. Go to folder: BeautifulGameDesgin-Latest
+echo  2. Install dependencies: npm install in BackEND and FrontEND
+echo  3. Run START_GAME.bat to launch the game
 echo ------------------------------------------------
 echo.
 pause
