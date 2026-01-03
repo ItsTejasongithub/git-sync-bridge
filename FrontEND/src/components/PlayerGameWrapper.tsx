@@ -31,6 +31,7 @@ export const PlayerGameWrapper: React.FC = () => {
     markQuizCompleted,
     updateTime,
     updatePauseState,
+    isTransactionPending,
   } = useGameState(true); // true = multiplayer mode, disables local timer
 
   // Initialize game state with multiplayer admin settings when game starts
@@ -165,6 +166,8 @@ export const PlayerGameWrapper: React.FC = () => {
         showLeaderboard={true}
         showPauseButton={false}
         leaderboardData={transformedLeaderboard}
+        // Pass transaction state so asset cards can disable while a transaction is pending
+        isTransacting={isTransactionPending}
       />
     </div>
   );

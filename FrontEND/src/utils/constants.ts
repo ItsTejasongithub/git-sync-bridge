@@ -119,3 +119,20 @@ export const getRandomItems = <T>(array: T[], min: number, max: number): T[] => 
 export const getRandomItem = <T>(array: T[]): T => {
   return array[Math.floor(Math.random() * array.length)];
 };
+
+// Utility function to format numbers in Indian numbering system (lakhs, crores)
+export const formatIndianNumber = (num: number): string => {
+  const numStr = Math.abs(num).toFixed(2);
+  const [integerPart, decimalPart] = numStr.split('.');
+
+  // Indian numbering system: last 3 digits, then groups of 2
+  const lastThree = integerPart.slice(-3);
+  const otherNumbers = integerPart.slice(0, -3);
+
+  let formatted = lastThree;
+  if (otherNumbers !== '') {
+    formatted = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + lastThree;
+  }
+
+  return formatted + '.' + decimalPart;
+};

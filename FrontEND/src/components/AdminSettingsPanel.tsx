@@ -32,6 +32,7 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
     initialSettings?.selectedCategories || ['BANKING']
   );
   const [hideCurrentYear, setHideCurrentYear] = useState(initialSettings?.hideCurrentYear || false);
+  const [enableQuiz, setEnableQuiz] = useState(initialSettings?.enableQuiz !== undefined ? initialSettings.enableQuiz : true);
   const [initialPocketCash, setInitialPocketCash] = useState(initialSettings?.initialPocketCash || 100000);
   const [recurringIncome, setRecurringIncome] = useState(initialSettings?.recurringIncome || 50000);
   const [calculatedStartYear, setCalculatedStartYear] = useState<number>(2005);
@@ -71,7 +72,8 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
       gameStartYear: calculatedStartYear,
       hideCurrentYear,
       initialPocketCash,
-      recurringIncome
+      recurringIncome,
+      enableQuiz
     };
 
     if (isMultiplayerMode && onApply) {
@@ -180,6 +182,19 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
               />
               <span>Hide current calendar year (show only game years)</span>
             </label>
+          </div>
+          <div className="option-row">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={enableQuiz}
+                onChange={(e) => setEnableQuiz(e.target.checked)}
+              />
+              <span>Enable quiz on new asset unlock</span>
+            </label>
+            <small style={{ marginLeft: '28px', display: 'block', color: 'rgba(255, 255, 255, 0.6)' }}>
+              When disabled, a simple notification will show for 5 seconds instead of quiz
+            </small>
           </div>
         </div>
 

@@ -6,6 +6,7 @@ export interface AdminSettings {
   hideCurrentYear: boolean;
   initialPocketCash: number; // Starting pocket cash amount
   recurringIncome: number; // Amount added to pocket cash every 6 months
+  enableQuiz: boolean; // Enable/disable quiz on asset unlock
 }
 
 export interface PlayerInfo {

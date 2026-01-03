@@ -53,10 +53,61 @@ export const useGameState = (isMultiplayer: boolean = false) => {
   const transactionInProgress = useRef(false);
   const pendingTimeUpdate = useRef<{year: number; month: number} | null>(null);
 
-  // Debug: Monitor pocket cash changes (DISABLED for performance)
-  // useEffect(() => {
-  //   console.log(`💵 Pocket Cash State: ₹${gameState.pocketCash.toFixed(2)}`);
-  // }, [gameState.pocketCash]);
+  // Track a reactive flag for UI to disable controls while a transaction is pending
+  const [isTransactionPending, setIsTransactionPending] = useState(false);
+
+  // Helper to finish a transaction: unlock the transaction and apply any pending time updates
+  // Uses a short delay to let React state update settle and to debounce rapid duplicate clicks
+  const finishTransaction = (delay = 250) => {
+    setTimeout(() => {
+      transactionInProgress.current = false;
+      setIsTransactionPending(false);
+
+      // If a time update arrived while transaction was in progress, apply it now
+      if (pendingTimeUpdate.current) {
+        const { year, month } = pendingTimeUpdate.current;
+        pendingTimeUpdate.current = null;
+        if (typeof updateTime === 'function') {
+          updateTime(year, month);
+        } else {
+          // If updateTime is not available yet, schedule another microtask
+          setTimeout(() => {
+            if (typeof updateTime === 'function') updateTime(year, month);
+          }, 0);
+        }
+      }
+    }, delay);
+  };
+
+  // Keep a short-lived cache of recent transactions to avoid duplicates caused by
+  // accidental double-clicks or race conditions in multiplayer. Keyed by
+  // assetType|assetName|quantity|price (rounded) and expires after a few seconds.
+  const recentTransactions = useRef<Map<string, number>>(new Map());
+
+  // Reservation system: track amounts reserved for in-flight buys so two overlapping
+  // buy attempts cannot both succeed due to reading the same pocketCash value.
+  const reservedAmountRef = useRef<number>(0);
+  const pocketCashRef = useRef<number>(gameState.pocketCash);
+
+  // Keep pocketCashRef in sync with state
+  useEffect(() => {
+    pocketCashRef.current = gameState.pocketCash;
+  }, [gameState.pocketCash]);
+
+
+  // Debug: Monitor pocket cash changes with stack trace (temporary, verbose)
+  const prevPocketCashRef = useRef<number>(gameState.pocketCash);
+  useEffect(() => {
+    const prev = prevPocketCashRef.current;
+    const curr = gameState.pocketCash;
+    if (prev !== curr) {
+      console.warn(`🔍 pocketCash changed: ₹${prev.toFixed(2)} -> ₹${curr.toFixed(2)}`);
+      console.trace('pocketCash change stack');
+    }
+    prevPocketCashRef.current = curr;
+  }, [gameState.pocketCash]);
+
+  // Note: Remove the above verbose logging once root cause is found.
 
   // Start game timer (disabled in multiplayer mode - server controls time)
   useEffect(() => {
@@ -377,17 +428,66 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       return;
     }
 
+      // Signature to detect duplicate rapid transactions
+    const txSignature = `${assetType}|${assetName}|${quantity}|${currentPrice.toFixed(6)}`;
+    const now = Date.now();
+    const prevTs = recentTransactions.current.get(txSignature);
+
+    console.debug(`[buyAsset] Attempting ${txSignature} now=${now} transactionInProgress=${transactionInProgress.current} reserved=${reservedAmountRef.current} pocket=${pocketCashRef.current}`);
+
+    if (prevTs && now - prevTs < 1000) {
+      console.warn(`⚠️ Duplicate buy detected (${txSignature}) — ignoring`);
+      console.trace('Duplicate buy call stack');
+      return;
+    }
+
+    // Prevent duplicate transactions via a ref lock
+    if (transactionInProgress.current) {
+      console.warn(`⚠️ Transaction already in progress, ignoring duplicate buy request`);
+      return;
+    }
+
+    // Check available funds accounting for reserved amounts from in-flight buys
+    const totalCost = quantity * currentPrice;
+    const available = pocketCashRef.current - reservedAmountRef.current;
+    if (totalCost > available) {
+      console.warn(`❌ Insufficient available funds: required=${totalCost}, available=${available}`);
+      alert(`Cannot buy ${assetName}: Not enough pocket cash`);
+      return;
+    }
+
+    // Reserve funds immediately to block overlapping buys
+    reservedAmountRef.current += totalCost;
+
+    transactionInProgress.current = true;
+    setIsTransactionPending(true);
+
+    // Record this initiated transaction so quick repeated calls are ignored
+    recentTransactions.current.set(txSignature, now);
+    // Schedule automatic cleanup of this signature after 5s
+    setTimeout(() => {
+      recentTransactions.current.delete(txSignature);
+    }, 5000);
+
     setGameState(prev => {
       if (gameHasEnded(prev)) return prev; // Prevent transactions after game end
       const totalCost = quantity * currentPrice;
-      console.log(`🛒 Buying ${quantity} ${assetName} @ ₹${currentPrice} = ₹${totalCost}`);
-      if (totalCost > prev.pocketCash) return prev;
+      console.log(`🛒 Buying ${quantity} ${assetName} @ ₹${currentPrice} = ₹${totalCost} (${txSignature})`);
+      // Additional safety: if reserved funds were altered (race), re-check inside update
+      if (totalCost > prev.pocketCash) {
+        // rollback reservation since we failed to apply transaction
+        reservedAmountRef.current = Math.max(0, reservedAmountRef.current - totalCost);
+        return prev;
+      }
 
-      const newHoldings = { ...prev.holdings };
+      // Always clone the nested holdings objects immutably to avoid accidental in-place mutations
+      // which can cause duplicate-applied changes when multiple transactions are processed rapidly.
+      const newHoldings = { ...prev.holdings } as typeof prev.holdings;
 
       if (assetType === 'physicalGold' || assetType === 'digitalGold' || assetType === 'indexFund' ||
           assetType === 'mutualFund' || assetType === 'commodity') {
-        const holding = newHoldings[assetType as keyof typeof newHoldings] as AssetHolding;
+        // Clone the specific holding object
+        const holding = { ...(newHoldings[assetType as keyof typeof newHoldings] as AssetHolding) };
         const newQuantity = holding.quantity + quantity;
         const newTotalInvested = holding.totalInvested + totalCost;
         (newHoldings[assetType as keyof typeof newHoldings] as AssetHolding) = {
@@ -396,8 +496,9 @@ export const useGameState = (isMultiplayer: boolean = false) => {
           totalInvested: newTotalInvested
         };
       } else if (assetType === 'stocks' || assetType === 'crypto' || assetType === 'reits') {
-        const assetGroup = newHoldings[assetType as 'stocks' | 'crypto' | 'reits'];
-        const holding = assetGroup[assetName] || { quantity: 0, avgPrice: 0, totalInvested: 0 };
+        // Clone the asset group (stocks/crypto/reits) before mutating
+        const assetGroup = { ...(newHoldings[assetType as 'stocks' | 'crypto' | 'reits']) };
+        const holding = assetGroup[assetName] ? { ...assetGroup[assetName] } : { quantity: 0, avgPrice: 0, totalInvested: 0 };
         const newQuantity = holding.quantity + quantity;
         const newTotalInvested = holding.totalInvested + totalCost;
         assetGroup[assetName] = {
@@ -405,23 +506,38 @@ export const useGameState = (isMultiplayer: boolean = false) => {
           avgPrice: newTotalInvested / newQuantity,
           totalInvested: newTotalInvested
         };
+        // Assign the cloned group back to newHoldings to keep immutability
+        (newHoldings[assetType as 'stocks' | 'crypto' | 'reits']) = assetGroup;
       }
 
-      return {
+      const updatedState = {
         ...prev,
         pocketCash: prev.pocketCash - totalCost,
         holdings: newHoldings
       };
+
+      // Release the reserved funds for this transaction after the state update settles
+      setTimeout(() => {
+        reservedAmountRef.current = Math.max(0, reservedAmountRef.current - totalCost);
+        console.debug(`[buyAsset] Reservation released: -${totalCost}, reservedNow=${reservedAmountRef.current}`);
+      }, 0);
+
+      // Finish transaction (longer debounce to avoid duplicate buys) and process pending time updates
+      finishTransaction();
+
+      return updatedState;
     });
   }, []);
 
   const sellAsset = useCallback((assetType: string, assetName: string, quantity: number, currentPrice: number) => {
     // CRITICAL DEBUG: Always log sell transactions to catch pricing issues
-    console.log(`\n🔍 ===== SELL TRANSACTION START =====`);
+    const txSignature = `${assetType}|${assetName}|${quantity}|${currentPrice.toFixed(6)}`;
+    console.log(`\n🔍 ===== SELL TRANSACTION START ===== (${txSignature})`);
     console.log(`📌 Asset: ${assetName} (${assetType})`);
     console.log(`📌 Quantity to Sell: ${quantity}`);
     console.log(`📌 Current Price per unit: ₹${currentPrice}`);
     console.log(`📌 Expected Sale Amount: ₹${(quantity * currentPrice).toFixed(2)}`);
+    console.debug(`📌 pocketCash=${pocketCashRef.current} reserved=${reservedAmountRef.current}`);
 
     // CRITICAL FIX: Prevent selling at price 0 (would cause bankruptcy!)
     if (currentPrice <= 0) {
@@ -430,19 +546,36 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       return;
     }
 
+    // Signature to detect duplicate rapid sell transactions
+    const now = Date.now();
+    const prevTs = recentTransactions.current.get(txSignature);
+    if (prevTs && now - prevTs < 1000) {
+      console.warn(`⚠️ Duplicate sell detected (${txSignature}) — ignoring`);
+      console.trace('Duplicate sell call stack');
+      return;
+    }
+
     // Mark transaction as in progress
     transactionInProgress.current = true;
+    setIsTransactionPending(true);
+    recentTransactions.current.set(txSignature, now);
+    setTimeout(() => {
+      recentTransactions.current.delete(txSignature);
+    }, 5000);
 
     setGameState(prev => {
       if (gameHasEnded(prev)) return prev; // Prevent transactions after game end
-      const newHoldings = { ...prev.holdings };
+      // Clone top-level holdings and nested groups to avoid in-place mutations that cause UI mismatch
+      const newHoldings = { ...prev.holdings } as typeof prev.holdings;
       let holding: AssetHolding | undefined;
 
       if (assetType === 'physicalGold' || assetType === 'digitalGold' || assetType === 'indexFund' ||
           assetType === 'mutualFund' || assetType === 'commodity') {
-        holding = newHoldings[assetType as keyof typeof newHoldings] as AssetHolding;
+        // Clone the specific holding object
+        holding = { ...((newHoldings[assetType as keyof typeof newHoldings] as AssetHolding)) };
       } else if (assetType === 'stocks' || assetType === 'crypto' || assetType === 'reits') {
-        const assetGroup = newHoldings[assetType as 'stocks' | 'crypto' | 'reits'];
+        // Clone the asset group before reading/modifying
+        const assetGroup = { ...(newHoldings[assetType as 'stocks' | 'crypto' | 'reits']) };
         holding = assetGroup[assetName];
       }
 
@@ -472,7 +605,8 @@ export const useGameState = (isMultiplayer: boolean = false) => {
           totalInvested: holding.totalInvested - reducedInvestment
         };
       } else if (assetType === 'stocks' || assetType === 'crypto' || assetType === 'reits') {
-        const assetGroup = newHoldings[assetType as 'stocks' | 'crypto' | 'reits'];
+        // Operate on cloned asset group and assign back immutably
+        const assetGroup = { ...(newHoldings[assetType as 'stocks' | 'crypto' | 'reits']) };
         if (newQuantity === 0) {
           delete assetGroup[assetName];
         } else {
@@ -482,8 +616,8 @@ export const useGameState = (isMultiplayer: boolean = false) => {
             totalInvested: holding.totalInvested - reducedInvestment
           };
         }
+        (newHoldings[assetType as 'stocks' | 'crypto' | 'reits']) = assetGroup;
       }
-
       const updatedState = {
         ...prev,
         pocketCash: prev.pocketCash + saleAmount,
@@ -496,17 +630,8 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       return updatedState;
     });
 
-    // Unlock transaction after state update completes
-    setTimeout(() => {
-      transactionInProgress.current = false;
-
-      // Apply any pending time update
-      if (pendingTimeUpdate.current) {
-        const { year, month } = pendingTimeUpdate.current;
-        pendingTimeUpdate.current = null;
-        updateTime(year, month);
-      }
-    }, 50);
+    // Finish transaction (longer debounce) and apply any pending time update
+    finishTransaction();
   }, []);
 
   const togglePause = useCallback(() => {
@@ -635,6 +760,8 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     togglePause,
     markQuizCompleted,
     updateTime,
-    updatePauseState
+    updatePauseState,
+    // Reactive flag for UI components to know whether a transaction is pending
+    isTransactionPending
   };
 };

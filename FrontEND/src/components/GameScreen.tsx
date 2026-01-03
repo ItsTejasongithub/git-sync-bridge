@@ -29,6 +29,7 @@ interface GameScreenProps {
   showPauseButton?: boolean; // Control visibility of pause button (host/admin only)
   onReturnToMenu?: () => void; // Return to main menu from end screen
   leaderboardData?: Array<{ playerId: string; playerName: string; networth: number; portfolioBreakdown?: any; }>;
+  isTransacting?: boolean; // When true, disable buy/sell UI to avoid duplicate transactions
 }
 
 export const GameScreen: React.FC<GameScreenProps> = ({
@@ -47,7 +48,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   showLeaderboard = false,
   showPauseButton = true,
   onReturnToMenu,
-  leaderboardData
+  leaderboardData,
+  isTransacting = false
 }) => {
   // Helper function to format numbers with commas (Indian numbering system)
   const formatCurrency = (amount: number): string => {
@@ -72,6 +74,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   // Education modal state
   const [showEducationModal, setShowEducationModal] = useState(false);
   const [currentQuizCategory, setCurrentQuizCategory] = useState<string | null>(null);
+  const [quizEnabled, setQuizEnabled] = useState(true); // Track if quiz should be shown
 
   const currentYear = gameState.currentYear;
   const selectedAssets = gameState.selectedAssets;
@@ -305,20 +308,27 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         // Skip if quiz modal is already showing
         if (showEducationModal) break;
 
-        // Show quiz for this category
+        // Check if quiz is enabled in admin settings
+        const isQuizEnabled = adminSettings?.enableQuiz !== false; // Default to true if not set
+
+        // Show modal (either with quiz or just notification)
         const educationContent = getEducationContent(quizCategory);
         if (educationContent) {
           setCurrentQuizCategory(quizCategory);
+          setQuizEnabled(isQuizEnabled);
           setShowEducationModal(true);
+
           // Notify server in multiplayer mode
           if (onQuizStarted) {
             onQuizStarted(quizCategory);
           }
-          // Pause the game when quiz appears
-          if (!gameState.isPaused) {
+
+          // Only pause the game if quiz is enabled
+          if (isQuizEnabled && !gameState.isPaused) {
             onTogglePause();
           }
-          break; // Show one quiz at a time
+
+          break; // Show one modal at a time
         }
       }
     }
@@ -720,6 +730,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                       unit="/10g"
                       onBuy={(qty) => onBuyAsset('physicalGold', 'Physical_Gold', qty, physicalGoldPrice)}
                       onSell={(qty) => onSellAsset('physicalGold', 'Physical_Gold', qty, physicalGoldPrice)}
+                      isTransacting={isTransacting}
                     />
                   )}
                   {isAssetUnlocked('DIGITAL_GOLD') && (
@@ -733,6 +744,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                       unit="/share"
                       onBuy={(qty) => onBuyAsset('digitalGold', 'Digital_Gold', qty, digitalGoldPrice)}
                       onSell={(qty) => onSellAsset('digitalGold', 'Digital_Gold', qty, digitalGoldPrice)}
+                      isTransacting={isTransacting}
                     />
                   )}
                 </div>
@@ -755,6 +767,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                       unit="/share"
                       onBuy={(qty) => onBuyAsset(selectedAssets.fundType === 'index' ? 'indexFund' : 'mutualFund', selectedAssets.fundName, qty, fundPrice)}
                       onSell={(qty) => onSellAsset(selectedAssets.fundType === 'index' ? 'indexFund' : 'mutualFund', selectedAssets.fundName, qty, fundPrice)}
+                      isTransacting={isTransacting}
                     />
                   )}
                 </div>
@@ -796,6 +809,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                           onBuy={(qty) => onBuyAsset('stocks', stockName, qty, stockData.price)}
                           onSell={(qty) => onSellAsset('stocks', stockName, qty, stockData.price)}
                           isStock={true}
+                          isTransacting={isTransacting}
                         />
                       );
                     })}
@@ -819,6 +833,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                       unit="/coin"
                       onBuy={(qty) => onBuyAsset('crypto', 'BTC', qty, btcPrice)}
                       onSell={(qty) => onSellAsset('crypto', 'BTC', qty, btcPrice)}
+                      isTransacting={isTransacting}
                     />
                   )}
                   {isAssetUnlocked('ETH') && (
@@ -832,6 +847,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                       unit="/coin"
                       onBuy={(qty) => onBuyAsset('crypto', 'ETH', qty, ethPrice)}
                       onSell={(qty) => onSellAsset('crypto', 'ETH', qty, ethPrice)}
+                      isTransacting={isTransacting}
                     />
                   )}
                 </div>
@@ -853,6 +869,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                     unit="/oz"
                     onBuy={(qty) => onBuyAsset('commodity', selectedAssets.commodity, qty, commodityPrice)}
                     onSell={(qty) => onSellAsset('commodity', selectedAssets.commodity, qty, commodityPrice)}
+                    isTransacting={isTransacting}
                   />
                 </div>
               </section>
@@ -874,6 +891,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                       unit="/share"
                       onBuy={(qty) => onBuyAsset('reits', 'EMBASSY', qty, embassyPrice)}
                       onSell={(qty) => onSellAsset('reits', 'EMBASSY', qty, embassyPrice)}
+                      isTransacting={isTransacting}
                     />
                   )}
                   {isAssetUnlocked('MINDSPACE') && (
@@ -887,6 +905,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                       unit="/share"
                       onBuy={(qty) => onBuyAsset('reits', 'MINDSPACE', qty, mindspacePrice)}
                       onSell={(qty) => onSellAsset('reits', 'MINDSPACE', qty, mindspacePrice)}
+                      isTransacting={isTransacting}
                     />
                   )}
                 </div>
@@ -895,12 +914,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         </div>
       </div>
 
-      {/* Education Quiz Modal */}
+      {/* Education Quiz Modal / Unlock Notification */}
       <AssetEducationModal
         isOpen={showEducationModal}
         content={currentQuizCategory ? getEducationContent(currentQuizCategory) : null}
         questionIndex={currentQuizCategory && gameState.quizQuestionIndices ? gameState.quizQuestionIndices[currentQuizCategory] : undefined}
         onComplete={handleQuizComplete}
+        showQuiz={quizEnabled}
       />
     </div>
   );

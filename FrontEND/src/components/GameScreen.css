@@ -854,3 +854,80 @@
   background: rgba(255, 153, 51, 0.7);
 }
 
+/* ============================================ */
+/* UNLOCK NOTIFICATION (when quiz is disabled) */
+/* ============================================ */
+
+.unlock-notification {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  animation: slideInFromTop 0.5s ease-out;
+}
+
+.unlock-notification-content {
+  background: linear-gradient(135deg, #FF9933 0%, #FF6600 100%);
+  border: 3px solid #FFFFFF;
+  border-radius: 20px;
+  padding: 40px 60px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  min-width: 400px;
+  animation: pulse 0.5s ease-in-out;
+}
+
+.unlock-notification-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  animation: bounce 1s infinite;
+}
+
+.unlock-notification-content h3 {
+  color: white;
+  font-size: 28px;
+  font-weight: bold;
+  margin: 0 0 10px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.unlock-notification-content p {
+  color: white;
+  font-size: 16px;
+  margin: 0;
+  opacity: 0.9;
+}
+
+@keyframes slideInFromTop {
+  from {
+    transform: translate(-50%, -150%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+

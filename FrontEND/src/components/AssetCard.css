@@ -229,6 +229,13 @@
   transform: translateY(-1px);
 }
 
+.action-button.disabled, .action-button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  pointer-events: none;
+}
+
 .interest-info {
   text-align: center;
   margin-top: 12px;
@@ -920,6 +927,55 @@
   margin-top: 2px;
 }
 
+/* Pocket Cash Preview */
+.pocket-cash-preview {
+  background: rgba(232, 220, 196, 0.95);
+  border: 2px solid rgba(139, 115, 85, 0.4);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-top: -50px;
+  margin-bottom: 0px;
+  margin-left: auto;
+  margin-right: auto;
+  width: fit-content;
+  max-width: 85%;
+  text-align: center;
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.cash-preview-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  align-items: center;
+}
+
+.preview-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #5D4E42;
+  opacity: 0.85;
+}
+
+.preview-amount {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.preview-amount.buy {
+  color: #A85C5C;
+}
+
+.preview-amount.sell {
+  color: #5D8A66;
+}
+
 .quantity-selector {
   display: flex;
   gap: 4px;
@@ -1094,5 +1150,13 @@
     font-size: 11px !important;
     padding: 8px 10px !important;
     min-height: 36px;
+  }
+
+  .preview-label {
+    font-size: 10px !important;
+  }
+
+  .preview-amount {
+    font-size: 16px !important;
   }
 }

@@ -257,6 +257,60 @@
   font-weight: 600;
 }
 
+/* Notification Section (when quiz is disabled) */
+.notification-section {
+  padding: 40px 32px;
+  text-align: center;
+}
+
+.notification-icon {
+  font-size: 80px;
+  margin-bottom: 24px;
+  animation: bounce 1s infinite;
+}
+
+.notification-text {
+  color: #D4A574;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.auto-close-text {
+  color: rgba(212, 165, 116, 0.7);
+  font-size: 14px;
+  font-style: italic;
+  margin: 0;
+}
+
+.close-btn {
+  margin-top: 20px;
+  background: linear-gradient(135deg, #D4A574 0%, #B8935E 100%);
+  color: #2D2416;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  font-size: 14px;
+}
+
+.close-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 165, 116, 0.3);
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 884px) {
   .education-modal {

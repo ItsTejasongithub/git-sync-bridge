@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AssetHolding } from '../types';
 import { MiniChart } from './MiniChart';
 import { getAssetInfo } from '../utils/stockInfo';
+import { formatIndianNumber } from '../utils/constants';
 import './AssetCard.css';
 import './StockTooltip.css';
 
@@ -16,6 +17,7 @@ interface TradeableAssetCardProps {
   onBuy: (quantity: number) => void;
   onSell: (quantity: number) => void;
   isStock?: boolean; // Add compact stock card styling
+  isTransacting?: boolean; // When true, disable buy/sell UI to avoid duplicates
 }
 
 export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
@@ -28,12 +30,15 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
   unit,
   onBuy,
   onSell,
-  isStock = false
+  isStock = false,
+  isTransacting = false
 }) => {
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [customQuantity, setCustomQuantity] = useState('');
   const [mode, setMode] = useState<'none' | 'buy' | 'sell'>('none');
   const [isShaking, setIsShaking] = useState(false);
+  // Local click lock to prevent double clicks before parent state updates
+  const [localLock, setLocalLock] = useState(false);
 
   const priceChange = currentPrice - previousPrice;
   const priceChangePercent = previousPrice > 0 ? (priceChange / previousPrice) * 100 : 0;
@@ -46,30 +51,51 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
   };
 
   const handleBuy = () => {
+    if (isTransacting || localLock) {
+      console.warn('[TradeableAssetCard] Buy blocked - transaction pending or localLock active');
+      console.trace('Buy blocked stack');
+      return;
+    }
+
+    // If first click, reveal quantity UI and don't execute
     if (mode !== 'buy') {
-      // First click: Show quantity controls
       setMode('buy');
       setSelectedQuantity(1);
       setCustomQuantity('');
       return;
     }
 
-    // Second click: Execute transaction
+    // Second click: execute; set localLock immediately to prevent rapid second calls
+    setLocalLock(true);
+
     const quantity = customQuantity ? parseFloat(customQuantity) : selectedQuantity;
-    if (quantity <= 0) return;
+    if (quantity <= 0) {
+      setLocalLock(false);
+      return;
+    }
 
     const totalCost = quantity * currentPrice;
     if (totalCost > pocketCash) {
       triggerShake();
+      setLocalLock(false);
       return;
     }
 
     onBuy(quantity);
     setCustomQuantity('');
     setMode('none'); // Hide controls after transaction
+
+    // Clear local lock after a short delay (parent will also clear via isTransacting)
+    setTimeout(() => setLocalLock(false), 1200);
   };
 
   const handleSell = () => {
+    if (isTransacting || localLock) {
+      console.warn('[TradeableAssetCard] Sell blocked - transaction pending or localLock active');
+      console.trace('Sell blocked stack');
+      return;
+    }
+
     if (mode !== 'sell') {
       // First click: Show quantity controls
       setMode('sell');
@@ -79,17 +105,24 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
     }
 
     // Second click: Execute transaction
+    setLocalLock(true);
     const quantity = customQuantity ? parseFloat(customQuantity) : selectedQuantity;
-    if (quantity <= 0) return;
+    if (quantity <= 0) {
+      setLocalLock(false);
+      return;
+    }
 
     if (quantity > holding.quantity) {
       triggerShake();
+      setLocalLock(false);
       return;
     }
 
     onSell(quantity);
     setCustomQuantity('');
     setMode('none'); // Hide controls after transaction
+
+    setTimeout(() => setLocalLock(false), 1200);
   };
 
   // MAX quantity based on mode
@@ -105,6 +138,15 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
     ? (currentPrice - holding.avgPrice) * holding.quantity
     : 0;
   const isProfit = totalPL >= 0;
+
+  // Calculate pocket cash required/received based on mode and selected quantity
+  const currentQuantity = customQuantity ? parseFloat(customQuantity) || 0 : selectedQuantity;
+  const pocketCashImpact = currentQuantity * currentPrice;
+
+  // Calculate total invested amount
+  const totalInvested = holding.avgPrice > 0 && holding.quantity > 0
+    ? holding.avgPrice * holding.quantity
+    : 0;
 
   return (
     <div className={`asset-card tradeable-card ${isStock ? 'stock-card' : ''} ${isShaking ? 'shake' : ''}`}>
@@ -135,7 +177,7 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
         {/* Default: Show only P&L prominently */}
         <div className={`stat-item-main ${isProfit ? 'profit' : 'loss'}`}>
           <span className="stat-label">P&L</span>
-          <span className="stat-value-main">{isProfit ? '+' : ''}₹{totalPL.toFixed(2)}</span>
+          <span className="stat-value-main">{isProfit ? '+' : ''}₹{formatIndianNumber(totalPL)}</span>
         </div>
             <div className="stat-item">
             <span className="stat-label">QTY</span>
@@ -146,8 +188,15 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
         <div className="stat-details">
 
           <div className="stat-item">
-            <span className="stat-label">AVG</span>
-            <span className="stat-value">{holding.avgPrice > 0 ? `₹${holding.avgPrice.toFixed(2)}` : '--'}</span>
+            <span className="stat-label">Invested</span>
+            <span className="stat-value">{totalInvested > 0 ? `₹${formatIndianNumber(totalInvested)}` : '--'}</span>
+          </div>
+
+          <div className="stat-divider"></div>
+
+          <div className="stat-item">
+            <span className="stat-label">Avg</span>
+            <span className="stat-value">{holding.avgPrice > 0 ? `₹${formatIndianNumber(holding.avgPrice)}` : '--'}</span>
           </div>
 
         </div>
@@ -159,53 +208,73 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
       </div>
 
       {mode !== 'none' && (
-        <div className="quantity-selector">
-          <button
-            className={`qty-btn ${selectedQuantity === 1 && !customQuantity ? 'active' : ''}`}
-            onClick={() => {
-              setSelectedQuantity(1);
-              setCustomQuantity('');
-            }}
-          >
-            1
-          </button>
-          <button
-            className={`qty-btn ${selectedQuantity === 10 && !customQuantity ? 'active' : ''}`}
-            onClick={() => {
-              setSelectedQuantity(10);
-              setCustomQuantity('');
-            }}
-          >
-            10
-          </button>
-          <div className="input-container">
-            <input
-              type="number"
-              className="qty-input"
-              value={customQuantity}
-              onChange={(e) => setCustomQuantity(e.target.value)}
-              placeholder="Custom"
-            />
+        <>
+          {/* Pocket Cash Preview */}
+          <div className="pocket-cash-preview">
+            {mode === 'buy' ? (
+              <div className="cash-preview-text">
+                <span className="preview-label">Pocket cash required:</span>
+                <span className="preview-amount buy">₹{formatIndianNumber(pocketCashImpact)}</span>
+              </div>
+            ) : (
+              <div className="cash-preview-text">
+                <span className="preview-label">You will receive:</span>
+                <span className="preview-amount sell">₹{formatIndianNumber(pocketCashImpact)}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="quantity-selector">
             <button
-              className="max-button"
+              type="button"
+              className={`qty-btn ${selectedQuantity === 1 && !customQuantity ? 'active' : ''}`}
               onClick={() => {
-                setCustomQuantity(maxQuantity.toString());
-                setSelectedQuantity(0);
+                setSelectedQuantity(1);
+                setCustomQuantity('');
               }}
             >
-              MAX
+              1
             </button>
+            <button
+              type="button"
+              className={`qty-btn ${selectedQuantity === 10 && !customQuantity ? 'active' : ''}`}
+              onClick={() => {
+                setSelectedQuantity(10);
+                setCustomQuantity('');
+              }}
+            >
+              10
+            </button>
+            <div className="input-container">
+              <input
+                type="number"
+                className="qty-input"
+                value={customQuantity}
+                onChange={(e) => setCustomQuantity(e.target.value)}
+                placeholder="Custom"
+              />
+              <button
+                type="button"
+                className="max-button"
+                onClick={() => {
+                  setCustomQuantity(maxQuantity.toString());
+                  setSelectedQuantity(0);
+                }}
+              >
+                MAX
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       <div className="button-group">
         {mode === 'buy' ? (
           <>
-            <button className="action-button buy-btn" onClick={handleBuy}>
+            <button type="button" className={`action-button buy-btn ${isTransacting ? 'disabled' : ''}`} onClick={handleBuy} disabled={isTransacting}>
               BUY
             </button>
-            <button className="action-button cancel-btn" onClick={() => setMode('none')}>
+            <button type="button" className="action-button cancel-btn" onClick={() => setMode('none')}>
               CANCEL
             </button>
           </>
@@ -214,16 +283,16 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
             <button className="action-button cancel-btn" onClick={() => setMode('none')}>
               CANCEL
             </button>
-            <button className="action-button sell-btn" onClick={handleSell}>
+            <button className={`action-button sell-btn ${isTransacting ? 'disabled' : ''}`} onClick={handleSell} disabled={isTransacting}>
               SELL
             </button>
           </>
         ) : (
           <>
-            <button className="action-button buy-btn" onClick={handleBuy}>
+            <button type="button" className={`action-button buy-btn ${isTransacting ? 'disabled' : ''}`} onClick={handleBuy} disabled={isTransacting}>
               BUY
             </button>
-            <button className="action-button sell-btn" onClick={handleSell}>
+            <button type="button" className={`action-button sell-btn ${isTransacting ? 'disabled' : ''}`} onClick={handleSell} disabled={isTransacting}>
               SELL
             </button>
           </>

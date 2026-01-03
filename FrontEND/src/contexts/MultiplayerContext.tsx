@@ -137,7 +137,9 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
           const prevAny = prev as any;
 
           if (typeof serverAny.pocketCash !== 'undefined' && serverAny.pocketCash !== prevAny.pocketCash) {
-            console.debug('🔒 Multiplayer: Server pocketCash differs but will NOT overwrite local value', { serverPocketCash: serverAny.pocketCash, localPocketCash: prevAny.pocketCash });
+            // Make these warnings more visible during debugging so we can detect unexpected overwrites
+            console.warn('🔒 Multiplayer: Server pocketCash differs but will NOT overwrite local value', { serverPocketCash: serverAny.pocketCash, localPocketCash: prevAny.pocketCash });
+            console.trace('Server pocketCash mismatch stack');
           }
 
           if (serverAny.holdings && JSON.stringify(serverAny.holdings) !== JSON.stringify(prevAny.holdings)) {
