@@ -39,31 +39,34 @@ export const SavingsAccountCard: React.FC<SavingsAccountCardProps> = ({
   };
 
   const handleMax = () => {
-    const maxAmount = operation === 'deposit' ? pocketCash : balance;
-    setInputAmount(maxAmount.toFixed(2));
-  };
+  const maxAmount = operation === 'deposit' ? pocketCash : balance;
+  setInputAmount(maxAmount.toFixed(2));
+};
 
-  const handleConfirm = () => {
-    const amount = parseFloat(inputAmount);
-    if (isNaN(amount) || amount <= 0) return;
+const handleConfirm = () => {
+  const amount = parseFloat(inputAmount);
+  if (isNaN(amount) || amount <= 0) return;
 
-    if (operation === 'deposit') {
-      if (amount > pocketCash) {
-        triggerShake();
-        return;
-      }
-      onDeposit(amount);
-    } else {
-      if (amount > balance) {
-        triggerShake();
-        return;
-      }
-      onWithdraw(amount);
+  if (operation === 'deposit') {
+    // Use a small epsilon for floating-point comparison
+    if (amount > pocketCash + 0.01) {
+      triggerShake();
+      return;
     }
+    // Ensure we don't deposit more than available
+    onDeposit(Math.min(amount, pocketCash));
+  } else {
+    if (amount > balance + 0.01) {
+      triggerShake();
+      return;
+    }
+    // Ensure we don't withdraw more than available
+    onWithdraw(Math.min(amount, balance));
+  }
 
-    setShowInput(false);
-    setInputAmount('');
-  };
+  setShowInput(false);
+  setInputAmount('');
+};
 
   return (
     <div className={`asset-card savings-card ${isShaking ? 'shake' : ''}`}>
