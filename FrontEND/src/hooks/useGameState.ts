@@ -13,7 +13,7 @@ import {
   getRandomItems,
   getRandomItem
 } from '../utils/constants';
-import { generateAssetUnlockSchedule } from '../utils/assetUnlockCalculator';
+import { generateAssetUnlockSchedule, extractSelectedAssetsFromSchedule } from '../utils/assetUnlockCalculator';
 import { generateQuestionIndices } from '../utils/assetEducation';
 
 // Performance optimization: Disable debug logging in production
@@ -209,24 +209,25 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       shuffledQuotes = initialData.yearlyQuotes || [...FINANCIAL_QUOTES].sort(() => Math.random() - 0.5);
       quizQuestionIndices = initialData.quizQuestionIndices || generateQuestionIndices();
     } else {
-      const selectedStocks = getRandomItems(AVAILABLE_STOCKS, 2, 5);
-      const fundType: 'index' | 'mutual' = Math.random() > 0.5 ? 'index' : 'mutual';
-      const fundName = fundType === 'index'
-        ? getRandomItem(AVAILABLE_INDEX_FUNDS)
-        : getRandomItem(AVAILABLE_MUTUAL_FUNDS);
-      const selectedCommodity = getRandomItem(AVAILABLE_COMMODITIES);
-
-      selectedAssets = {
-        stocks: selectedStocks,
-        fundType,
-        fundName,
-        commodity: selectedCommodity
-      };
-
+      // Generate unlock schedule first
       assetUnlockSchedule = generateAssetUnlockSchedule(
         adminSettings.selectedCategories,
         adminSettings.gameStartYear
       );
+
+      // Extract selected assets from schedule (ensures 2 fixed + 0-3 random stocks)
+      const extractedAssets = extractSelectedAssetsFromSchedule(assetUnlockSchedule);
+
+      const fundType: 'index' | 'mutual' = extractedAssets.fundName ?
+        (AVAILABLE_INDEX_FUNDS.includes(extractedAssets.fundName) ? 'index' : 'mutual') :
+        (Math.random() > 0.5 ? 'index' : 'mutual');
+
+      selectedAssets = {
+        stocks: extractedAssets.stocks,
+        fundType,
+        fundName: extractedAssets.fundName || (fundType === 'index' ? getRandomItem(AVAILABLE_INDEX_FUNDS) : getRandomItem(AVAILABLE_MUTUAL_FUNDS)),
+        commodity: extractedAssets.commodity || getRandomItem(AVAILABLE_COMMODITIES)
+      };
 
       shuffledQuotes = [...FINANCIAL_QUOTES].sort(() => Math.random() - 0.5);
 
@@ -255,42 +256,35 @@ export const useGameState = (isMultiplayer: boolean = false) => {
   }, []);
 
   const startSoloGame = useCallback((adminSettings?: AdminSettings) => {
-    // Randomly select assets for this game
-    const selectedStocks = getRandomItems(AVAILABLE_STOCKS, 2, 5);
+    // Generate asset unlock schedule if admin settings are provided
+    const assetUnlockSchedule = adminSettings
+      ? generateAssetUnlockSchedule(adminSettings.selectedCategories, adminSettings.gameStartYear)
+      : undefined;
 
-    // When using admin settings, select earliest available fund based on selected categories
+    let selectedStocks: string[];
     let fundType: 'index' | 'mutual';
     let fundName: string;
+    let selectedCommodity: string;
 
-    if (adminSettings) {
-      const hasFunds = adminSettings.selectedCategories.includes('FUNDS');
+    if (assetUnlockSchedule) {
+      // Extract assets from schedule (ensures 2 fixed + 0-3 random stocks)
+      const extractedAssets = extractSelectedAssetsFromSchedule(assetUnlockSchedule);
 
-      if (hasFunds) {
-        // Randomly decide between index or mutual fund
-        const useIndexFund = Math.random() > 0.5;
-        fundType = useIndexFund ? 'index' : 'mutual';
-
-        if (useIndexFund) {
-          fundName = 'NIFTYBEES'; // Earliest index fund (2009)
-        } else {
-          fundName = 'SBI_Bluechip'; // Earliest mutual fund (2018)
-        }
-      } else {
-        // Fallback to random if FUNDS not selected
-        fundType = Math.random() > 0.5 ? 'index' : 'mutual';
-        fundName = fundType === 'index'
-          ? getRandomItem(AVAILABLE_INDEX_FUNDS)
-          : getRandomItem(AVAILABLE_MUTUAL_FUNDS);
-      }
+      selectedStocks = extractedAssets.stocks;
+      fundType = extractedAssets.fundName ?
+        (AVAILABLE_INDEX_FUNDS.includes(extractedAssets.fundName) ? 'index' : 'mutual') :
+        (Math.random() > 0.5 ? 'index' : 'mutual');
+      fundName = extractedAssets.fundName || (fundType === 'index' ? getRandomItem(AVAILABLE_INDEX_FUNDS) : getRandomItem(AVAILABLE_MUTUAL_FUNDS));
+      selectedCommodity = extractedAssets.commodity || getRandomItem(AVAILABLE_COMMODITIES);
     } else {
-      // Random selection for quick start
+      // Fallback: Random selection for quick start (no admin settings)
+      selectedStocks = getRandomItems(AVAILABLE_STOCKS, 2, 5);
       fundType = Math.random() > 0.5 ? 'index' : 'mutual';
       fundName = fundType === 'index'
         ? getRandomItem(AVAILABLE_INDEX_FUNDS)
         : getRandomItem(AVAILABLE_MUTUAL_FUNDS);
+      selectedCommodity = getRandomItem(AVAILABLE_COMMODITIES);
     }
-
-    const selectedCommodity = getRandomItem(AVAILABLE_COMMODITIES);
 
     const selectedAssets: SelectedAssets = {
       stocks: selectedStocks,
@@ -298,11 +292,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       fundName,
       commodity: selectedCommodity
     };
-
-    // Generate asset unlock schedule if admin settings are provided
-    const assetUnlockSchedule = adminSettings
-      ? generateAssetUnlockSchedule(adminSettings.selectedCategories, adminSettings.gameStartYear)
-      : undefined;
 
     // Shuffle quotes for this game - one unique quote per year
     const shuffledQuotes = [...FINANCIAL_QUOTES].sort(() => Math.random() - 0.5);

@@ -261,8 +261,8 @@ export const generateAssetUnlockSchedule = (
     const initialStocks = availableStocks.slice(0, initialStockCount);
 
     if (initialStocks.length >= 2) {
-      // Select 0-3 additional stocks randomly
-      const additionalCount = Math.floor(Math.random() * 4); // 0, 1, 2, or 3
+      // Select 1-3 additional stocks randomly (minimum 1, maximum 3)
+      const additionalCount = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3
 
       let stocksToUnlockNow = [...initialStocks];
       let stocksToUnlockLater: string[] = [];
