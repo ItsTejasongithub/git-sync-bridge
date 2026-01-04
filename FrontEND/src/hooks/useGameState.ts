@@ -115,10 +115,13 @@ export const useGameState = (isMultiplayer: boolean = false) => {
 
     const interval = setInterval(() => {
       setGameState(prev => {
-        // CRITICAL FIX: Stop timer if game has ended (year 20, month 12)
+        // CRITICAL FIX: Stop timer if game has ended (year 20, month 12) and mark as ended
         if (prev.currentYear >= TOTAL_GAME_YEARS && prev.currentMonth === 12) {
           clearInterval(interval);
-          return prev;
+          return {
+            ...prev,
+            isStarted: false // Mark game as ended to trigger transition to End Game screen
+          };
         }
 
         // Check if game has ended before processing
