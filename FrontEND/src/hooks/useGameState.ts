@@ -41,6 +41,10 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     currentYear: 1,
     currentMonth: 1,
     pocketCash: STARTING_CASH,
+    // NOTE: `pocketCashReceivedTotal` is controlled solely by Host settings.
+    // It is initialized from `adminSettings.initialPocketCash` and only increased
+    // when Host-defined recurring income is applied (e.g., every 6 months).
+    pocketCashReceivedTotal: STARTING_CASH,
     savingsAccount: { balance: 0, interestRate: SAVINGS_INTEREST_RATE },
     fixedDeposits: [],
     holdings: initialHoldings,
@@ -164,8 +168,10 @@ export const useGameState = (isMultiplayer: boolean = false) => {
 
         // Add recurring income every 6 months (months 6 and 12)
         let newPocketCash = prev.pocketCash;
+        let newPocketCashReceivedTotal = prev.pocketCashReceivedTotal || 0;
         if ((newMonth === 6 || newMonth === 12) && prev.adminSettings?.recurringIncome) {
           newPocketCash += prev.adminSettings.recurringIncome;
+          newPocketCashReceivedTotal += prev.adminSettings.recurringIncome;
         }
 
         return {
@@ -173,6 +179,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
           currentMonth: newMonth,
           currentYear: newYear,
           pocketCash: newPocketCash,
+          pocketCashReceivedTotal: newPocketCashReceivedTotal,
           savingsAccount: { ...prev.savingsAccount, balance: newSavingsBalance },
           fixedDeposits: updatedFDs
         };
@@ -232,6 +239,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       currentYear: 1,
       currentMonth: 1,
       pocketCash: adminSettings.initialPocketCash || STARTING_CASH,
+      pocketCashReceivedTotal: adminSettings.initialPocketCash || STARTING_CASH,
       savingsAccount: { balance: 0, interestRate: SAVINGS_INTEREST_RATE },
       fixedDeposits: [],
       holdings: initialHoldings,
@@ -308,6 +316,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       currentYear: 1,
       currentMonth: 1,
       pocketCash: adminSettings?.initialPocketCash || STARTING_CASH,
+      pocketCashReceivedTotal: adminSettings?.initialPocketCash || STARTING_CASH,
       savingsAccount: { balance: 0, interestRate: SAVINGS_INTEREST_RATE },
       fixedDeposits: [],
       holdings: initialHoldings,
@@ -328,6 +337,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       currentYear: 1,
       currentMonth: 1,
       pocketCash: STARTING_CASH,
+      pocketCashReceivedTotal: STARTING_CASH,
       savingsAccount: { balance: 0, interestRate: SAVINGS_INTEREST_RATE },
       fixedDeposits: [],
       holdings: initialHoldings,
@@ -692,8 +702,10 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         });
 
         let newPocketCash = prev.pocketCash;
+        let newPocketCashReceivedTotal = prev.pocketCashReceivedTotal || 0;
         if ((month === 6 || month === 12) && month !== prev.currentMonth && prev.adminSettings?.recurringIncome) {
           newPocketCash += prev.adminSettings.recurringIncome;
+          newPocketCashReceivedTotal += prev.adminSettings.recurringIncome;
         }
 
         console.log('🎯 updateTime: final year/month received, marking game as ended locally');
@@ -703,6 +715,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
           currentYear: TOTAL_GAME_YEARS,
           currentMonth: 12,
           pocketCash: newPocketCash,
+          pocketCashReceivedTotal: newPocketCashReceivedTotal,
           savingsAccount: { ...prev.savingsAccount, balance: newSavingsBalance },
           fixedDeposits: updatedFDs,
           isStarted: false,
@@ -726,8 +739,10 @@ export const useGameState = (isMultiplayer: boolean = false) => {
 
       // Add recurring income every 6 months (months 6 and 12)
       let newPocketCash = prev.pocketCash;
+      let newPocketCashReceivedTotal = prev.pocketCashReceivedTotal || 0;
       if ((month === 6 || month === 12) && month !== prev.currentMonth && prev.adminSettings?.recurringIncome) {
         newPocketCash += prev.adminSettings.recurringIncome;
+        newPocketCashReceivedTotal += prev.adminSettings.recurringIncome;
       }
 
       return {
@@ -735,6 +750,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         currentYear: year,
         currentMonth: month,
         pocketCash: newPocketCash,
+        pocketCashReceivedTotal: newPocketCashReceivedTotal,
         savingsAccount: { ...prev.savingsAccount, balance: newSavingsBalance },
         fixedDeposits: updatedFDs
       };

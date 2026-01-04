@@ -108,8 +108,10 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
                 <span className="cagr-label">CAGR:</span>
                 <span className="cagr-value">{cagr}%</span>
               </div>
-              <div className="starting-amount">
-                Total Capital Invested: {formatCurrency(totalCapital)}
+
+
+              <div className="total-received" title="Host-controlled: initial pocket cash + recurring income">
+                Total Capital Received: {formatCurrency(gameState.pocketCashReceivedTotal || 0)}
               </div>
             </div>
 
@@ -177,8 +179,30 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
             </div>
           </div>
         ) : (
-          /* MULTIPLAYER MODE - Show leaderboard */
+          /* MULTIPLAYER MODE - Show leaderboard with personal stats */
           <div className="multiplayer-results">
+            {/* Personal Stats Card (same as solo mode) */}
+            <div className="final-networth-card">
+              <h2>Your Final Networth</h2>
+              <div className="networth-amount" title={`CAGR: ${cagr}%`}>
+                {formatCurrency(finalNetworth)}
+              </div>
+              <div className={`profit-display ${profit >= 0 ? 'positive' : 'negative'}`}>
+                <span className="profit-label">Total Profit:</span>
+                <span className="profit-amount">
+                  {profit >= 0 ? '+' : ''}{formatCurrency(profit)}
+                </span>
+                <span className="profit-percentage">({profitPercentage}%)</span>
+              </div>
+              <div className="cagr-display">
+                <span className="cagr-label">CAGR:</span>
+                <span className="cagr-value">{cagr}%</span>
+              </div>
+              <div className="total-received" title="Host-controlled: initial pocket cash + recurring income">
+                Total Capital Received: {formatCurrency(gameState.pocketCashReceivedTotal || 0)}
+              </div>
+            </div>
+
             <h2>🏆 Final Leaderboard</h2>
             <div className="leaderboard-table">
               {leaderboardData && leaderboardData.length > 0 ? (

@@ -53,17 +53,33 @@
   width: clamp(280px, 18vw, 320px);
   min-width: 280px;
   height: 100vh;
+  max-height: 100vh;
   background: rgba(0, 0, 0, 0.85);
   color: white;
-  padding: clamp(12px, 1.5vw, 20px);
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: clamp(12px, 1.5vw, 20px);
   border-right: 3px solid #FF9933;
   z-index: 10;
   flex-shrink: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.sidebar-fixed {
+  flex-shrink: 0;
+  padding: clamp(12px, 1.5vw, 20px);
+  padding-bottom: clamp(6px, 0.75vw, 10px);
+}
+
+.sidebar-scrollable {
+  flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  padding: 0 clamp(12px, 1.5vw, 20px) clamp(12px, 1.5vw, 20px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.5vw, 20px);
 }
 
 /* Tablet: Reduce sidebar width */
@@ -165,6 +181,46 @@
   margin: 0;
 }
 
+.total-received {
+  background: linear-gradient(135deg, #c49702, #09d6d6);
+  padding: clamp(8px, 1vw, 12px);
+  border-radius: clamp(6px, 0.6vw, 8px);
+  text-align: center;
+}
+
+.total-received-label {
+  font-size: clamp(11px, 1vw, 13px);
+  opacity: 0.9;
+  margin-bottom: 3px;
+  font-weight: bold;
+}
+
+.total-received-amount {
+  font-size: clamp(14px, 1.4vw, 18px);
+  font-weight: 700;
+}
+
+.flow-arrow {
+  font-size: clamp(1px, 1.6vw, 20px);
+  opacity: 0.8;
+  text-align: center;
+  animation: flowDown 1.5s ease-in-out infinite;
+  margin: 0;
+  padding: 0;
+  line-height: 0.5;
+}
+
+@keyframes flowDown {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(3px);
+    opacity: 1;
+  }
+}
+
 .pocket-cash {
   background: linear-gradient(135deg, #FF9933, #FF6600);
   padding: clamp(10px, 1.2vw, 15px);
@@ -182,6 +238,34 @@
 .pocket-amount {
   font-size: clamp(16px, 1.6vw, 20px);
   font-weight: 700;
+}
+
+.pocket-tooltip-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.pocket-tooltip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  bottom: -36px;
+  background: rgba(0,0,0,0.9);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+  z-index: 999;
+}
+
+.pocket-tooltip-wrapper:hover .pocket-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0px);
 }
 
 .net-worth {
@@ -222,27 +306,60 @@
 }
 
 .net-worth-pl {
-  font-size: clamp(11px, 1.1vw, 14px);
+  font-size: clamp(10px, 1.1vw, 10px);
   font-weight: 500;
 
 }
 
+.net-tooltip-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
 .net-worth-breakdown {
   position: absolute;
-  left: 100%;
-  top: 0;
-  margin-left: 15px;
-  background: rgba(0, 0, 0, 0.95);
-  border: 2px solid #667eea;
-  border-radius: 8px;
-  padding: 15px;
-  min-width: 220px;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  bottom: -36px;
+  background: rgb(0, 0, 0); /* match pocket tooltip */
+  border-radius: 6px;
+  padding: 10px;
+  min-width: 260px;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
   z-index: 9999;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  font-size: 12px; /* smaller, like pocket tooltip */
+}
+
+.net-tooltip-wrapper:hover .net-worth-breakdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0px);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 12px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+}
+.net-worth-breakdown .breakdown-title {
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.net-worth-breakdown .breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px; /* add horizontal padding for breathing room */
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent; /* remove boxed background */
+  margin-bottom: 6px; /* separate items visually without boxes */
+  border-radius: 6px;
+}
+
+.net-worth-breakdown .breakdown-item:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
 }
 
 .breakdown-title {
@@ -254,17 +371,9 @@
   padding-bottom: 8px;
 }
 
+/* Ensure other global breakdown-item rules don't conflict visually */
 .breakdown-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 0;
-  font-size: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.breakdown-item:last-child {
-  border-bottom: none;
+  background: transparent;
 }
 
 .breakdown-name {
@@ -275,7 +384,46 @@
 .breakdown-percentage {
   color: #667eea;
   font-weight: 700;
+}
+
+.breakdown-item.highlight {
+  background: linear-gradient(90deg, rgba(102,126,234,0.08), rgba(255,153,51,0.06));
+  border-radius: 6px;
+  padding: 6px 12px;
+  box-shadow: 0 8px 20px rgba(255, 209, 102, 0.08);
+  border-left: 4px solid #ffd166; /* golden accent */
+  position: relative;
+  z-index: 2;
+}
+
+.breakdown-item.highlight .breakdown-name {
+  color: #ffd166;
+  font-weight: 700;
+}
+
+.highlight-badge {
+  display: inline-block;
+  margin-left: 8px;
+  background: #ffd166;
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 12px;
+  vertical-align: middle;
+}
+
+.cagr {
   font-size: 13px;
+  font-weight: 700;
+  color: #ffd166;
+}
+
+.net-worth-breakdown .cagr {
+  margin-bottom: 8px;
+  color: #ffd166;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .leaderboard {
@@ -835,22 +983,22 @@
 }
 
 /* Sidebar scrollbar */
-.sidebar::-webkit-scrollbar {
+.sidebar-scrollable::-webkit-scrollbar {
   width: 8px;
 }
 
-.sidebar::-webkit-scrollbar-track {
+.sidebar-scrollable::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
 }
 
-.sidebar::-webkit-scrollbar-thumb {
+.sidebar-scrollable::-webkit-scrollbar-thumb {
   background: rgba(255, 153, 51, 0.5);
   border-radius: 10px;
   border: 2px solid transparent;
 }
 
-.sidebar::-webkit-scrollbar-thumb:hover {
+.sidebar-scrollable::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 153, 51, 0.7);
 }
 

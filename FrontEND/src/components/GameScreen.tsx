@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { GameState, AssetData, FDRate } from '../types';
 import { SavingsAccountCard } from './SavingsAccountCard';
 import { FixedDepositCard } from './FixedDepositCard';
@@ -7,10 +7,10 @@ import { AssetEducationModal } from './AssetEducationModal';
 import { MultiplayerLeaderboardSidebar } from './MultiplayerLeaderboardSidebar';
 import GameEndScreen from './GameEndScreen';
 import { loadCSV, parseAssetCSV, parseFDRates, getAssetPriceAtDate, getFDRateForYear } from '../utils/csvLoader';
-import { ASSET_UNLOCK_TIMELINE, STARTING_CASH, TOTAL_GAME_YEARS } from '../utils/constants';
+import { ASSET_UNLOCK_TIMELINE, TOTAL_GAME_YEARS } from '../utils/constants';
 import { ASSET_TIMELINE_DATA } from '../utils/assetUnlockCalculator';
 import { getEducationContent } from '../utils/assetEducation';
-import { calculateTotalCapital } from '../utils/networthCalculator';
+import { calculateTotalCapital, calculateCAGR } from '../utils/networthCalculator';
 import './GameScreen.css';
 
 interface GameScreenProps {
@@ -53,8 +53,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   isTransacting = false
 }) => {
   // Helper function to format numbers with commas (Indian numbering system)
-  const formatCurrency = (amount: number): string => {
-    const [integerPart, decimalPart] = amount.toFixed(2).split('.');
+  const formatCurrency = (amount: number, rounded: boolean = false): string => {
+    const roundedAmount = rounded ? Math.round(amount) : amount;
+    const [integerPart, decimalPart] = roundedAmount.toFixed(2).split('.');
 
     // Indian numbering: last 3 digits, then groups of 2
     let lastThree = integerPart.substring(integerPart.length - 3);
@@ -65,7 +66,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     }
 
     const formatted = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + lastThree;
-    return `${formatted}.${decimalPart}`;
+    return rounded ? formatted : `${formatted}.${decimalPart}`;
   };
 
   // Dynamic asset data storage
@@ -77,9 +78,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const [currentQuizCategory, setCurrentQuizCategory] = useState<string | null>(null);
   const [quizEnabled, setQuizEnabled] = useState(true); // Track if quiz should be shown
 
-  // Ref for networth card positioning
-  const networthRef = useRef<HTMLDivElement>(null);
-  const [networthTooltipStyle, setNetworthTooltipStyle] = useState<React.CSSProperties>({});
+  // Net worth tooltip uses same wrapper/hover behavior as pocket tooltip
+  // (No manual positioning required)
 
   const currentYear = gameState.currentYear;
   const selectedAssets = gameState.selectedAssets;
@@ -571,10 +571,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     <div className="game-screen">
       {/* Left Sidebar */}
       <div className="sidebar">
-        <div className="logo-banner">
-          <h1 className="game-logo">BULL RUN</h1>
+        <div className="sidebar-fixed">
+          <div className="logo-banner">
+            <h1 className="game-logo">BULL RUN</h1>
+          </div>
         </div>
 
+        <div className="sidebar-scrollable">
         <div className="game-info">
           <p className="quote">
             {gameState.yearlyQuotes && gameState.yearlyQuotes[gameState.currentYear - 1]
@@ -583,11 +586,16 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           </p>
         </div>
 
+        <div className="total-received">
+          <div className="total-received-label">Total Received</div>
+          <div className="total-received-amount">₹{formatCurrency(gameState.pocketCashReceivedTotal || 0, true)}</div>
+        </div>
+<div className="flow-arrow">↓</div>
         <div className="pocket-cash">
           <div className="pocket-label">Pocket Cash</div>
-          <div className="pocket-amount">₹{formatCurrency(gameState.pocketCash)}</div>
+          <div className="pocket-amount">₹{formatCurrency(gameState.pocketCash, true)}</div>
         </div>
-
+<div className="flow-arrow">↓</div>
         {/* Net Worth Section */}
         {(() => {
           // Use pre-calculated networth from useMemo (optimization - no duplicate calculation)
@@ -596,18 +604,19 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
           // Build breakdown array for display (using pre-calculated values)
           if (netWorth > 0) {
-            if (networthData.breakdown.cash > 0) {
-              breakdown.push({
-                name: 'Pocket Cash',
-                value: networthData.breakdown.cash,
-                percentage: (networthData.breakdown.cash / netWorth) * 100
-              });
-            }
+            // NOTE: Pocket Cash intentionally excluded from the Portfolio Breakdown
             if (networthData.breakdown.savings > 0) {
               breakdown.push({
                 name: 'Savings',
                 value: networthData.breakdown.savings,
                 percentage: (networthData.breakdown.savings / netWorth) * 100
+              });
+            }
+            if (networthData.breakdown.fixedDeposits > 0) {
+              breakdown.push({
+                name: 'Fixed Deposits',
+                value: networthData.breakdown.fixedDeposits,
+                percentage: (networthData.breakdown.fixedDeposits / netWorth) * 100
               });
             }
             if (networthData.breakdown.gold > 0) {
@@ -659,34 +668,83 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           const gainFromStart = netWorth - totalCapital;
           const gainPercentage = totalCapital > 0 ? (gainFromStart / totalCapital) * 100 : 0;
 
+          // Compute invested amounts per category
+          const fdInvested = (gameState.fixedDeposits || []).reduce((s, fd) => s + (fd.amount || 0), 0);
+          const investedMap: { [k: string]: number } = {
+            'Fixed Deposits': fdInvested,
+            'Gold': (gameState.holdings.physicalGold.totalInvested || 0) + (gameState.holdings.digitalGold.totalInvested || 0),
+            'Funds': (gameState.holdings.indexFund.totalInvested || 0) + (gameState.holdings.mutualFund.totalInvested || 0),
+            'Stocks': Object.values(gameState.holdings.stocks || {}).reduce((s: number, h: any) => s + (h.totalInvested || 0), 0),
+            'Crypto': Object.values(gameState.holdings.crypto || {}).reduce((s: number, h: any) => s + (h.totalInvested || 0), 0),
+            'Commodity': gameState.holdings.commodity.totalInvested || 0,
+            'REITs': Object.values(gameState.holdings.reits || {}).reduce((s: number, h: any) => s + (h.totalInvested || 0), 0)
+          };
+
+          // Build items enriched with invested & pnl (only for tradeable assets with totalInvested)
+          const items = breakdown.map(item => {
+            const invested = investedMap[item.name] || 0;
+            const pnl = invested > 0 ? item.value - invested : 0;
+            const pnlPercent = invested > 0 ? (pnl / invested) * 100 : 0;
+            return { ...item, invested, pnl, pnlPercent };
+          });
+
+          // Determine highlight: prefer tradeable assets (not Savings/FD) with highest positive P&L %; else largest holding
+          const tradeableAssets = ['Gold', 'Funds', 'Stocks', 'Crypto', 'Commodity', 'REITs'];
+          const tradeableItems = items.filter((it: any) => tradeableAssets.includes(it.name) && it.invested > 0 && it.pnl > 0);
+          let highlightName: string | null = null;
+          let isTopPerformer = false;
+          if (tradeableItems.length > 0) {
+            const maxPnlEntry = tradeableItems.reduce((best: any, it: any) => it.pnlPercent > best.pnlPercent ? it : best);
+            highlightName = maxPnlEntry.name;
+            isTopPerformer = true;
+          } else {
+            const maxValueEntry = items.reduce((best: any, it: any) => !best || it.value > best.value ? it : best, null as any);
+            highlightName = maxValueEntry?.name || null;
+          }
+
+          // Compute CAGR display using total capital and years elapsed
+          const totalMonths = (gameState.currentYear - 1) * 12 + gameState.currentMonth;
+          const yearsElapsed = Math.max(0.0001, totalMonths / 12); // avoid divide-by-zero
+          const cagr = calculateCAGR(totalCapital, netWorth, yearsElapsed);
+
           return (
-            <div
-              className="net-worth"
-              ref={networthRef}
-              onMouseEnter={() => {
-                if (networthRef.current) {
-                  const rect = networthRef.current.getBoundingClientRect();
-                  setNetworthTooltipStyle({
-                    top: `${rect.top}px`,
-                    left: `${rect.right + 15}px`,
-                  });
-                }
-              }}
-            >
+            <div className="net-worth">
               <div className="net-worth-label">Net Worth</div>
-              <div className="net-worth-amount">₹{formatCurrency(netWorth)}</div>
-              <div className="net-worth-pl" style={{ color: gainFromStart >= 0 ? '#48ff00ff' : 'rgba(208, 0, 0, 1)' }}>
-                {gainFromStart >= 0 ? '+' : ''}₹{formatCurrency(gainFromStart)} ({gainFromStart >= 0 ? '+' : ''}{gainPercentage.toFixed(2)}%)
+              <div className="net-tooltip-wrapper">
+                <div className="net-worth-amount">₹{formatCurrency(netWorth, true)}</div>
+
+                <div className="net-worth-breakdown">
+                  <div className="breakdown-title">Portfolio Breakdown</div>
+                  <div className="cagr">CAGR: {cagr.toFixed(2)}%</div>
+                  {(() => {
+                    // put highlighted item first so it appears at the top of the breakdown
+                    const displayItems = highlightName ? [items.find(i => i.name === highlightName)!, ...items.filter(i => i.name !== highlightName)] : items;
+                    const highlightReason = isTopPerformer ? 'Top Performer' : 'Largest Holding';
+
+                    return displayItems.map((item, idx) => (
+                      <div key={idx} className={`breakdown-item ${item.name === highlightName ? 'highlight' : ''}`}>
+                        <span className="breakdown-name">
+                          {item.name}
+                          {item.name === highlightName && (
+                            <span className="highlight-badge">{highlightReason}</span>
+                          )}
+                        </span>
+                        <span className="breakdown-percentage">
+                          ₹{formatCurrency(item.value)} ({item.percentage.toFixed(1)}%)
+                          {item.invested > 0 && (
+                            <span style={{ color: item.pnl >= 0 ? '#48ff00' : '#d00000', marginLeft: '8px', fontSize: '11px' }}>
+                              {item.pnl >= 0 ? '+' : ''}{item.pnlPercent.toFixed(1)}%
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    ));
+                  })()}
+                </div>
               </div>
 
-              <div className="net-worth-breakdown" style={networthTooltipStyle}>
-                <div className="breakdown-title">Portfolio Breakdown</div>
-                {breakdown.map((item, idx) => (
-                  <div key={idx} className="breakdown-item">
-                    <span className="breakdown-name">{item.name}</span>
-                    <span className="breakdown-percentage">{item.percentage.toFixed(1)}%</span>
-                  </div>
-                ))}
+              <div className="net-worth-pl" style={{ color: gainFromStart >= 0 ? '#48ff00ff' : 'rgba(208, 0, 0, 1)' }}>
+                {gainFromStart >= 0 ? '+' : ''}₹{formatCurrency(gainFromStart)} ({gainFromStart >= 0 ? '+' : ''}{gainPercentage.toFixed(2)}%)
               </div>
             </div>
           );
@@ -720,6 +778,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
         {/* Multiplayer Leaderboard */}
         {showLeaderboard && <MultiplayerLeaderboardSidebar />}
+        </div>
       </div>
 
       {/* Main Content */}

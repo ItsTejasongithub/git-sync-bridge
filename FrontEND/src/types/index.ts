@@ -3,6 +3,7 @@ export interface GameState {
   currentYear: number;
   currentMonth: number;
   pocketCash: number;
+  pocketCashReceivedTotal?: number; // cumulative pocket cash received since game start (includes initial pocket cash)
   savingsAccount: SavingsAccount;
   fixedDeposits: FixedDeposit[];
   holdings: Holdings;

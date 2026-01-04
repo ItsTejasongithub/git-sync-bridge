@@ -170,6 +170,14 @@
   opacity: 0.85;
 }
 
+.total-received {
+  margin-top: 8px;
+  font-size: 13px;
+  opacity: 0.95;
+  font-weight: 600;
+  color: #fdf903;
+}
+
 .portfolio-breakdown-card {
   background: linear-gradient(135deg, #f8f9fa, #e9ecef);
   padding: 20px;
