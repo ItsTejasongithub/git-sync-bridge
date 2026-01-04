@@ -100,6 +100,7 @@
   margin: 8px 0;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
   letter-spacing: 1px;
+  cursor: help;
 }
 
 .profit-display {
@@ -139,6 +140,28 @@
   font-size: 16px;
   opacity: 0.95;
   font-weight: 600;
+}
+
+.cagr-display {
+  margin: 10px 0;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 16px;
+}
+
+.cagr-label {
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.cagr-value {
+  font-weight: 700;
+  font-size: 18px;
 }
 
 .starting-amount {

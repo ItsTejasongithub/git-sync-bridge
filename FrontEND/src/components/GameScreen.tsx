@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { GameState, AssetData, FDRate } from '../types';
 import { SavingsAccountCard } from './SavingsAccountCard';
 import { FixedDepositCard } from './FixedDepositCard';
@@ -10,6 +10,7 @@ import { loadCSV, parseAssetCSV, parseFDRates, getAssetPriceAtDate, getFDRateFor
 import { ASSET_UNLOCK_TIMELINE, STARTING_CASH, TOTAL_GAME_YEARS } from '../utils/constants';
 import { ASSET_TIMELINE_DATA } from '../utils/assetUnlockCalculator';
 import { getEducationContent } from '../utils/assetEducation';
+import { calculateTotalCapital } from '../utils/networthCalculator';
 import './GameScreen.css';
 
 interface GameScreenProps {
@@ -75,6 +76,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const [showEducationModal, setShowEducationModal] = useState(false);
   const [currentQuizCategory, setCurrentQuizCategory] = useState<string | null>(null);
   const [quizEnabled, setQuizEnabled] = useState(true); // Track if quiz should be shown
+
+  // Ref for networth card positioning
+  const networthRef = useRef<HTMLDivElement>(null);
+  const [networthTooltipStyle, setNetworthTooltipStyle] = useState<React.CSSProperties>({});
 
   const currentYear = gameState.currentYear;
   const selectedAssets = gameState.selectedAssets;
@@ -282,6 +287,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       'MINDSPACE': 'REIT'
     };
 
+    // IMPORTANT: Wait for adminSettings to be available before checking quiz unlock
+    // This prevents race condition where quiz triggers before multiplayer settings are loaded
+    if (!adminSettings) {
+      return;
+    }
+
     // Build dynamic list of categories to check based on user's selected assets
     const categoriesToCheck = [
       'SAVINGS_AC', 'FIXED_DEPOSIT', 'PHYSICAL_GOLD', 'INDIAN_STOCKS',
@@ -332,7 +343,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         }
       }
     }
-  }, [currentYear, gameState.currentMonth, gameState.completedQuizzes, isAssetCategoryUnlocked, gameState.isPaused, onTogglePause, onQuizStarted, selectedAssets, showEducationModal]);
+  }, [currentYear, gameState.currentMonth, gameState.completedQuizzes, isAssetCategoryUnlocked, gameState.isPaused, onTogglePause, onQuizStarted, selectedAssets, showEducationModal, adminSettings]);
 
   // Handle quiz completion
   const handleQuizComplete = () => {
@@ -345,6 +356,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       if (gameState.isPaused && !showLeaderboard) {
         onTogglePause();
       }
+    } else {
+      setShowEducationModal(false);
     }
   };
 
@@ -437,11 +450,21 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     const savingsValue = gameState.savingsAccount.balance;
     currentValue += savingsValue;
 
-    // Fixed deposits
-    gameState.fixedDeposits.forEach(fd => {
-      const fdValue = fd.isMatured ? fd.amount * (1 + fd.interestRate / 100) : fd.amount;
-      currentValue += fdValue;
-    });
+// Fixed deposits (include time-weighted accrued interest for non-matured FDs)
+  let fdTotal = 0;
+  gameState.fixedDeposits.forEach(fd => {
+    if (fd.isMatured) {
+      fdTotal += fd.amount * (1 + fd.interestRate / 100);
+    } else {
+      const startYear = fd.startYear;
+      const startMonth = fd.startMonth;
+      let monthsElapsed = (gameState.currentYear - startYear) * 12 + (gameState.currentMonth - startMonth);
+      monthsElapsed = Math.max(0, Math.min(monthsElapsed, fd.duration));
+      const interestAccrued = (fd.amount * (fd.interestRate / 100)) * (monthsElapsed / fd.duration);
+      fdTotal += fd.amount + interestAccrued;
+    }
+  });
+  currentValue += fdTotal;
 
     // Gold
     const goldValue =
@@ -486,6 +509,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       breakdown: {
         cash: pocketCashValue,
         savings: savingsValue,
+        fixedDeposits: fdTotal,
         gold: goldValue,
         funds: fundsValue,
         stocks: stocksValue,
@@ -500,6 +524,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     gameState.fixedDeposits,
     gameState.holdings,
     gameState.currentMonth,
+    gameState.currentYear,
     physicalGoldPrice,
     digitalGoldPrice,
     fundPrice,
@@ -629,20 +654,32 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             }
           }
 
-          // Calculate percentage gain/loss based on actual starting cash (custom or default ₹1,00,000)
-          const actualStartingCash = gameState.adminSettings?.initialPocketCash || STARTING_CASH;
-          const gainFromStart = netWorth - actualStartingCash;
-          const gainPercentage = (gainFromStart / actualStartingCash) * 100;
+          // Calculate percentage gain/loss based on total capital (initial + recurring income)
+          const totalCapital = calculateTotalCapital(gameState);
+          const gainFromStart = netWorth - totalCapital;
+          const gainPercentage = totalCapital > 0 ? (gainFromStart / totalCapital) * 100 : 0;
 
           return (
-            <div className="net-worth">
+            <div
+              className="net-worth"
+              ref={networthRef}
+              onMouseEnter={() => {
+                if (networthRef.current) {
+                  const rect = networthRef.current.getBoundingClientRect();
+                  setNetworthTooltipStyle({
+                    top: `${rect.top}px`,
+                    left: `${rect.right + 15}px`,
+                  });
+                }
+              }}
+            >
               <div className="net-worth-label">Net Worth</div>
               <div className="net-worth-amount">₹{formatCurrency(netWorth)}</div>
               <div className="net-worth-pl" style={{ color: gainFromStart >= 0 ? '#48ff00ff' : 'rgba(208, 0, 0, 1)' }}>
                 {gainFromStart >= 0 ? '+' : ''}₹{formatCurrency(gainFromStart)} ({gainFromStart >= 0 ? '+' : ''}{gainPercentage.toFixed(2)}%)
               </div>
 
-              <div className="net-worth-breakdown">
+              <div className="net-worth-breakdown" style={networthTooltipStyle}>
                 <div className="breakdown-title">Portfolio Breakdown</div>
                 {breakdown.map((item, idx) => (
                   <div key={idx} className="breakdown-item">

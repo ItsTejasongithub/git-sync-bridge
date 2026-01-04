@@ -12,7 +12,7 @@ A 20-year financial investment simulation game where you learn to build wealth t
 
 ### Year-by-Year Asset Unlocks
 
-1. **Year 1**: Savings Account (0.4% PA interest)
+1. **Year 1**: Savings Account (2.5% PA interest)
 2. **Year 2**: Fixed Deposits (3-month, 1-year, 3-year options)
 3. **Year 3**: Physical Gold & Digital Gold
 4. **Year 4**: Index Funds OR Mutual Funds (choose one)
@@ -25,7 +25,7 @@ A 20-year financial investment simulation game where you learn to build wealth t
 
 #### Savings Account
 - Deposit/withdraw anytime
-- Earns 0.4% annual interest
+- Earns 2.5% annual interest
 - Safe but low returns
 
 #### Fixed Deposits

@@ -2,6 +2,28 @@ import { GameState, AssetData } from '../types';
 import { getAssetPriceAtDate } from './csvLoader';
 
 /**
+ * Calculate total capital invested (initial + recurring income)
+ */
+export function calculateTotalCapital(gameState: GameState): number {
+  const initialCash = gameState.adminSettings?.initialPocketCash || 100000;
+  const recurringIncome = gameState.adminSettings?.recurringIncome || 0;
+
+  // Count how many times recurring income was added (every 6 months)
+  const totalMonths = (gameState.currentYear - 1) * 12 + gameState.currentMonth;
+  const recurringPayments = Math.floor(totalMonths / 6);
+
+  return initialCash + (recurringIncome * recurringPayments);
+}
+
+/**
+ * Calculate CAGR (Compound Annual Growth Rate)
+ */
+export function calculateCAGR(initialValue: number, finalValue: number, years: number): number {
+  if (initialValue <= 0 || years <= 0) return 0;
+  return (Math.pow(finalValue / initialValue, 1 / years) - 1) * 100;
+}
+
+/**
  * Calculates the current net worth of a player based on their game state and current asset prices.
  * This is the authoritative calculation used for both display and leaderboard sync.
  */
@@ -18,12 +40,22 @@ export function calculateNetworth(
   // Add savings
   currentValue += gameState.savingsAccount.balance;
 
-  // Add FD values
+  // Add FD values with accrued interest
   gameState.fixedDeposits.forEach((fd) => {
-    const fdValue = fd.isMatured
-      ? fd.amount * (1 + fd.interestRate / 100)
-      : fd.amount;
-    currentValue += fdValue;
+    if (fd.isMatured) {
+      currentValue += fd.amount * (1 + fd.interestRate / 100);
+    } else {
+      // Calculate time-weighted interest for non-matured FDs
+      const startYear = fd.startYear;
+      const startMonth = fd.startMonth;
+      const currentYear = gameState.currentYear;
+      const currentMonth = gameState.currentMonth;
+      let monthsElapsed = (currentYear - startYear) * 12 + (currentMonth - startMonth);
+      monthsElapsed = Math.max(0, Math.min(monthsElapsed, fd.duration));
+      const totalMonths = fd.duration;
+      const interestAccrued = (fd.amount * (fd.interestRate / 100)) * (monthsElapsed / totalMonths);
+      currentValue += fd.amount + interestAccrued;
+    }
   });
 
   // Physical Gold
@@ -174,9 +206,28 @@ export function calculatePortfolioBreakdown(
     reitsValue += gameState.holdings.reits['MINDSPACE'].quantity * price;
   }
 
+  // Calculate FD value with accrued interest
+  let fdValue = 0;
+  gameState.fixedDeposits.forEach((fd) => {
+    if (fd.isMatured) {
+      fdValue += fd.amount * (1 + fd.interestRate / 100);
+    } else {
+      const startYear = fd.startYear;
+      const startMonth = fd.startMonth;
+      const currentYear = gameState.currentYear;
+      const currentMonth = gameState.currentMonth;
+      let monthsElapsed = (currentYear - startYear) * 12 + (currentMonth - startMonth);
+      monthsElapsed = Math.max(0, Math.min(monthsElapsed, fd.duration));
+      const totalMonths = fd.duration;
+      const interestAccrued = (fd.amount * (fd.interestRate / 100)) * (monthsElapsed / totalMonths);
+      fdValue += fd.amount + interestAccrued;
+    }
+  });
+
   return {
     cash: gameState.pocketCash,
     savings: gameState.savingsAccount.balance,
+    fixedDeposits: fdValue,
     gold: goldValue,
     funds: fundsValue,
     stocks: stocksValue,

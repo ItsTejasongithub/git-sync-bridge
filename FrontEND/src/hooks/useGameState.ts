@@ -52,6 +52,8 @@ export const useGameState = (isMultiplayer: boolean = false) => {
   // Track if a transaction is in progress to prevent race conditions
   const transactionInProgress = useRef(false);
   const pendingTimeUpdate = useRef<{year: number; month: number} | null>(null);
+  // Forward declare updateTime so it can be referenced earlier (see finishTransaction)
+  let updateTime: ((year: number, month: number) => void) | undefined;
 
   // Track a reactive flag for UI to disable controls while a transaction is pending
   const [isTransactionPending, setIsTransactionPending] = useState(false);
@@ -652,7 +654,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
   }, []);
 
   // Update time from external source (for multiplayer)
-  const updateTime = useCallback((year: number, month: number) => {
+  updateTime = useCallback((year: number, month: number) => {
     // If a transaction is in progress, defer the time update
     if (transactionInProgress.current) {
       pendingTimeUpdate.current = { year, month };

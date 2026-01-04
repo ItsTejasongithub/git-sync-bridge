@@ -40,7 +40,7 @@ Your financial investment game is now fully set up and running!
 
 #### 1. Savings Account (Year 1)
 - Deposit/Withdraw functionality
-- 0.4% annual interest (auto-calculated monthly)
+- 2.5% annual interest (auto-calculated monthly)
 - MAX button for quick transactions
 - Real-time balance updates
 
@@ -216,7 +216,7 @@ npm run preview
 - Total: 20 years = 240 months = 720 seconds (~12 minutes)
 
 ### Interest Calculations
-- **Savings**: 0.4% annual = 0.4/12 = 0.033% monthly
+- **Savings**: 2.5% annual = 2.5/12 ≈ 0.2083% monthly
 - **FD**: Based on historical rates, calculated at maturity
 
 ### Asset Prices

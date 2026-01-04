@@ -40,7 +40,6 @@ export const PlayerGameWrapper: React.FC = () => {
     // Use admin settings from roomInfo if available, otherwise fall back to server-provided adminSettings (if any).
     if (multiplayerGameState?.isStarted && gameState.mode === 'menu') {
       const adminToUse = roomInfo?.adminSettings ?? (multiplayerGameState as any).adminSettings ?? undefined;
-      console.log('🎮 Starting multiplayer game with settings:', adminToUse);
 
       // Use server-provided initial data (selectedAssets, unlock schedule, quotes) when available
       const initialData = {
@@ -119,25 +118,6 @@ export const PlayerGameWrapper: React.FC = () => {
     portfolioBreakdown: player.portfolioBreakdown
   }));
 
-  // Debug logging
-  React.useEffect(() => {
-    if (gameState.currentYear === 20 && !gameState.isStarted) {
-      console.log('🏆 Local game ended! Leaderboard data:', {
-        rawLeaderboard: leaderboard,
-        transformedLeaderboard: transformedLeaderboard
-      });
-    }
-  }, [gameState.currentYear, gameState.isStarted, leaderboard, transformedLeaderboard]);
-
-  // Also log when multiplayer state signals final year (debug)
-  React.useEffect(() => {
-    if (multiplayerGameState?.currentYear === 20 && multiplayerGameState?.isStarted === false) {
-      console.log('🏁 Multiplayer gameEnded event received (server):', {
-        multiplayerYear: multiplayerGameState.currentYear,
-        multiplayerMonth: multiplayerGameState.currentMonth
-      });
-    }
-  }, [multiplayerGameState?.currentYear, multiplayerGameState?.currentMonth, multiplayerGameState?.isStarted]);
 
   return (
     <div className="player-game-wrapper">

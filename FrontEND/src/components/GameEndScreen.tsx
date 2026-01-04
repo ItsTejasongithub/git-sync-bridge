@@ -1,7 +1,7 @@
 import React from 'react';
 import './GameEndScreen.css';
 import { GameState, AssetData } from '../types';
-import { calculateNetworth, calculatePortfolioBreakdown } from '../utils/networthCalculator';
+import { calculateNetworth, calculatePortfolioBreakdown, calculateTotalCapital, calculateCAGR } from '../utils/networthCalculator';
 
 interface GameEndScreenProps {
   gameState: GameState;
@@ -62,6 +62,7 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
     return {
       cash: gameState.pocketCash,
       savings: gameState.savingsAccount.balance,
+      fixedDeposits: gameState.fixedDeposits.reduce((sum, fd) => sum + fd.amount, 0),
       gold: holdings.physicalGold.totalInvested + holdings.digitalGold.totalInvested,
       funds: holdings.indexFund.totalInvested + holdings.mutualFund.totalInvested,
       stocks: Object.values(holdings.stocks).reduce((sum, h) => sum + h.totalInvested, 0),
@@ -71,10 +72,12 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
     };
   };
 
-  const startingCash = gameState.adminSettings?.initialPocketCash || 100000; // Starting amount
+  const totalCapital = calculateTotalCapital(gameState);
   const finalNetworth = calculateNetworth(gameState, assetDataMap, calendarYear);
-  const profit = finalNetworth - startingCash;
-  const profitPercentage = ((profit / startingCash) * 100).toFixed(2);
+  const profit = finalNetworth - totalCapital;
+  const profitPercentage = ((profit / totalCapital) * 100).toFixed(2);
+  const years = gameState.currentYear; // Total years in game
+  const cagr = calculateCAGR(totalCapital, finalNetworth, years).toFixed(2);
   const breakdown = calculatePortfolioBreakdown(gameState, assetDataMap, calendarYear);
   const investedBreakdown = getInvestedBreakdown();
 
@@ -91,7 +94,9 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
           <div className="solo-results">
             <div className="final-networth-card">
               <h2>Your Final Networth</h2>
-              <div className="networth-amount">{formatCurrency(finalNetworth)}</div>
+              <div className="networth-amount" title={`CAGR: ${cagr}%`}>
+                {formatCurrency(finalNetworth)}
+              </div>
               <div className={`profit-display ${profit >= 0 ? 'positive' : 'negative'}`}>
                 <span className="profit-label">Total Profit:</span>
                 <span className="profit-amount">
@@ -99,8 +104,12 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
                 </span>
                 <span className="profit-percentage">({profitPercentage}%)</span>
               </div>
+              <div className="cagr-display">
+                <span className="cagr-label">CAGR:</span>
+                <span className="cagr-value">{cagr}%</span>
+              </div>
               <div className="starting-amount">
-                Starting Cash: {formatCurrency(startingCash)}
+                Total Capital Invested: {formatCurrency(totalCapital)}
               </div>
             </div>
 

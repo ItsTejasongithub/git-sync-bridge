@@ -28,8 +28,6 @@ export const AssetEducationModal: React.FC<AssetEducationModalProps> = ({
   useEffect(() => {
     if (!isOpen || !content) return;
 
-    console.log('[AssetEducationModal] Opening with showQuiz =', showQuiz);
-
     setSelectedOption(null);
     setAttempts(0);
     setIsShaking(false);
@@ -49,6 +47,39 @@ export const AssetEducationModal: React.FC<AssetEducationModalProps> = ({
       setSelectedQuestionIndex(0);
     }
   }, [isOpen, content, questionIndex, showQuiz]);
+
+  // Auto-close after 5 seconds when quiz is disabled (notification mode)
+  // Using a ref to track if timer was already set to prevent re-triggering
+  const autoCloseTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    // Only start timer once when modal opens in notification mode
+    if (!isOpen || !content || showQuiz) {
+      // Clear any existing timer if modal closes
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+        autoCloseTimerRef.current = null;
+      }
+      return;
+    }
+
+    // Don't start a new timer if one is already running
+    if (autoCloseTimerRef.current) {
+      return;
+    }
+
+    autoCloseTimerRef.current = setTimeout(() => {
+      onComplete();
+      autoCloseTimerRef.current = null;
+    }, 5000);
+
+    return () => {
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+        autoCloseTimerRef.current = null;
+      }
+    };
+  }, [isOpen, content, showQuiz]);
 
 
 
@@ -144,14 +175,17 @@ export const AssetEducationModal: React.FC<AssetEducationModalProps> = ({
             )}
           </div>
         ) : (
-          // Show simple notification (no quiz)
+          // Show simple notification (no quiz) - auto-closes after 5 seconds
           <div className="notification-section">
             <div className="notification-icon">🎉</div>
             <p className="notification-text">
               Check your new asset in the game!
             </p>
+            <p className="auto-close-text">
+              (Auto-closing in 5 seconds)
+            </p>
             <button className="close-btn" onClick={onComplete}>
-              Close
+              Close Now
             </button>
           </div>
         )}

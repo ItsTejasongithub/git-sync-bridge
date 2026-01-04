@@ -1,7 +1,7 @@
 export const MONTH_DURATION_MS = 3000; // 3 seconds = 1 month
 export const TOTAL_GAME_YEARS = 20;
 export const STARTING_CASH = 100000; // Starting pocket cash in rupees
-export const SAVINGS_INTEREST_RATE = 0.004; // 0.4% per annum
+export const SAVINGS_INTEREST_RATE = 0.025; // 2.5% per annum
 export const GAME_START_YEAR = 2005; // Game year 1 maps to calendar year 2005
 
 // Financial quotes - one random quote per year
