@@ -71,15 +71,9 @@
 }
 
 .leaderboard-list-container.expanded {
-  /* Constrain height to ensure independent scrolling within sidebar */
-  max-height: 60vh;
+  max-height: none;
   margin-top: 8px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch; /* smooth scrolling on mobile */
-  padding-right: 6px; /* avoid hiding scrollbar over content */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 153, 51, 0.5) rgba(255, 255, 255, 0.05);
+  overflow: visible;
 } 
 
 .leaderboard-list {
