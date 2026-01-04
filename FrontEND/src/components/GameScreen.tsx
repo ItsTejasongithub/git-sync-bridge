@@ -604,7 +604,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
           // Build breakdown array for display (using pre-calculated values)
           if (netWorth > 0) {
-            // NOTE: Pocket Cash intentionally excluded from the Portfolio Breakdown
+            // Include Pocket Cash in breakdown
+            if (networthData.breakdown.cash > 0) {
+              breakdown.push({
+                name: 'Pocket Cash',
+                value: networthData.breakdown.cash,
+                percentage: (networthData.breakdown.cash / netWorth) * 100
+              });
+            }
             if (networthData.breakdown.savings > 0) {
               breakdown.push({
                 name: 'Savings',
