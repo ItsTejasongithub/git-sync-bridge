@@ -40,7 +40,7 @@ export const SavingsAccountCard: React.FC<SavingsAccountCardProps> = ({
 
   const handleMax = () => {
     const maxAmount = operation === 'deposit' ? pocketCash : balance;
-    setInputAmount(Math.floor(maxAmount).toString());
+    setInputAmount(maxAmount.toFixed(2));
   };
 
   const handleConfirm = () => {
