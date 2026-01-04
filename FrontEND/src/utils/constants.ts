@@ -90,7 +90,7 @@ export const AVAILABLE_MUTUAL_FUNDS = [
 // Available commodities (user selects one in Year 7)
 export const AVAILABLE_COMMODITIES = [
   'COTTON', 'WHEAT', 'CRUDEOIL_WTI', 'SILVER', 'NATURALGAS',
-  'COPPER', 'BRENT', 'ALUMINIUM'
+  'COPPER', 'BRENT'
 ];
 
 export const getAssetPath = (category: string, assetName: string): string => {

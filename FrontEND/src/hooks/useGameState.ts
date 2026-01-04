@@ -355,7 +355,8 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         pocketCash: prev.pocketCash - amount,
         savingsAccount: {
           ...prev.savingsAccount,
-          balance: prev.savingsAccount.balance + amount
+          balance: prev.savingsAccount.balance + amount,
+          totalDeposited: (prev.savingsAccount.totalDeposited || 0) + amount
         }
       };
     });
@@ -365,12 +366,20 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     setGameState(prev => {
       if (gameHasEnded(prev)) return prev;
       if (amount > prev.savingsAccount.balance) return prev;
+
+      // Reduce totalDeposited proportionally when withdrawing
+      const currentBalance = prev.savingsAccount.balance;
+      const currentDeposited = prev.savingsAccount.totalDeposited || currentBalance;
+      const withdrawalRatio = amount / currentBalance;
+      const newTotalDeposited = Math.max(0, currentDeposited - (currentDeposited * withdrawalRatio));
+
       return {
         ...prev,
         pocketCash: prev.pocketCash + amount,
         savingsAccount: {
           ...prev.savingsAccount,
-          balance: prev.savingsAccount.balance - amount
+          balance: prev.savingsAccount.balance - amount,
+          totalDeposited: newTotalDeposited
         }
       };
     });

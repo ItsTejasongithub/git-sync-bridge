@@ -677,7 +677,22 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
           // Compute invested amounts per category
           const fdInvested = (gameState.fixedDeposits || []).reduce((s, fd) => s + (fd.amount || 0), 0);
+
+          // For Savings: use totalDeposited if available
+          // If not tracked (old games), approximate using reverse compound interest
+          let savingsInvested = 0;
+          if (gameState.savingsAccount.totalDeposited !== undefined) {
+            savingsInvested = gameState.savingsAccount.totalDeposited;
+          } else if (gameState.savingsAccount.balance > 0) {
+            // Reverse compound interest: P = A / (1 + r/12)^months
+            const monthsElapsed = (gameState.currentYear - 1) * 12 + gameState.currentMonth;
+            const monthlyRate = gameState.savingsAccount.interestRate / 12;
+            savingsInvested = gameState.savingsAccount.balance / Math.pow(1 + monthlyRate, monthsElapsed);
+          }
+
           const investedMap: { [k: string]: number } = {
+            'Pocket Cash': 0, // Pocket cash has no P&L (it's just cash)
+            'Savings': savingsInvested,
             'Fixed Deposits': fdInvested,
             'Gold': (gameState.holdings.physicalGold.totalInvested || 0) + (gameState.holdings.digitalGold.totalInvested || 0),
             'Funds': (gameState.holdings.indexFund.totalInvested || 0) + (gameState.holdings.mutualFund.totalInvested || 0),

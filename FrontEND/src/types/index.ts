@@ -28,6 +28,7 @@ export interface SelectedAssets {
 export interface SavingsAccount {
   balance: number;
   interestRate: number; // 2.5% PA = 0.025
+  totalDeposited?: number; // Total amount deposited (withdrawals reduce this proportionally)
 }
 
 export interface FixedDeposit {
