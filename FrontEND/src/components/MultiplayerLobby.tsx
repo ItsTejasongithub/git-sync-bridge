@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMultiplayer } from '../contexts/MultiplayerContext';
-import { AdminSettingsPanel } from './AdminSettingsPanel';
 import { AdminSettings } from '../types';
+import { adminSettingsApi } from '../services/adminApi';
 import './MultiplayerLobby.css';
 
 interface MultiplayerLobbyProps {
@@ -24,7 +24,31 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ onBack }) =>
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [adminSettings, setAdminSettings] = useState<AdminSettings | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(false);
+
+  // Load global admin settings on mount
+  useEffect(() => {
+    loadAdminSettings();
+  }, []);
+
+  const loadAdminSettings = async () => {
+    setLoadingSettings(true);
+    const response = await adminSettingsApi.getSettings();
+    if (response.success && response.settings) {
+      setAdminSettings(response.settings);
+    } else {
+      // Use default settings if server is unavailable
+      setAdminSettings({
+        selectedCategories: ['BANKING', 'GOLD', 'STOCKS', 'FUNDS', 'CRYPTO', 'REIT', 'COMMODITIES'],
+        gameStartYear: 2005,
+        hideCurrentYear: false,
+        initialPocketCash: 100000,
+        recurringIncome: 50000,
+        enableQuiz: true,
+      });
+    }
+    setLoadingSettings(false);
+  };
 
   const handleCreateRoom = async () => {
     if (!playerName.trim()) return;
@@ -49,8 +73,6 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ onBack }) =>
     setMode('menu');
     setPlayerName('');
     setRoomCode('');
-    setAdminSettings(null);
-    setShowSettings(false);
   };
 
   // Not in a room - show menu
@@ -195,42 +217,31 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ onBack }) =>
             </div>
           </div>
 
-          {/* Admin Settings (Host Only) */}
-          {isHost && (
-            <div className="settings-section">
-              <h2>Game Settings</h2>
-              {!showSettings ? (
-                <button
-                  className="configure-button"
-                  onClick={() => setShowSettings(true)}
-                >
-                  {adminSettings ? 'EDIT SETTINGS' : 'CONFIGURE SETTINGS'}
-                </button>
-              ) : (
-                <div className="settings-panel">
-                  <AdminSettingsPanel
-                    onClose={() => setShowSettings(false)}
-                    onApply={(settings) => {
-                      setAdminSettings(settings);
-                      setShowSettings(false);
-                    }}
-                    initialSettings={adminSettings || undefined}
-                  />
-                </div>
-              )}
+          {/* Global Settings Info */}
+          <div className="settings-info">
+            <h2>Game Settings</h2>
+            {loadingSettings ? (
+              <p className="loading-text">Loading global settings...</p>
+            ) : adminSettings ? (
+              <div className="settings-summary">
+                <p>✓ Using global admin settings</p>
+                <p className="settings-detail">
+                  {adminSettings.selectedCategories.length} asset categories enabled
+                </p>
+                <p className="settings-detail-small">
+                  Initial Cash: ₹{adminSettings.initialPocketCash.toLocaleString('en-IN')} |
+                  Recurring: ₹{adminSettings.recurringIncome.toLocaleString('en-IN')}
+                </p>
+                <p className="settings-note">
+                  Settings are managed globally by admins
+                </p>
+              </div>
+            ) : (
+              <p className="error-text">Failed to load settings</p>
+            )}
+          </div>
 
-              {adminSettings && !showSettings && (
-                <div className="settings-summary">
-                  <p>✓ Settings configured</p>
-                  <p className="settings-detail">
-                    {adminSettings.selectedCategories.length} asset categories
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Non-host waiting message */}
+          {/* Waiting message */}
           {!isHost && (
             <div className="waiting-message">
               <p>Waiting for host to start the game...</p>
@@ -246,8 +257,10 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ onBack }) =>
             onClick={handleStartGame}
             disabled={!canStart}
           >
-            {!adminSettings
-              ? 'CONFIGURE SETTINGS FIRST'
+            {loadingSettings
+              ? 'LOADING SETTINGS...'
+              : !adminSettings
+              ? 'SETTINGS UNAVAILABLE'
               : nonHostPlayerCount < 2
               ? 'WAITING FOR PLAYERS...'
               : 'START GAME'}

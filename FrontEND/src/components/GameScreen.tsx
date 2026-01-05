@@ -31,6 +31,8 @@ interface GameScreenProps {
   onReturnToMenu?: () => void; // Return to main menu from end screen
   leaderboardData?: Array<{ playerId: string; playerName: string; networth: number; portfolioBreakdown?: any; }>;
   isTransacting?: boolean; // When true, disable buy/sell UI to avoid duplicate transactions
+  playerName?: string; // Player name for logging
+  roomId?: string; // Room ID for multiplayer logging
 }
 
 export const GameScreen: React.FC<GameScreenProps> = ({
@@ -50,7 +52,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   showPauseButton = true,
   onReturnToMenu,
   leaderboardData,
-  isTransacting = false
+  isTransacting = false,
+  playerName,
+  roomId
 }) => {
   // Helper function to format numbers with commas (Indian numbering system)
   const formatCurrency = (amount: number, rounded: boolean = false): string => {
@@ -563,6 +567,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         calendarYear={calendarYear}
         leaderboardData={leaderboardData}
         onReturnToMenu={onReturnToMenu || (() => window.location.reload())}
+        playerName={playerName}
+        roomId={roomId}
       />
     );
   }

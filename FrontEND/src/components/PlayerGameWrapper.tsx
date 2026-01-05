@@ -118,6 +118,10 @@ export const PlayerGameWrapper: React.FC = () => {
     portfolioBreakdown: player.portfolioBreakdown
   }));
 
+  // Get player name and room ID for logging
+  const playerName = currentPlayer?.name || 'Unknown Player';
+  const roomId = roomInfo?.roomId;
+
 
   return (
     <div className="player-game-wrapper">
@@ -148,6 +152,9 @@ export const PlayerGameWrapper: React.FC = () => {
         leaderboardData={transformedLeaderboard}
         // Pass transaction state so asset cards can disable while a transaction is pending
         isTransacting={isTransactionPending}
+        // Pass player info for logging
+        playerName={playerName}
+        roomId={roomId}
       />
     </div>
   );

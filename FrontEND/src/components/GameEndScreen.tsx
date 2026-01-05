@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import './GameEndScreen.css';
 import { GameState, AssetData } from '../types';
 import { calculateNetworth, calculatePortfolioBreakdown, calculateTotalCapital, calculateCAGR } from '../utils/networthCalculator';
+import { playerLogsApi } from '../services/adminApi';
 
 interface GameEndScreenProps {
   gameState: GameState;
@@ -22,6 +23,8 @@ interface GameEndScreenProps {
     };
   }>;
   onReturnToMenu: () => void;
+  playerName?: string;
+  roomId?: string;
 }
 
 const GameEndScreen: React.FC<GameEndScreenProps> = ({
@@ -31,8 +34,11 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
   calendarYear,
   leaderboardData,
   onReturnToMenu,
+  playerName,
+  roomId,
 }) => {
   const [isPortfolioExpanded, setIsPortfolioExpanded] = React.useState(false);
+  const hasLoggedRef = useRef(false); // Prevent double logging
 
   const getAssetCategoryColor = (category: string): string => {
     const colors: { [key: string]: string } = {
@@ -80,6 +86,41 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
   const cagr = calculateCAGR(totalCapital, finalNetworth, years).toFixed(2);
   const breakdown = calculatePortfolioBreakdown(gameState, assetDataMap, calendarYear);
   const investedBreakdown = getInvestedBreakdown();
+
+  // Log game results when component mounts (only once)
+  useEffect(() => {
+    if (hasLoggedRef.current) return;
+
+    // Only log if we have player name and admin settings
+    if (playerName && gameState.adminSettings) {
+      hasLoggedRef.current = true;
+
+      // Calculate game duration in minutes
+      const gameDuration = gameState.gameStartTime
+        ? Math.round((Date.now() - gameState.gameStartTime) / 60000)
+        : undefined;
+
+      playerLogsApi.logGame({
+        gameMode: isMultiplayer ? 'multiplayer' : 'solo',
+        playerName: playerName,
+        roomId: roomId,
+        finalNetworth: finalNetworth,
+        finalCAGR: parseFloat(cagr),
+        profitLoss: profit,
+        portfolioBreakdown: breakdown,
+        adminSettings: gameState.adminSettings,
+        gameDurationMinutes: gameDuration,
+      }).then(response => {
+        if (response.success) {
+          console.log('Game logged successfully:', response.logId);
+        } else {
+          console.error('Failed to log game:', response.message);
+        }
+      }).catch(error => {
+        console.error('Error logging game:', error);
+      });
+    }
+  }, [playerName, gameState.adminSettings, isMultiplayer, roomId, finalNetworth, cagr, profit, breakdown, gameState.gameStartTime]);
 
   return (
     <div className="game-end-screen">

@@ -9,18 +9,27 @@
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit"
   },
-  "keywords": ["game", "multiplayer", "socket.io", "finance"],
+  "keywords": [
+    "game",
+    "multiplayer",
+    "socket.io",
+    "finance"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
     "express": "^4.18.2",
     "socket.io": "^4.7.2",
-    "cors": "^2.8.5"
+    "sql.js": "^1.13.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.10.6",
-    "@types/cors": "^2.8.17",
+    "@types/sql.js": "^1.4.9",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   }

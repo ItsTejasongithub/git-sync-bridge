@@ -24,7 +24,12 @@
       "Bash(rd /S /Q .git)",
       "Bash(git remote add:*)",
       "Bash(git push:*)",
-      "Bash(git remote set-url:*)"
+      "Bash(git remote set-url:*)",
+      "Bash(npm install:*)",
+      "Bash(sqlite3:*)",
+      "Bash(node inspectDB.js:*)",
+      "Bash(node viewLogs.js:*)",
+      "Bash(del game.db)"
     ]
   }
 }

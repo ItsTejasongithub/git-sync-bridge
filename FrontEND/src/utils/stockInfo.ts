@@ -174,6 +174,41 @@ export const STOCK_INFO_DATABASE: { [key: string]: StockInfo } = {
     sector: 'Retail',
     description: 'Leading retail chain operating Westside, Zudio, and Star stores'
   },
+  'Indo National': {
+    fullName: 'Indo National Limited',
+    sector: 'Diversified',
+    description: 'Multi-business conglomerate with interests in trading and manufacturing'
+  },
+  'Zee Entertainment': {
+    fullName: 'Zee Entertainment Enterprises',
+    sector: 'Media & Entertainment',
+    description: 'Leading media and entertainment company with TV channels and digital platforms'
+  },
+  'Ashok Leyland': {
+    fullName: 'Ashok Leyland Limited',
+    sector: 'Automotive',
+    description: 'Major commercial vehicle manufacturer specializing in trucks and buses'
+  },
+  'ITI Limited': {
+    fullName: 'ITI Limited',
+    sector: 'Telecommunications Equipment',
+    description: 'Public sector telecom equipment manufacturer and IT solutions provider'
+  },
+  'CESC Limited': {
+    fullName: 'CESC Limited',
+    sector: 'Power & Utilities',
+    description: 'Integrated power utility company serving Kolkata and surrounding areas'
+  },
+  'Trident': {
+    fullName: 'Trident Limited',
+    sector: 'Textiles',
+    description: 'Leading manufacturer of home textiles, yarn, and paper products'
+  },
+  'Weizmann': {
+    fullName: 'Weizmann Forex Limited',
+    sector: 'Financial Services',
+    description: 'Foreign exchange and money transfer service provider'
+  },
   'TCS': {
     fullName: 'Tata Consultancy Services',
     sector: 'Information Technology',
@@ -199,6 +234,11 @@ export const STOCK_INFO_DATABASE: { [key: string]: StockInfo } = {
     sector: 'Cement',
     description: 'Largest cement manufacturer in India'
   },
+  'HFCL': {
+    fullName: 'HFCL Limited',
+    sector: 'Telecommunications Equipment',
+    description: 'Technology enterprise providing telecom and defense equipment solutions'
+  },
   'JSWSTEEL': {
     fullName: 'JSW Steel Limited',
     sector: 'Metals & Mining',
@@ -209,15 +249,80 @@ export const STOCK_INFO_DATABASE: { [key: string]: StockInfo } = {
     sector: 'Automotive',
     description: 'Largest passenger car manufacturer in India'
   },
+  'Subex': {
+    fullName: 'Subex Limited',
+    sector: 'Information Technology',
+    description: 'Provider of telecom analytics and revenue assurance solutions'
+  },
+  'UCO Bank': {
+    fullName: 'UCO Bank',
+    sector: 'Banking & Finance',
+    description: 'Public sector bank with pan-India presence and international operations'
+  },
+  'Jindal Stainless': {
+    fullName: 'Jindal Stainless Limited',
+    sector: 'Metals & Mining',
+    description: 'Leading stainless steel manufacturer in India'
+  },
+  'Indiabulls Real Estate': {
+    fullName: 'Indiabulls Real Estate Limited',
+    sector: 'Real Estate',
+    description: 'Real estate development company focused on residential and commercial projects'
+  },
   'NTPC': {
     fullName: 'NTPC Limited',
     sector: 'Power Generation',
     description: 'Largest power generation company in India'
   },
+  'JP Power Ventures': {
+    fullName: 'Jaiprakash Power Ventures',
+    sector: 'Power Generation',
+    description: 'Power generation company with hydroelectric and thermal projects'
+  },
+  'Saksoft': {
+    fullName: 'Saksoft Limited',
+    sector: 'Information Technology',
+    description: 'IT consulting and solutions company specializing in digital transformation'
+  },
+  'Yes Bank': {
+    fullName: 'Yes Bank Limited',
+    sector: 'Banking & Finance',
+    description: 'Private sector bank that faced crisis in 2020, now recovering'
+  },
+  'Suzlon Energy': {
+    fullName: 'Suzlon Energy Limited',
+    sector: 'Renewable Energy',
+    description: 'Wind turbine manufacturer facing financial challenges'
+  },
+  'GVK Power & Infra': {
+    fullName: 'GVK Power & Infrastructure',
+    sector: 'Infrastructure',
+    description: 'Infrastructure development company in power, airports, and energy sectors'
+  },
+  'Vakrangee': {
+    fullName: 'Vakrangee Limited',
+    sector: 'Technology',
+    description: 'Technology company providing banking and retail solutions'
+  },
   'TECHM': {
     fullName: 'Tech Mahindra Limited',
     sector: 'Information Technology',
     description: 'Leading IT services and consulting provider with telecom expertise'
+  },
+  'Vodafone Idea': {
+    fullName: 'Vodafone Idea Limited',
+    sector: 'Telecommunications',
+    description: 'Telecom operator struggling with debt and market share loss'
+  },
+  'Dish TV India': {
+    fullName: 'Dish TV India Limited',
+    sector: 'Media & Entertainment',
+    description: 'Direct-to-home satellite television service provider'
+  },
+  'Websol Energy Systems': {
+    fullName: 'Websol Energy Systems Limited',
+    sector: 'Renewable Energy',
+    description: 'Solar cell and module manufacturing company'
   },
   'POWERGRID': {
     fullName: 'Power Grid Corporation of India',
@@ -229,60 +334,136 @@ export const STOCK_INFO_DATABASE: { [key: string]: StockInfo } = {
     sector: 'Infrastructure',
     description: 'Largest private sector port and logistics company in India'
   },
+  'Reliance Power': {
+    fullName: 'Reliance Power Limited',
+    sector: 'Power Generation',
+    description: 'Power generation company with execution challenges'
+  },
+  'IRB Infrastructure': {
+    fullName: 'IRB Infrastructure Developers',
+    sector: 'Infrastructure',
+    description: 'Leading highway infrastructure developer and toll road operator'
+  },
+  'Adani Power': {
+    fullName: 'Adani Power Limited',
+    sector: 'Power Generation',
+    description: 'Private thermal power generation company'
+  },
+  'RattanIndia Power': {
+    fullName: 'RattanIndia Power Limited',
+    sector: 'Power Generation',
+    description: 'Independent power producer with thermal power plants'
+  },
+  'Hindustan Copper': {
+    fullName: 'Hindustan Copper Limited',
+    sector: 'Metals & Mining',
+    description: 'Public sector copper mining and smelting company'
+  },
+  'Manappuram Finance': {
+    fullName: 'Manappuram Finance Limited',
+    sector: 'Financial Services',
+    description: 'Gold loan and microfinance services provider'
+  },
+  'RattanIndia Enterprises': {
+    fullName: 'RattanIndia Enterprises Limited',
+    sector: 'Diversified',
+    description: 'Diversified company with interests in drones, e-vehicles, and fintech'
+  },
+  'Spacenet Enterprises': {
+    fullName: 'Spacenet Enterprises India',
+    sector: 'Technology',
+    description: 'Satellite and telecom infrastructure services provider'
+  },
+  'Brightcom Group': {
+    fullName: 'Brightcom Group Limited',
+    sector: 'Digital Marketing',
+    description: 'Digital advertising and marketing technology company'
+  },
   'INDIGO': {
     fullName: 'InterGlobe Aviation (IndiGo)',
     sector: 'Aviation',
     description: "India's largest airline by market share and fleet size"
+  },
+  'Quick Heal Technologies': {
+    fullName: 'Quick Heal Technologies Limited',
+    sector: 'Information Technology',
+    description: 'Cybersecurity solutions provider for individuals and enterprises'
+  },
+  'PNB Housing Finance': {
+    fullName: 'PNB Housing Finance Limited',
+    sector: 'Financial Services',
+    description: 'Housing finance company providing home loans and related services'
+  },
+  'Sanginita Chemicals': {
+    fullName: 'Sanginita Chemicals Limited',
+    sector: 'Chemicals',
+    description: 'Specialty chemicals manufacturer for pigments and dyes'
+  },
+  'NACL Industries': {
+    fullName: 'NACL Industries Limited',
+    sector: 'Chemicals',
+    description: 'Agrochemical and specialty chemical manufacturing company'
   },
   'SBILIFE': {
     fullName: 'SBI Life Insurance Company',
     sector: 'Insurance',
     description: 'Leading private life insurance company in India'
   },
-
-  // High-risk/Penny stocks
-  'Yes Bank': {
-    fullName: 'Yes Bank Limited',
-    sector: 'Banking & Finance',
-    description: 'Private sector bank that faced crisis in 2020, now recovering'
-  },
-  'Suzlon Energy': {
-    fullName: 'Suzlon Energy Limited',
-    sector: 'Renewable Energy',
-    description: 'Wind turbine manufacturer facing financial challenges'
-  },
-  'Vodafone Idea': {
-    fullName: 'Vodafone Idea Limited',
-    sector: 'Telecommunications',
-    description: 'Telecom operator struggling with debt and market share loss'
-  },
-  'Reliance Power': {
-    fullName: 'Reliance Power Limited',
-    sector: 'Power Generation',
-    description: 'Power generation company with execution challenges'
-  },
-  'Vakrangee': {
-    fullName: 'Vakrangee Limited',
-    sector: 'Technology',
-    description: 'Technology company providing banking and retail solutions'
-  },
-  'Ksolves India': {
-    fullName: 'Ksolves India Limited',
-    sector: 'Information Technology',
-    description: 'IT services company specializing in cloud and data solutions'
+  '5Paisa Capital': {
+    fullName: '5Paisa Capital Limited',
+    sector: 'Financial Services',
+    description: 'Discount brokerage and online trading platform'
   },
   'Vertoz': {
     fullName: 'Vertoz Advertising Limited',
     sector: 'Digital Marketing',
     description: 'Programmatic advertising and marketing technology company'
   },
-  'Jindal Stainless': {
-    fullName: 'Jindal Stainless Limited',
-    sector: 'Metals & Mining',
-    description: 'Leading stainless steel manufacturer in India'
+  'Indostar Capital Finance': {
+    fullName: 'IndoStar Capital Finance',
+    sector: 'Financial Services',
+    description: 'Non-banking finance company focused on SME and vehicle financing'
   },
-
-  // Default fallback for any stock not in database
+  'Vinny Overseas': {
+    fullName: 'Vinny Overseas Limited',
+    sector: 'Textiles',
+    description: 'Manufacturer and exporter of home furnishing textiles'
+  },
+  'Ujjivan Small Finance Bank': {
+    fullName: 'Ujjivan Small Finance Bank',
+    sector: 'Banking & Finance',
+    description: 'Small finance bank focused on microfinance and inclusive banking'
+  },
+  'Ksolves India': {
+    fullName: 'Ksolves India Limited',
+    sector: 'Information Technology',
+    description: 'IT services company specializing in cloud and data solutions'
+  },
+  'Railtel Corporation': {
+    fullName: 'RailTel Corporation of India',
+    sector: 'Telecommunications',
+    description: 'Public sector telecom infrastructure provider leveraging railway networks'
+  },
+  'MTAR Technologies': {
+    fullName: 'MTAR Technologies Limited',
+    sector: 'Defense & Aerospace',
+    description: 'Precision engineering solutions for nuclear, space, and defense sectors'
+  },
+  'Easy Trip Planners': {
+    fullName: 'Easy Trip Planners Limited',
+    sector: 'Travel & Hospitality',
+    description: 'Online travel company offering flight, hotel, and holiday bookings'
+  },
+  'One97 Communications (Paytm)': {
+    fullName: 'One97 Communications (Paytm)',
+    sector: 'Financial Technology',
+    description: 'Digital payments and financial services platform'
+  },
+  'Honasa Consumer': {
+    fullName: 'Honasa Consumer Limited',
+    sector: 'FMCG',
+    description: 'D2C beauty and personal care brand company (Mamaearth, The Derma Co)'
+  }
 };
 
 // Comprehensive asset information database (includes all tradeable assets)

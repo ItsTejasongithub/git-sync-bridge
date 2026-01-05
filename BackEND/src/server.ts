@@ -11,6 +11,9 @@ import {
   SocketData,
 } from './types';
 import * as os from 'os';
+import { initializeDatabase, closeDatabase } from './database/db';
+import adminRoutes from './routes/adminRoutes';
+import gameLogRoutes from './routes/gameLogRoutes';
 
 // Performance: Reduce logging for better performance
 const VERBOSE_LOGGING = false; // Set to true only for debugging
@@ -21,6 +24,9 @@ const httpServer = createServer(app);
 
 // CORS configuration for local network
 app.use(cors());
+
+// Parse JSON request bodies
+app.use(express.json());
 
 // Socket.io setup
 const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(
@@ -85,6 +91,12 @@ function getLocalNetworkIP(): string {
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'BullRun Server is running!' });
 });
+
+// Admin API routes
+app.use('/api/admin', adminRoutes);
+
+// Game logging API routes
+app.use('/api/game', gameLogRoutes);
 
 // DEV-ONLY: Trigger game end for all rooms or a specific room
 // Only enabled when NODE_ENV is not 'production' to avoid accidental use
@@ -259,8 +271,8 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       // Broadcast initial leaderboard so UI shows up immediately
       gameSyncManager.broadcastLeaderboard(roomId);
 
-      // Start server-side time progression (3 seconds = 1 month)
-      const MONTH_DURATION_MS = 3000;
+      // Start server-side time progression (5 seconds = 1 month)
+      const MONTH_DURATION_MS = 5000;
       const interval = gameSyncManager.startTimeProgression(roomId, MONTH_DURATION_MS);
       if (interval) {
         room.timeProgressionInterval = interval;
@@ -352,18 +364,44 @@ setInterval(() => {
   roomManager.cleanupOldRooms();
 }, 60 * 60 * 1000);
 
-// Start server
-const PORT = process.env.PORT || 3001;
-const localIP = getLocalNetworkIP();
+// Initialize database and start server
+async function startServer() {
+  try {
+    // Initialize database
+    await initializeDatabase();
+    console.log('✅ Database initialized successfully');
 
-httpServer.listen(PORT as number, '0.0.0.0', () => {
-  console.log('\n🎮 ════════════════════════════════════════════════════════');
-  console.log('   BULLRUN - Multiplayer Server');
-  console.log('   ════════════════════════════════════════════════════════');
-  console.log(`   Status: ✅ Running`);
-  console.log(`   Local:  http://localhost:${PORT}`);
-  console.log(`   Network: http://${localIP}:${PORT}`);
-  console.log('   ════════════════════════════════════════════════════════');
-  console.log('   📱 Share the Network URL with players on your network!');
-  console.log('   ════════════════════════════════════════════════════════\n');
+    const PORT = process.env.PORT || 3001;
+    const localIP = getLocalNetworkIP();
+
+    httpServer.listen(PORT as number, '0.0.0.0', () => {
+      console.log('\n🎮 ════════════════════════════════════════════════════════');
+      console.log('   BULLRUN - Multiplayer Server');
+      console.log('   ════════════════════════════════════════════════════════');
+      console.log(`   Status: ✅ Running`);
+      console.log(`   Local:  http://localhost:${PORT}`);
+      console.log(`   Network: http://${localIP}:${PORT}`);
+      console.log('   ════════════════════════════════════════════════════════');
+      console.log('   📱 Share the Network URL with players on your network!');
+      console.log('   ════════════════════════════════════════════════════════\n');
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Handle graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\n\n🛑 Server shutting down...');
+  closeDatabase();
+  process.exit(0);
 });
+
+process.on('SIGTERM', () => {
+  console.log('\n\n🛑 Server shutting down...');
+  closeDatabase();
+  process.exit(0);
+});
+
+startServer();
