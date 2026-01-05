@@ -136,6 +136,10 @@ router.put('/settings', (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Invalid recurringIncome' });
     }
 
+    if (typeof settings.eventsCount !== 'number' || settings.eventsCount < 1 || settings.eventsCount > 20) {
+      return res.status(400).json({ success: false, message: 'Invalid eventsCount (must be a number between 1 and 20)'});
+    }
+
     const result = updateAdminSettings(settings);
 
     if (result.success) {

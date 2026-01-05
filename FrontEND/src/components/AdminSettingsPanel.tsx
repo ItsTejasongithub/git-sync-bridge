@@ -35,8 +35,17 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
   const [enableQuiz, setEnableQuiz] = useState(initialSettings?.enableQuiz !== undefined ? initialSettings.enableQuiz : true);
   const [initialPocketCash, setInitialPocketCash] = useState(initialSettings?.initialPocketCash || 100000);
   const [recurringIncome, setRecurringIncome] = useState(initialSettings?.recurringIncome || 50000);
+  const [eventsCount, setEventsCount] = useState(initialSettings?.eventsCount || 3);
   const [calculatedStartYear, setCalculatedStartYear] = useState<number>(2005);
   const [latestAssetYear, setLatestAssetYear] = useState<number>(2005);
+
+  // Refs for easier debugging / focusing
+  const eventsSelectRef = React.useRef<HTMLSelectElement | null>(null);
+
+  // Diagnostic log to help confirm running build has eventsCount control
+  useEffect(() => {
+    console.log('⚙️ AdminSettingsPanel mounted - eventsCount (UI):', eventsCount, 'initialSettings.eventsCount:', initialSettings?.eventsCount);
+  }, []);
 
   const isMultiplayerMode = !!onApply;
 
@@ -73,7 +82,8 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
       hideCurrentYear,
       initialPocketCash,
       recurringIncome,
-      enableQuiz
+      enableQuiz,
+      eventsCount
     };
 
     if (isMultiplayerMode && onApply) {
@@ -135,6 +145,12 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
           </p>
 
           <div className="financial-inputs">
+            <div className="info-row" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+              <strong>Random Life Events:</strong>
+              <span style={{ fontWeight: 700 }}>{eventsCount}</span>
+              <button type="button" className="btn-secondary" style={{ padding: '6px 10px', fontSize: '0.9rem' }} onClick={() => eventsSelectRef.current?.focus()}>Change</button>
+            </div>
+
             <div className="input-group">
               <label htmlFor="initialPocketCash">Initial Pocket Cash</label>
               <div className="input-with-prefix">
@@ -167,6 +183,21 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
                 />
               </div>
               <small>Amount added to pocket cash every 6 months</small>
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="eventsCount">Random Life Events</label>
+              <select
+                id="eventsCount"
+                ref={eventsSelectRef}
+                value={eventsCount}
+                onChange={(e) => setEventsCount(Number(e.target.value))}
+              >
+                {Array.from({ length: 20 }, (_, i) => i + 1).map(n => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+              <small>Number of random life events per player (1 - 20)</small>
             </div>
           </div>
         </div>

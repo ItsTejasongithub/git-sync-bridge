@@ -220,7 +220,17 @@
   font-size: 0.85rem;
   margin-top: 0.25rem;
 }
-
+/* Ensure select controls are visually consistent and clearly visible */
+.input-group select {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f7fafc;
+  color: #2d3748;
+  font-weight: 600;
+  outline: none;
+}
 .info-section {
   background: #edf2f7;
   padding: 1.5rem;

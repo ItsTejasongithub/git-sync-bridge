@@ -27,6 +27,11 @@ export const SavingsAccountCard: React.FC<SavingsAccountCardProps> = ({
   };
 
   const handleDeposit = () => {
+    // Block deposits while in debt - just shake
+    if (pocketCash < 0) {
+      triggerShake();
+      return;
+    }
     setOperation('deposit');
     setShowInput(true);
     setInputAmount('');
@@ -86,8 +91,13 @@ const handleConfirm = () => {
 
       {!showInput ? (
         <div className="button-group">
-          <button className="action-button deposit-btn" onClick={handleDeposit}>
-            Deposit
+          <button
+            className={`action-button deposit-btn ${pocketCash < 0 ? 'disabled' : ''}`}
+            onClick={handleDeposit}
+            disabled={pocketCash < 0}
+            title={pocketCash < 0 ? 'Cannot deposit while in debt' : ''}
+          >
+            {pocketCash < 0 ? '🔒 Deposit' : 'Deposit'}
           </button>
           <button className="action-button withdraw-btn" onClick={handleWithdraw}>
             Withdraw

@@ -203,6 +203,50 @@ export class GameSyncManager {
         month: newMonth,
       });
 
+      // Check per-player life events and emit targeted events
+      try {
+        const lifeMap = room.gameState.lifeEvents || {};
+        Object.keys(lifeMap).forEach(playerId => {
+          const events = lifeMap[playerId] || [];
+          events.forEach(ev => {
+            if (!ev.triggered && ev.gameYear === newYear && ev.gameMonth === newMonth) {
+              // Mark as triggered server-side to avoid duplicate triggers
+              ev.triggered = true;
+
+              // Apply event to the player's cash & networth on the server so broadcasts remain consistent
+              try {
+                const player = room.players.get(playerId);
+                if (player) {
+                  const available = player.portfolioBreakdown?.cash || 0;
+                  const required = ev.amount < 0 ? Math.abs(ev.amount) : 0;
+                  const status = available >= required ? 'ENOUGH' : 'INSUFFICIENT';
+
+                  // Log concise life event check (keeps server logs focused)
+                  console.log(`🧮 Life Event Check for ${playerId}: required=₹${required}, available=₹${available}, status=${status}`);
+
+                  // Apply amount
+                  player.portfolioBreakdown.cash = (player.portfolioBreakdown.cash || 0) + ev.amount;
+                  player.networth = (player.networth || 0) + ev.amount;
+                }
+              } catch (err) {
+                console.error('Error applying life event to player state:', err);
+              }
+
+              // Emit only to the target player (socket id == playerId) and include post-event cash for client sync
+              try {
+                const postPocketCash = room.players.get(playerId)?.portfolioBreakdown?.cash ?? undefined;
+                this.io.to(playerId).emit('lifeEventTriggered', { event: ev, postPocketCash });
+                console.log(`🔔 Life event emitted for player ${playerId} in room ${roomId}: ${ev.message} (${ev.amount})`);
+              } catch (err) {
+                console.warn('Failed to emit lifeEventTriggered to', playerId, err);
+              }
+            }
+          });
+        });
+      } catch (err) {
+        console.error('Error while processing life events:', err);
+      }
+
       // Also broadcast full game state so clients can react to any state changes (asset unlocks, quotes, etc.)
       this.broadcastGameState(roomId);
 

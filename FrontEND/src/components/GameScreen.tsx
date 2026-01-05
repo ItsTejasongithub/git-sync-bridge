@@ -6,11 +6,13 @@ import { TradeableAssetCard } from './TradeableAssetCard';
 import { AssetEducationModal } from './AssetEducationModal';
 import { MultiplayerLeaderboardSidebar } from './MultiplayerLeaderboardSidebar';
 import GameEndScreen from './GameEndScreen';
+import { LifeEventPopup } from './LifeEventPopup';
 import { loadCSV, parseAssetCSV, parseFDRates, getAssetPriceAtDate, getFDRateForYear } from '../utils/csvLoader';
 import { ASSET_UNLOCK_TIMELINE, TOTAL_GAME_YEARS } from '../utils/constants';
 import { ASSET_TIMELINE_DATA } from '../utils/assetUnlockCalculator';
 import { getEducationContent } from '../utils/assetEducation';
 import { calculateTotalCapital, calculateCAGR } from '../utils/networthCalculator';
+import { TotalReceivedBreakdown } from './TotalReceivedBreakdown';
 import './GameScreen.css';
 
 interface GameScreenProps {
@@ -33,6 +35,8 @@ interface GameScreenProps {
   isTransacting?: boolean; // When true, disable buy/sell UI to avoid duplicate transactions
   playerName?: string; // Player name for logging
   roomId?: string; // Room ID for multiplayer logging
+  lifeEventPopup?: any; // Active life event to display
+  clearLifeEventPopup?: () => void;
 }
 
 export const GameScreen: React.FC<GameScreenProps> = ({
@@ -54,7 +58,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   leaderboardData,
   isTransacting = false,
   playerName,
-  roomId
+  roomId,
+  lifeEventPopup,
+  clearLifeEventPopup
 }) => {
   // Helper function to format numbers with commas (Indian numbering system)
   const formatCurrency = (amount: number, rounded: boolean = false): string => {
@@ -573,8 +579,18 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     );
   }
 
+  // Debug: log popup prop changes
+  useEffect(() => {
+    if (lifeEventPopup) {
+      console.log('🪟 GameScreen: lifeEventPopup prop set', lifeEventPopup);
+    } else {
+      // console.log('🪟 GameScreen: lifeEventPopup cleared');
+    }
+  }, [lifeEventPopup]);
+
   return (
     <div className="game-screen">
+      {lifeEventPopup && <LifeEventPopup event={lifeEventPopup} onClose={() => { if (clearLifeEventPopup) clearLifeEventPopup(); }} />}
       {/* Left Sidebar */}
       <div className="sidebar">
         <div className="sidebar-fixed">
@@ -592,13 +608,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           </p>
         </div>
 
-        <div className="total-received">
-          <div className="total-received-label">Total Received</div>
-          <div className="total-received-amount">₹{formatCurrency(gameState.pocketCashReceivedTotal || 0, true)}</div>
-        </div>
+        <TotalReceivedBreakdown
+          totalReceived={gameState.pocketCashReceivedTotal || 0}
+          cashTransactions={gameState.cashTransactions || []}
+          initialCash={gameState.adminSettings?.initialPocketCash || 0}
+        />
 <div className="flow-arrow">↓</div>
-        <div className="pocket-cash">
-          <div className="pocket-label">Pocket Cash</div>
+        <div className={`pocket-cash ${gameState.pocketCash < 0 ? 'debt' : ''}`}>
+          <div className="pocket-label">
+            Pocket Cash
+            {gameState.pocketCash < 0 && <span className="debt-indicator">You are in debt</span>}
+          </div>
           <div className="pocket-amount">₹{formatCurrency(gameState.pocketCash, true)}</div>
         </div>
 <div className="flow-arrow">↓</div>

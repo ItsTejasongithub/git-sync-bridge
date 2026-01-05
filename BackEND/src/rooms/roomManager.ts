@@ -205,6 +205,30 @@ export class RoomManager {
     return { success: true };
   }
 
+  // Generate per-player life events and store in room.gameState.lifeEvents
+  generateLifeEventsForRoom(roomId: string, eventsCount: number): boolean {
+    const room = this.rooms.get(roomId);
+    if (!room) return false;
+
+    const { gameState } = room;
+    const mapping: { [playerId: string]: any[] } = {};
+    const { generateLifeEvents } = require('../game/lifeEvents');
+
+    room.players.forEach((_, playerId) => {
+      try {
+        const events = generateLifeEvents(eventsCount, gameState.assetUnlockSchedule);
+        mapping[playerId] = events;
+        console.log(`✨ Generated ${events.length} life events for player ${playerId} in room ${roomId}`);
+      } catch (err) {
+        console.error('Failed to generate life events for player', playerId, err);
+        mapping[playerId] = [];
+      }
+    });
+
+    room.gameState.lifeEvents = mapping as any;
+    return true;
+  }
+
   updatePlayerState(playerId: string, networth: number, portfolioBreakdown: any): boolean {
     const room = this.getRoomByPlayerId(playerId);
     if (!room) return false;

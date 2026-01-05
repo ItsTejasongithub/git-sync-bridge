@@ -56,6 +56,12 @@ export const FixedDepositCard: React.FC<FixedDepositCardProps> = ({
     const amount = parseFloat(inputAmount);
     if (isNaN(amount) || amount <= 0) return;
 
+    // Block FD creation while in debt
+    if (pocketCash < 0) {
+      triggerShake();
+      return;
+    }
+
     if (amount > pocketCash) {
       triggerShake();
       return;
@@ -121,10 +127,18 @@ export const FixedDepositCard: React.FC<FixedDepositCardProps> = ({
 
       {fixedDeposits.length < 3 && !showInput && (
         <button
-          className="action-button create-fd-btn"
-          onClick={() => setShowInput(true)}
+          className={`action-button create-fd-btn ${pocketCash < 0 ? 'disabled' : ''}`}
+          onClick={() => {
+            if (pocketCash < 0) {
+              triggerShake();
+              return;
+            }
+            setShowInput(true);
+          }}
+          disabled={pocketCash < 0}
+          title={pocketCash < 0 ? 'Cannot create FD while in debt' : ''}
         >
-          Create FD
+          {pocketCash < 0 ? '🔒 Create FD' : 'Create FD'}
         </button>
       )}
 

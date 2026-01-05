@@ -1,9 +1,30 @@
+export interface LifeEvent {
+  id: string;
+  type: 'gain' | 'loss';
+  message: string;
+  amount: number; // positive for gains, negative for losses
+  gameYear: number; // 1..20
+  gameMonth: number; // 1..12
+  triggered?: boolean;
+}
+
+export interface CashTransaction {
+  id: string;
+  type: 'recurring_income' | 'life_event_gain' | 'life_event_loss';
+  amount: number; // positive for gains, negative for losses
+  message: string;
+  gameYear: number;
+  gameMonth: number;
+  timestamp: number; // ms since epoch for ordering
+}
+
 export interface GameState {
   mode: 'menu' | 'solo' | 'multi' | 'settings';
   currentYear: number;
   currentMonth: number;
   pocketCash: number;
   pocketCashReceivedTotal?: number; // cumulative pocket cash received since game start (includes initial pocket cash)
+  cashTransactions?: CashTransaction[]; // Track all cash inflows/outflows for breakdown display
   savingsAccount: SavingsAccount;
   fixedDeposits: FixedDeposit[];
   holdings: Holdings;
@@ -16,6 +37,8 @@ export interface GameState {
   yearlyQuotes?: string[]; // Array of quotes, one per year (shuffled at game start)
   completedQuizzes?: string[]; // Track which asset categories have completed their quiz
   quizQuestionIndices?: { [category: string]: number }; // Random question index per category for this session
+  // Solo mode uses an array of life events; multiplayer stores per-player events on server and emits triggers
+  lifeEvents?: LifeEvent[];
 }
 
 export interface SelectedAssets {
@@ -88,6 +111,7 @@ export interface AdminSettings {
   initialPocketCash: number; // Starting pocket cash amount
   recurringIncome: number; // Amount added to pocket cash every 6 months
   enableQuiz: boolean; // Enable/disable quiz on asset unlock
+  eventsCount?: number; // Number of random life events per player (min 1, max 20). Default: 3
 }
 
 export interface AssetUnlockSchedule {

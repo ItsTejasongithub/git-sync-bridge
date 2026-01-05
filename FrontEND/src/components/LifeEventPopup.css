@@ -1,0 +1,522 @@
+/* Overlay - Semi-transparent backdrop with blur */
+.life-event-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  animation: overlayFadeIn 0.3s ease-out;
+  padding: 20px;
+}
+
+.life-event-overlay.closing {
+  animation: overlayFadeOut 0.3s ease-out forwards;
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+}
+
+@keyframes overlayFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Main Card */
+.life-event-card {
+  background: linear-gradient(145deg, #ffffff, #f5f5f5);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(0, 0, 0, 0.1);
+  position: relative;
+  animation: cardSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center;
+}
+
+.life-event-card.closing {
+  animation: cardSlideOut 0.3s ease-out forwards;
+}
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes cardSlideOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+}
+
+/* Loss variant */
+.life-event-card.loss {
+  border-top: 4px solid #e74c3c;
+}
+
+/* Gain variant */
+.life-event-card.gain {
+  border-top: 4px solid #2ecc71;
+}
+
+/* Close Button */
+.life-event-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+  padding: 0;
+}
+
+.life-event-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+  transform: rotate(90deg);
+}
+
+.life-event-close:active {
+  transform: rotate(90deg) scale(0.95);
+}
+
+/* Header Section */
+.life-event-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.life-event-icon {
+  font-size: 48px;
+  line-height: 1;
+  animation: iconBounce 0.6s ease-out;
+}
+
+.life-event-icon.loss {
+  animation: iconShake 0.6s ease-out;
+}
+
+@keyframes iconBounce {
+  0% { transform: scale(0) rotate(-180deg); }
+  50% { transform: scale(1.2) rotate(10deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+@keyframes iconShake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.life-event-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+  flex: 1;
+}
+
+/* Message */
+.life-event-message {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #34495e;
+  margin: 0 0 24px 0;
+  font-weight: 500;
+}
+
+/* Amount Container */
+.life-event-amount-container {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: center;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.life-event-amount-container.loss {
+  border-color: rgba(231, 76, 60, 0.2);
+  background: linear-gradient(135deg, #ffe5e5, #ffd4d4);
+}
+
+.life-event-amount-container.gain {
+  border-color: rgba(46, 204, 113, 0.2);
+  background: linear-gradient(135deg, #e8f8f0, #d4f4e2);
+}
+
+.life-event-amount-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #7f8c8d;
+  margin-bottom: 8px;
+}
+
+.life-event-amount {
+  display: block;
+  font-size: 36px;
+  font-weight: 800;
+  animation: amountPulse 0.6s ease-out;
+}
+
+.life-event-amount.loss {
+  color: #e74c3c;
+}
+
+.life-event-amount.gain {
+  color: #2ecc71;
+}
+
+@keyframes amountPulse {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Status Section */
+.life-event-status {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  border: 2px solid #e9ecef;
+}
+
+.life-event-status.debt {
+  background: linear-gradient(135deg, #ffe5e5, #fff0f0);
+  border-color: #e74c3c;
+  animation: debtPulse 2s ease-in-out infinite;
+}
+
+.life-event-status.success {
+  background: linear-gradient(135deg, #e8f8f0, #f0fdf4);
+  border-color: #2ecc71;
+}
+
+@keyframes debtPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(231, 76, 60, 0);
+  }
+}
+
+.status-icon {
+  font-size: 32px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.status-content {
+  flex: 1;
+}
+
+.status-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.status-debt {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e74c3c;
+  margin-bottom: 16px;
+}
+
+.status-message {
+  font-size: 14px;
+  color: #34495e;
+  line-height: 1.5;
+}
+
+.status-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.status-action-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #34495e;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.action-icon {
+  font-size: 18px;
+}
+
+.status-note {
+  font-size: 12px;
+  color: #7f8c8d;
+  font-style: italic;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  text-align: center;
+}
+
+/* Dismiss Hint */
+.life-event-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #95a5a6;
+  font-style: italic;
+  margin-top: 8px;
+  opacity: 0.8;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .life-event-card {
+    padding: 24px;
+    max-width: 100%;
+  }
+
+  .life-event-header {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .life-event-icon {
+    font-size: 36px;
+  }
+
+  .life-event-title {
+    font-size: 20px;
+  }
+
+  .life-event-message {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  .life-event-amount {
+    font-size: 28px;
+  }
+
+  .life-event-amount-container {
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .life-event-status {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .status-icon {
+    font-size: 24px;
+  }
+
+  .status-title {
+    font-size: 14px;
+  }
+
+  .status-debt {
+    font-size: 16px;
+  }
+}
+
+/* Debt Recovery Specific Styles */
+.life-event-status.debt-recovery {
+  background: linear-gradient(135deg, #fff8e1, #fffef7);
+  border: 2px solid #ffc107;
+  padding: 24px;
+}
+
+.life-event-status.debt-recovery.cleared {
+  background: linear-gradient(135deg, #e8f8f0, #f0fdf4);
+  border-color: #2ecc71;
+  animation: successPulse 1.5s ease-in-out 3;
+}
+
+.life-event-status.debt-recovery.partial {
+  background: linear-gradient(135deg, #fff3e0, #fffaf0);
+  border-color: #ff9800;
+}
+
+@keyframes successPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(46, 204, 113, 0);
+  }
+}
+
+.recovery-icon {
+  font-size: 40px !important;
+  animation: celebrationBounce 1s ease-out 3;
+}
+
+@keyframes celebrationBounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-12px) scale(1.1);
+  }
+  60% {
+    transform: translateY(-6px) scale(1.05);
+  }
+}
+
+.recovery-title {
+  color: #2ecc71 !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  animation: titleGlow 2s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(46, 204, 113, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(46, 204, 113, 0.6);
+  }
+}
+
+.debt-recovery-details {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.recovery-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+.recovery-row.final {
+  font-size: 16px;
+  font-weight: 700;
+  padding-top: 12px;
+}
+
+.recovery-label {
+  color: #5f6368;
+  font-weight: 500;
+}
+
+.recovery-value {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.recovery-value.debt-amount {
+  color: #e74c3c;
+}
+
+.recovery-value.gain-amount {
+  color: #2ecc71;
+}
+
+.recovery-value.success-amount {
+  color: #2ecc71;
+  font-size: 18px;
+  animation: balanceHighlight 2s ease-in-out infinite;
+}
+
+@keyframes balanceHighlight {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.recovery-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ddd, transparent);
+  margin: 12px 0;
+}
+
+.recovery-message {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  padding: 12px;
+  background: rgba(46, 204, 113, 0.1);
+  border-radius: 6px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.debt-recovery.partial .recovery-message {
+  background: rgba(255, 152, 0, 0.1);
+}
+
+/* Print-friendly */
+@media print {
+  .life-event-overlay,
+  .life-event-card {
+    display: none;
+  }
+}

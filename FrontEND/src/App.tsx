@@ -24,7 +24,9 @@ function AppContent() {
     buyAsset,
     sellAsset,
     togglePause,
-    markQuizCompleted
+    markQuizCompleted,
+    lifeEventPopup,
+    clearLifeEventPopup
   } = useGameState();
 
   const { multiplayerMode } = useMultiplayer();
@@ -127,6 +129,8 @@ function AppContent() {
           onMarkQuizCompleted={markQuizCompleted}
           onReturnToMenu={backToMenu}
           playerName={currentPlayerName}
+          lifeEventPopup={lifeEventPopup}
+          clearLifeEventPopup={clearLifeEventPopup}
         />
       )}
 

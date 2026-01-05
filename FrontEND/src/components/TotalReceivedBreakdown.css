@@ -1,0 +1,453 @@
+/* Total Received Wrapper with Hover Breakdown */
+.total-received-wrapper {
+  position: relative;
+  background: linear-gradient(135deg, #c8ff01 0%, #08c7ce 100%);
+  border: 3px solid #4A8B4D;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.total-received-wrapper:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  border-color: #e5e905;
+}
+
+.total-received-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #072008;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+
+.total-received-amount {
+  font-size: 24px;
+  font-weight: 800;
+  color: #FEFDF8;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Breakdown Panel - Rendered via portal and positioned fixed so it sits above the UI */
+.breakdown-floating {
+  /* Position will be set inline (fixed) so we can place relative to trigger */
+  background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+  border: 3px solid #4A8B4D;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(74, 139, 77, 0.3);
+  z-index: 99999;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px) scale(0.99);
+  transition: all 0.18s cubic-bezier(0.34, 1.2, 0.64, 1);
+  pointer-events: none;
+  overflow: hidden; /* No internal scroll; show up to 6 items */
+  max-height: 90vh;
+  min-width: 280px;
+}
+
+.breakdown-floating.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Keep consistent responsive width behavior when panel is in floating mode */
+@media (max-width: 1400px) {
+  .breakdown-floating {
+    min-width: 320px;
+  }
+}
+
+@media (max-width: 800px) {
+  .breakdown-floating {
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+  }
+}
+
+/* Breakdown Header */
+.breakdown-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(74, 139, 77, 0.3);
+}
+
+.breakdown-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #5FA862;
+  margin: 0 0 4px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.breakdown-subtitle {
+  font-size: 12px;
+  color: #B8E6BA;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* Transactions List */
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* Newest at the top */
+  gap: 8px;
+  margin-bottom: 16px;
+  /* Scroll-for-more enabled on all screens; base max-height keeps panel bounded */
+  max-height: 420px; /* show several items, scroll for more */
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Compact mode: for screens with limited height (500-900px), show 3 visible items and make the list shorter but still scrollable. */
+.transactions-list.compact {
+  max-height: 220px; /* approximately 3 items */
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.transactions-list::-webkit-scrollbar,
+.transactions-list.compact::-webkit-scrollbar {
+  width: 8px;
+}
+
+.transactions-list::-webkit-scrollbar-thumb,
+.transactions-list.compact::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.06);
+  border-radius: 6px;
+  border: 1px solid rgba(74,139,77,0.06);
+}
+
+/* Final summary at top */
+.final-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(74, 139, 77, 0.08);
+}
+
+.final-label {
+  font-size: 13px;
+  color: #B8E6BA;
+  font-weight: 600;
+}
+
+.final-value {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.final-value.positive {
+  color: #48ff00;
+}
+
+.final-value.negative {
+  color: #e74c3c;
+}
+
+
+.no-transactions {
+  text-align: center;
+  padding: 40px 20px;
+  color: #B8E6BA;
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+/* Transaction Item */
+.transaction-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  animation: slideInFromBottom 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.transaction-item.gain {
+  border-color: rgba(72, 255, 0, 0.2);
+  background: linear-gradient(135deg, rgba(72, 255, 0, 0.08), rgba(72, 255, 0, 0.02));
+}
+
+.transaction-item.loss {
+  border-color: rgba(231, 76, 60, 0.2);
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.08), rgba(231, 76, 60, 0.02));
+}
+
+.transaction-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.transaction-item.gain:hover {
+  border-color: rgba(72, 255, 0, 0.4);
+  background: linear-gradient(135deg, rgba(72, 255, 0, 0.12), rgba(72, 255, 0, 0.04));
+}
+
+.transaction-item.loss:hover {
+  border-color: rgba(231, 76, 60, 0.4);
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.12), rgba(231, 76, 60, 0.04));
+}
+
+.transaction-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.transaction-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.transaction-message {
+  font-size: 13px;
+  font-weight: 600;
+  color: #FEFDF8;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.transaction-meta {
+  font-size: 11px;
+  color: #B8E6BA;
+  opacity: 0.7;
+}
+
+.transaction-amount {
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.transaction-amount.positive {
+  color: #48ff00;
+  text-shadow: 0 0 8px rgba(72, 255, 0, 0.4);
+}
+
+.transaction-amount.negative {
+  color: #e74c3c;
+  text-shadow: 0 0 8px rgba(231, 76, 60, 0.4);
+}
+
+/* Summary Section */
+.breakdown-summary {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.summary-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(74, 139, 77, 0.5), transparent);
+  margin: 12px 0;
+}
+
+.summary-divider.thick {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(74, 139, 77, 0.8), transparent);
+  margin: 16px 0;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  gap: 12px;
+}
+
+.summary-row.life-events-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.summary-note {
+  font-size: 11px;
+  color: #B8E6BA;
+  opacity: 0.7;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.pocket-formula {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #B8E6BA;
+  opacity: 0.9;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(74,139,77,0.06);
+}
+
+.breakdown-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+  margin: 14px 0;
+}
+
+.breakdown-note {
+  font-size: 12px;
+  color: #B8E6BA;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+
+.summary-row.total-row {
+  padding-top: 12px;
+}
+
+.summary-label {
+  font-size: 13px;
+  color: #B8E6BA;
+  font-weight: 600;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.summary-sublabel {
+  font-size: 11px;
+  color: #B8E6BA;
+  font-weight: 400;
+  opacity: 0.6;
+  margin-top: 2px;
+}
+
+.summary-value {
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.summary-value.positive {
+  color: #48ff00;
+}
+
+.summary-value.negative {
+  color: #e74c3c;
+}
+
+.summary-value.neutral {
+  color: #FEFDF8;
+}
+
+.summary-value.highlight {
+  font-size: 18px;
+  color: #5FA862;
+  text-shadow: 0 0 12px rgba(95, 168, 98, 0.6);
+  animation: highlightPulse 2s ease-in-out infinite;
+}
+
+@keyframes highlightPulse {
+  0%, 100% {
+    transform: scale(1);
+    text-shadow: 0 0 12px rgba(95, 168, 98, 0.6);
+  }
+  50% {
+    transform: scale(1.05);
+    text-shadow: 0 0 16px rgba(95, 168, 98, 0.8);
+  }
+}
+
+.life-events-row .summary-value {
+  align-self: flex-end;
+  margin-top: -20px;
+}
+
+/* Breakdown Hint */
+.breakdown-hint {
+  text-align: center;
+  font-size: 11px;
+  color: #B8E6BA;
+  opacity: 0.5;
+  margin-top: 12px;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  /* Make panel more solid on laptop screens so underlying sidebar doesn't bleed through */
+  .breakdown-floating {
+    min-width: 320px;
+    background: linear-gradient(135deg, #0b0b0b 0%, #161616 100%);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+  }
+
+  /* Make transaction items more opaque on small screens */
+  .transaction-item {
+    background: rgba(0,0,0,0.5);
+    border-color: rgba(74,139,77,0.08);
+  }
+
+  /* Allow messages to wrap so long messages don't overlap */
+  .transaction-message {
+    font-size: 12px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .transaction-amount {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .breakdown-floating {
+    left: auto !important;
+    right: 8px !important;
+    width: auto !important;
+    min-width: 280px;
+  }
+}
+
+/* When sidebar is narrow, show panel on top */
+@media (max-height: 800px) {
+  .breakdown-floating {
+    max-height: 70vh;
+  }
+
+  .transactions-list {
+    max-height: 200px;
+  }
+}

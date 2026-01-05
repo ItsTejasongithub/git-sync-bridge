@@ -53,7 +53,12 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
   const handleBuy = () => {
     if (isTransacting || localLock) {
       console.warn('[TradeableAssetCard] Buy blocked - transaction pending or localLock active');
-      console.trace('Buy blocked stack');
+      return;
+    }
+
+    // Block buys while in debt - NO ALERT, just shake
+    if (pocketCash < 0) {
+      triggerShake();
       return;
     }
 
@@ -92,7 +97,6 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
   const handleSell = () => {
     if (isTransacting || localLock) {
       console.warn('[TradeableAssetCard] Sell blocked - transaction pending or localLock active');
-      console.trace('Sell blocked stack');
       return;
     }
 
@@ -271,7 +275,7 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
       <div className="button-group">
         {mode === 'buy' ? (
           <>
-            <button type="button" className={`action-button buy-btn ${isTransacting ? 'disabled' : ''}`} onClick={handleBuy} disabled={isTransacting}>
+            <button type="button" className={`action-button buy-btn ${isTransacting || pocketCash < 0 ? 'disabled' : ''}`} onClick={handleBuy} disabled={isTransacting || pocketCash < 0}>
               BUY
             </button>
             <button type="button" className="action-button cancel-btn" onClick={() => setMode('none')}>
@@ -289,8 +293,8 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
           </>
         ) : (
           <>
-            <button type="button" className={`action-button buy-btn ${isTransacting ? 'disabled' : ''}`} onClick={handleBuy} disabled={isTransacting}>
-              BUY
+            <button type="button" className={`action-button buy-btn ${isTransacting || pocketCash < 0 ? 'disabled' : ''}`} onClick={handleBuy} disabled={isTransacting || pocketCash < 0} title={pocketCash < 0 ? 'Cannot buy while in debt' : ''}>
+              {pocketCash < 0 ? '🔒 BUY' : 'BUY'}
             </button>
             <button type="button" className={`action-button sell-btn ${isTransacting ? 'disabled' : ''}`} onClick={handleSell} disabled={isTransacting}>
               SELL

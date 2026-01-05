@@ -32,7 +32,11 @@ export const PlayerGameWrapper: React.FC = () => {
     updateTime,
     updatePauseState,
     isTransactionPending,
-  } = useGameState(true); // true = multiplayer mode, disables local timer
+    lifeEventPopup,
+    applyLifeEvent,
+    clearLifeEventPopup,
+    forceShowLifeEventPopup
+  } = useGameState(true); // true = multiplayer mode, disables local timer, includes life event handler
 
   // Initialize game state with multiplayer admin settings when game starts
   useEffect(() => {
@@ -69,6 +73,36 @@ export const PlayerGameWrapper: React.FC = () => {
 
     updatePauseState(multiplayerGameState.isPaused);
   }, [multiplayerGameState?.isPaused, gameState.mode, updatePauseState]);
+
+  // Listen for life events emitted by server for this player
+  useEffect(() => {
+    const handler = (data: any) => {
+      try {
+        if (data && data.event) {
+          // Log reception and apply event (server may include postPocketCash)
+          console.log(`🔔 Life event received from server: ${data.event.message} (${data.event.amount}), postPocketCash=${typeof data.postPocketCash === 'number' ? `₹${data.postPocketCash}` : 'n/a'}`);
+          // Pass server-calculated postPocketCash (if provided) so client can sync deterministically
+          applyLifeEvent({ ...data.event, postPocketCash: data.postPocketCash });
+
+          // Fallback: ensure popup shows even if applyLifeEvent failed to show it
+          try {
+            if (typeof forceShowLifeEventPopup === 'function') {
+              forceShowLifeEventPopup(data.event);
+            }
+          } catch (err) {
+            // Non-critical; proceed
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to apply life event from server', err);
+      }
+    };
+
+    socketService.on('lifeEventTriggered', handler);
+    return () => {
+      socketService.off('lifeEventTriggered', handler);
+    };
+  }, [applyLifeEvent]);
 
   // Handle networth updates from GameScreen
   const handleNetworthCalculated = useCallback((networth: number, portfolioBreakdown: any) => {
@@ -155,6 +189,9 @@ export const PlayerGameWrapper: React.FC = () => {
         // Pass player info for logging
         playerName={playerName}
         roomId={roomId}
+        // Life event popup hooks
+        lifeEventPopup={lifeEventPopup}
+        clearLifeEventPopup={clearLifeEventPopup}
       />
     </div>
   );

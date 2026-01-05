@@ -32,9 +32,34 @@ export async function initializeDatabase(): Promise<void> {
       saveDatabase();
       console.log('New database created and initialized');
     }
+
+    // Run lightweight migrations on existing DB files to ensure schema compatibility
+    try {
+      runMigrations();
+    } catch (migErr) {
+      console.warn('Warning: migrations failed', migErr);
+    }
   } catch (error) {
     console.error('Failed to initialize database:', error);
     throw error;
+  }
+}
+
+/**
+ * Run any lightweight migrations needed for older DB files
+ */
+function runMigrations(): void {
+  if (!db) throw new Error('Database not initialized');
+
+  // Check admin_settings columns
+  const info = db.exec("PRAGMA table_info('admin_settings')");
+  const hasEventsCount =
+    info && info.length > 0 && info[0].values && info[0].values.some((row: any) => row[1] === 'events_count');
+
+  if (!hasEventsCount) {
+    console.log('Migration: adding missing column events_count to admin_settings');
+    db.run('ALTER TABLE admin_settings ADD COLUMN events_count INTEGER NOT NULL DEFAULT 3');
+    saveDatabase();
   }
 }
 
@@ -65,6 +90,7 @@ async function createTables(): Promise<void> {
       initial_pocket_cash INTEGER NOT NULL DEFAULT 100000,
       recurring_income INTEGER NOT NULL DEFAULT 50000,
       enable_quiz INTEGER NOT NULL DEFAULT 1,
+      events_count INTEGER NOT NULL DEFAULT 3,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);

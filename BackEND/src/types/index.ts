@@ -7,6 +7,7 @@ export interface AdminSettings {
   initialPocketCash: number; // Starting pocket cash amount
   recurringIncome: number; // Amount added to pocket cash every 6 months
   enableQuiz: boolean; // Enable/disable quiz on asset unlock
+  eventsCount?: number; // Number of random life events per player (min 1, max 20). Default: 3
 }
 
 export interface PlayerInfo {
@@ -45,6 +46,16 @@ export interface Room {
   timeProgressionInterval?: NodeJS.Timeout; // Server-side timer
 }
 
+export interface LifeEvent {
+  id: string;
+  type: 'gain' | 'loss';
+  message: string;
+  amount: number; // positive for gain, negative for loss
+  gameYear: number; // 1..20
+  gameMonth: number; // 1..12
+  triggered?: boolean; // whether this event has been triggered
+}
+
 export interface GameState {
   isStarted: boolean;
   isPaused: boolean;
@@ -58,6 +69,9 @@ export interface GameState {
   assetUnlockSchedule?: any;
   yearlyQuotes?: string[];
   quizQuestionIndices?: { [category: string]: number }; // Random question index per category
+
+  // Optional per-player life events schedule (used in multiplayer)
+  lifeEvents?: { [playerId: string]: LifeEvent[] };
 }
 
 // Socket event types
@@ -82,6 +96,9 @@ export interface ServerToClientEvents {
   // Quiz events
   quizTriggered: (data: { playerId: string; quizCategory: string }) => void;
   quizCompleted: (data: { playerId: string; quizCategory: string }) => void;
+
+  // Life events
+  lifeEventTriggered: (data: { event: LifeEvent; postPocketCash?: number }) => void;
 
   // Admin settings
   adminSettingsUpdated: (data: { adminSettings: AdminSettings }) => void;

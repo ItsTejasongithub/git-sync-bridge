@@ -38,6 +38,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
     initialPocketCash: 100000,
     recurringIncome: 50000,
     enableQuiz: true,
+    // Number of random life events per player (default 3, 1..20)
+    eventsCount: 3,
   });
 
   // Track latest asset year
@@ -67,6 +69,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
     const response = await adminSettingsApi.getSettings();
     if (response.success && response.settings) {
       setSettings(response.settings);
+      console.log('⚙️ AdminPanelModal: loaded settings.eventsCount =', response.settings.eventsCount);
     }
     setLoading(false);
   };
@@ -413,6 +416,35 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                   fontSize: '14px',
                 }}
               />
+            </div>
+
+            {/* Random Life Events (per player) */}
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ color: '#fff', display: 'block', marginBottom: '5px' }}>
+                Random Life Events (per player)
+              </label>
+              <select
+                value={settings.eventsCount}
+                onChange={(e) => setSettings({ ...settings, eventsCount: Number(e.target.value) })}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '5px',
+                  border: '1px solid #4ecca3',
+                  backgroundColor: '#16213e',
+                  color: '#fff',
+                  fontSize: '14px',
+                }}
+              >
+                {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n} style={{ color: '#000' }}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              <p style={{ color: '#888', fontSize: '12px', marginTop: '5px' }}>
+                Number of random life events scheduled per player during a game (1 - 20)
+              </p>
             </div>
 
             {/* Toggles */}

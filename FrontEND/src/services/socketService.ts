@@ -23,6 +23,7 @@ interface ServerToClientEvents {
   leaderboardUpdate: (data: { players: PlayerInfo[] }) => void;
   quizTriggered: (data: { playerId: string; quizCategory: string }) => void;
   quizCompleted: (data: { playerId: string; quizCategory: string }) => void;
+  lifeEventTriggered: (data: { event: any; postPocketCash?: number }) => void;
   adminSettingsUpdated: (data: { adminSettings: AdminSettings }) => void;
   error: (data: { message: string }) => void;
 }
@@ -120,6 +121,15 @@ class SocketService {
     this.socket.on('leaderboardUpdate', (data) => this.emit('leaderboardUpdate', data));
     this.socket.on('quizTriggered', (data) => this.emit('quizTriggered', data));
     this.socket.on('quizCompleted', (data) => this.emit('quizCompleted', data));
+    // Diagnostic: log when lifeEventTriggered arrives from server
+    this.socket.on('lifeEventTriggered', (data) => {
+      try {
+        console.log(`🔔 lifeEventTriggered (socket): ${data?.event?.message} (${data?.event?.amount}), postPocketCash=${typeof data?.postPocketCash === 'number' ? `₹${data.postPocketCash}` : 'n/a'}`);
+      } catch (err) {
+        // noop
+      }
+      this.emit('lifeEventTriggered', data);
+    });
     this.socket.on('adminSettingsUpdated', (data) => this.emit('adminSettingsUpdated', data));
   }
 

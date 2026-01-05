@@ -258,6 +258,14 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         if (data.initialGameState.quizQuestionIndices) {
           room.gameState.quizQuestionIndices = data.initialGameState.quizQuestionIndices;
         }
+
+        // After applying initial game state (asset unlock schedule etc.), generate life events for each player
+        try {
+          const count = (data.adminSettings && typeof data.adminSettings.eventsCount === 'number') ? data.adminSettings.eventsCount : 3;
+          roomManager.generateLifeEventsForRoom(roomId, count);
+        } catch (err) {
+          console.warn('⚠️ Failed to generate life events for room', roomId, err);
+        }
       }
 
       callback({ success: true });

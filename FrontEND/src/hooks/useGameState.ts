@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { GameState, FixedDeposit, AssetHolding, SelectedAssets, AdminSettings } from '../types';
+import { GameState, FixedDeposit, AssetHolding, SelectedAssets, AdminSettings, CashTransaction } from '../types';
 import {
   MONTH_DURATION_MS,
   STARTING_CASH,
@@ -13,6 +13,7 @@ import {
   getRandomItems,
   getRandomItem
 } from '../utils/constants';
+import { generateLifeEvents } from '../utils/lifeEvents';
 import { generateAssetUnlockSchedule, extractSelectedAssetsFromSchedule } from '../utils/assetUnlockCalculator';
 import { generateQuestionIndices } from '../utils/assetEducation';
 
@@ -85,6 +86,9 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     }, delay);
   };
 
+  // Life event popup state (holds the most recent event to display in UI)
+  const [lifeEventPopup, setLifeEventPopup] = useState<any | null>(null);
+
   // Keep a short-lived cache of recent transactions to avoid duplicates caused by
   // accidental double-clicks or race conditions in multiplayer. Keyed by
   // assetType|assetName|quantity|price (rounded) and expires after a few seconds.
@@ -94,6 +98,8 @@ export const useGameState = (isMultiplayer: boolean = false) => {
   // buy attempts cannot both succeed due to reading the same pocketCash value.
   const reservedAmountRef = useRef<number>(0);
   const pocketCashRef = useRef<number>(gameState.pocketCash);
+  // Timer ref for auto-closing life event popups
+  const lifeEventAutoCloseTimerRef = useRef<number | null>(null);
 
   // Keep pocketCashRef in sync with state
   useEffect(() => {
@@ -101,14 +107,13 @@ export const useGameState = (isMultiplayer: boolean = false) => {
   }, [gameState.pocketCash]);
 
 
-  // Debug: Monitor pocket cash changes with stack trace (temporary, verbose)
+  // Debug: Monitor pocket cash changes (concise)
   const prevPocketCashRef = useRef<number>(gameState.pocketCash);
   useEffect(() => {
     const prev = prevPocketCashRef.current;
     const curr = gameState.pocketCash;
     if (prev !== curr) {
-      console.warn(`🔍 pocketCash changed: ₹${prev.toFixed(2)} -> ₹${curr.toFixed(2)}`);
-      console.trace('pocketCash change stack');
+      console.log(`🔍 pocketCash changed: ₹${prev.toFixed(2)} -> ₹${curr.toFixed(2)}`);
     }
     prevPocketCashRef.current = curr;
   }, [gameState.pocketCash]);
@@ -169,9 +174,89 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         // Add recurring income every 6 months (months 6 and 12)
         let newPocketCash = prev.pocketCash;
         let newPocketCashReceivedTotal = prev.pocketCashReceivedTotal || 0;
+        let newCashTransactions = [...(prev.cashTransactions || [])];
+
         if ((newMonth === 6 || newMonth === 12) && prev.adminSettings?.recurringIncome) {
           newPocketCash += prev.adminSettings.recurringIncome;
           newPocketCashReceivedTotal += prev.adminSettings.recurringIncome;
+
+          // Track recurring income transaction
+          const transaction: CashTransaction = {
+            id: `recurring_${newYear}_${newMonth}_${Date.now()}`,
+            type: 'recurring_income',
+            amount: prev.adminSettings.recurringIncome,
+            message: 'Monthly Salary',
+            gameYear: newYear,
+            gameMonth: newMonth,
+            timestamp: Date.now()
+          };
+          newCashTransactions.push(transaction);
+        }
+
+        // Process any scheduled life events (solo mode)
+        let updatedLifeEvents = prev.lifeEvents ? [...prev.lifeEvents] : undefined;
+        const triggeredEvents: any[] = [];
+        if (updatedLifeEvents) {
+          updatedLifeEvents = updatedLifeEvents.map(ev => {
+            if (!ev.triggered && ev.gameYear === newYear && ev.gameMonth === newMonth) {
+              // Apply effect immediately
+              newPocketCash += ev.amount;
+              if (ev.amount > 0) newPocketCashReceivedTotal += ev.amount;
+
+              // Track life event transaction
+              const transaction: CashTransaction = {
+                id: `life_event_${ev.id}_${Date.now()}`,
+                type: ev.type === 'gain' ? 'life_event_gain' : 'life_event_loss',
+                amount: ev.amount,
+                message: ev.message,
+                gameYear: newYear,
+                gameMonth: newMonth,
+                timestamp: Date.now()
+              };
+              newCashTransactions.push(transaction);
+
+              triggeredEvents.push(ev);
+              return { ...ev, triggered: true };
+            }
+            return ev;
+          });
+        }
+
+        // After state is set, push a popup for the first triggered event (if any)
+        if (triggeredEvents.length > 0) {
+          setTimeout(() => {
+            try {
+              const event = triggeredEvents[0];
+              const isInDebt = newPocketCash < 0;
+              const remainingDebt = isInDebt ? Math.abs(newPocketCash) : 0;
+
+              // Cancel any previous auto-close timer
+              if (lifeEventAutoCloseTimerRef.current) {
+                clearTimeout(lifeEventAutoCloseTimerRef.current as any);
+                lifeEventAutoCloseTimerRef.current = null;
+              }
+
+              console.log('🪟 Life Event Popup: shown (solo mode)');
+              if (!isInDebt) {
+                console.log('🪟 Life Event Popup: will auto-close in 10s (sufficient funds)');
+              } else {
+                console.log('🪟 Life Event Popup: locked (insufficient funds) - will stay open until debt cleared');
+              }
+
+              setLifeEventPopup({ ...event, locked: isInDebt, remainingDebt });
+
+              // Schedule auto-close only if sufficient funds
+              if (!isInDebt) {
+                lifeEventAutoCloseTimerRef.current = window.setTimeout(() => {
+                  setLifeEventPopup(null);
+                  lifeEventAutoCloseTimerRef.current = null;
+                  console.log('🪟 Life Event Popup: auto-closed after 10s (solo mode, sufficient funds)');
+                }, 10000);
+              }
+            } catch (err) {
+              // noop
+            }
+          }, 0);
         }
 
         return {
@@ -180,8 +265,10 @@ export const useGameState = (isMultiplayer: boolean = false) => {
           currentYear: newYear,
           pocketCash: newPocketCash,
           pocketCashReceivedTotal: newPocketCashReceivedTotal,
+          cashTransactions: newCashTransactions,
           savingsAccount: { ...prev.savingsAccount, balance: newSavingsBalance },
-          fixedDeposits: updatedFDs
+          fixedDeposits: updatedFDs,
+          lifeEvents: updatedLifeEvents
         };
       });
     }, MONTH_DURATION_MS);
@@ -299,6 +386,15 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     // Generate random question indices for quiz (one per category, consistent for this game session)
     const quizQuestionIndices = generateQuestionIndices();
 
+    const soloLifeEvents = generateLifeEvents(adminSettings?.eventsCount || 3, assetUnlockSchedule);
+
+    // Debug: print generated life events so testers can verify schedule and timing
+    try {
+      console.log('✨ Solo life events generated:', soloLifeEvents.map((e: any) => ({ id: e.id, msg: e.message, year: e.gameYear, month: e.gameMonth, amount: e.amount })));
+    } catch (err) {
+      // noop
+    }
+
     setGameState({
       mode: 'solo',
       isStarted: true,
@@ -316,7 +412,8 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       assetUnlockSchedule,
       yearlyQuotes: shuffledQuotes,
       completedQuizzes: [],
-      quizQuestionIndices
+      quizQuestionIndices,
+      lifeEvents: soloLifeEvents
     });
   }, []);
 
@@ -441,6 +538,12 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       return;
     }
 
+    // Prevent buying while player is in debt
+    if (pocketCashRef.current < 0) {
+      alert('Cannot buy while you are in debt. Sell assets or wait for incoming payments to recover your balance.');
+      return;
+    }
+
       // Signature to detect duplicate rapid transactions
     const txSignature = `${assetType}|${assetName}|${quantity}|${currentPrice.toFixed(6)}`;
     const now = Date.now();
@@ -450,7 +553,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
 
     if (prevTs && now - prevTs < 1000) {
       console.warn(`⚠️ Duplicate buy detected (${txSignature}) — ignoring`);
-      console.trace('Duplicate buy call stack');
       return;
     }
 
@@ -545,12 +647,8 @@ export const useGameState = (isMultiplayer: boolean = false) => {
   const sellAsset = useCallback((assetType: string, assetName: string, quantity: number, currentPrice: number) => {
     // CRITICAL DEBUG: Always log sell transactions to catch pricing issues
     const txSignature = `${assetType}|${assetName}|${quantity}|${currentPrice.toFixed(6)}`;
-    console.log(`\n🔍 ===== SELL TRANSACTION START ===== (${txSignature})`);
-    console.log(`📌 Asset: ${assetName} (${assetType})`);
-    console.log(`📌 Quantity to Sell: ${quantity}`);
-    console.log(`📌 Current Price per unit: ₹${currentPrice}`);
-    console.log(`📌 Expected Sale Amount: ₹${(quantity * currentPrice).toFixed(2)}`);
-    console.debug(`📌 pocketCash=${pocketCashRef.current} reserved=${reservedAmountRef.current}`);
+    // Concise log for debugging: keep minimal to reduce noise
+    console.log(`🔍 Sell transaction started: ${assetName} x${quantity} @ ₹${currentPrice.toFixed(2)} (estimated ₹${(quantity * currentPrice).toFixed(2)})`);
 
     // CRITICAL FIX: Prevent selling at price 0 (would cause bankruptcy!)
     if (currentPrice <= 0) {
@@ -564,7 +662,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     const prevTs = recentTransactions.current.get(txSignature);
     if (prevTs && now - prevTs < 1000) {
       console.warn(`⚠️ Duplicate sell detected (${txSignature}) — ignoring`);
-      console.trace('Duplicate sell call stack');
       return;
     }
 
@@ -647,6 +744,99 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     finishTransaction();
   }, []);
 
+  const applyLifeEvent = useCallback((event: any) => {
+    // Use the current pocket cash as baseline (client side). If server provided a postPocketCash, prefer that for consistency in multiplayer.
+    const prevPocket = pocketCashRef.current;
+    const newPocket = typeof event.postPocketCash === 'number' ? event.postPocketCash : (prevPocket + event.amount);
+
+    // Compute received delta for logging/total updates (positive only)
+    const receivedDelta = event.amount > 0 ? event.amount : Math.max(0, newPocket - prevPocket);
+
+    // Life event evaluation log
+    const required = event.amount < 0 ? Math.abs(event.amount) : 0;
+    const status = newPocket >= 0 ? 'ENOUGH' : 'INSUFFICIENT';
+    console.log(`🧮 Life Event Check: required=₹${required}, available=₹${prevPocket}, status=${status}`);
+
+    // Apply to local state
+    setGameState(prev => {
+      if (gameHasEnded(prev)) return prev;
+
+      const updatedLifeEvents = prev.lifeEvents ? prev.lifeEvents.map(ev => ev.id === event.id ? { ...ev, triggered: true } : ev) : prev.lifeEvents;
+
+      // Track life event transaction (multiplayer)
+      const newCashTransactions = [...(prev.cashTransactions || [])];
+      const transaction: CashTransaction = {
+        id: `life_event_${event.id}_${Date.now()}`,
+        type: event.type === 'gain' ? 'life_event_gain' : 'life_event_loss',
+        amount: event.amount,
+        message: event.message,
+        gameYear: event.gameYear || prev.currentYear,
+        gameMonth: event.gameMonth || prev.currentMonth,
+        timestamp: Date.now()
+      };
+      newCashTransactions.push(transaction);
+
+      return {
+        ...prev,
+        pocketCash: newPocket,
+        pocketCashReceivedTotal: (prev.pocketCashReceivedTotal || 0) + receivedDelta,
+        cashTransactions: newCashTransactions,
+        lifeEvents: updatedLifeEvents
+      };
+    });
+
+    // Log popup lifecycle and set popup data (includes locked/remainingDebt when negative)
+    const remainingDebt = newPocket < 0 ? Math.abs(newPocket) : 0;
+    console.log('🪟 Life Event Popup: shown');
+    if (newPocket >= 0) {
+      console.log('🪟 Life Event Popup: will auto-close in 10s (sufficient funds)');
+    } else {
+      console.log('🪟 Life Event Popup: locked (insufficient funds) - will stay open until debt cleared');
+    }
+
+    // Cancel any previous auto-close timer
+    if (lifeEventAutoCloseTimerRef.current) {
+      clearTimeout(lifeEventAutoCloseTimerRef.current as any);
+      lifeEventAutoCloseTimerRef.current = null;
+    }
+
+    setLifeEventPopup({ ...event, locked: newPocket < 0, remainingDebt });
+
+    // Schedule auto-close only if sufficient funds (10 seconds for positive events or loss events with sufficient balance)
+    if (newPocket >= 0) {
+      lifeEventAutoCloseTimerRef.current = window.setTimeout(() => {
+        setLifeEventPopup(null);
+        lifeEventAutoCloseTimerRef.current = null;
+        console.log('🪟 Life Event Popup: auto-closed after 10s (sufficient funds)');
+      }, 10000);
+    }
+
+  }, []);
+
+  // Developer helper: allow triggering a test life event from the browser console in development mode
+  useEffect(() => {
+    try {
+      if ((import.meta as any).env && (import.meta as any).env.MODE === 'development') {
+        (window as any).triggerLifeEvent = (amount: number, message?: string) => {
+          try {
+            const ev = { id: `dev-${Date.now()}`, message: message || `Dev Life Event ${amount}`, amount } as any;
+            console.log('🧪 triggerLifeEvent called:', ev);
+            applyLifeEvent(ev);
+          } catch (err) {
+            // noop
+          }
+        };
+        console.log('🧪 Developer helper attached: window.triggerLifeEvent(amount, message)');
+      }
+    } catch (err) {
+      // noop
+    }
+
+    return () => {
+      try { delete (window as any).triggerLifeEvent; } catch (err) { }
+    };
+  }, [applyLifeEvent]);
+
   const togglePause = useCallback(() => {
     setGameState(prev => ({
       ...prev,
@@ -701,9 +891,23 @@ export const useGameState = (isMultiplayer: boolean = false) => {
 
         let newPocketCash = prev.pocketCash;
         let newPocketCashReceivedTotal = prev.pocketCashReceivedTotal || 0;
+        let newCashTransactions = [...(prev.cashTransactions || [])];
+
         if ((month === 6 || month === 12) && month !== prev.currentMonth && prev.adminSettings?.recurringIncome) {
           newPocketCash += prev.adminSettings.recurringIncome;
           newPocketCashReceivedTotal += prev.adminSettings.recurringIncome;
+
+          // Track recurring income transaction (multiplayer - final month)
+          const transaction: CashTransaction = {
+            id: `recurring_${year}_${month}_${Date.now()}`,
+            type: 'recurring_income',
+            amount: prev.adminSettings.recurringIncome,
+            message: 'Monthly Salary',
+            gameYear: year,
+            gameMonth: month,
+            timestamp: Date.now()
+          };
+          newCashTransactions.push(transaction);
         }
 
         console.log('🎯 updateTime: final year/month received, marking game as ended locally');
@@ -714,6 +918,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
           currentMonth: 12,
           pocketCash: newPocketCash,
           pocketCashReceivedTotal: newPocketCashReceivedTotal,
+          cashTransactions: newCashTransactions,
           savingsAccount: { ...prev.savingsAccount, balance: newSavingsBalance },
           fixedDeposits: updatedFDs,
           isStarted: false,
@@ -738,9 +943,23 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       // Add recurring income every 6 months (months 6 and 12)
       let newPocketCash = prev.pocketCash;
       let newPocketCashReceivedTotal = prev.pocketCashReceivedTotal || 0;
+      let newCashTransactions = [...(prev.cashTransactions || [])];
+
       if ((month === 6 || month === 12) && month !== prev.currentMonth && prev.adminSettings?.recurringIncome) {
         newPocketCash += prev.adminSettings.recurringIncome;
         newPocketCashReceivedTotal += prev.adminSettings.recurringIncome;
+
+        // Track recurring income transaction (multiplayer)
+        const transaction: CashTransaction = {
+          id: `recurring_${year}_${month}_${Date.now()}`,
+          type: 'recurring_income',
+          amount: prev.adminSettings.recurringIncome,
+          message: 'Monthly Salary',
+          gameYear: year,
+          gameMonth: month,
+          timestamp: Date.now()
+        };
+        newCashTransactions.push(transaction);
       }
 
       return {
@@ -749,11 +968,27 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         currentMonth: month,
         pocketCash: newPocketCash,
         pocketCashReceivedTotal: newPocketCashReceivedTotal,
+        cashTransactions: newCashTransactions,
         savingsAccount: { ...prev.savingsAccount, balance: newSavingsBalance },
         fixedDeposits: updatedFDs
       };
     });
   }, []);
+
+  // Watch for pocketCash changes to resolve locked life event popups automatically
+  useEffect(() => {
+    if (!lifeEventPopup) return;
+
+    if (lifeEventPopup.locked && pocketCashRef.current >= 0) {
+      // Debt resolved — close popup and clear timers
+      if (lifeEventAutoCloseTimerRef.current) {
+        clearTimeout(lifeEventAutoCloseTimerRef.current as any);
+        lifeEventAutoCloseTimerRef.current = null;
+      }
+      setLifeEventPopup(null);
+      console.log('🪟 Life Event Popup: auto-closed (sufficient funds after sell/income)');
+    }
+  }, [gameState.pocketCash, lifeEventPopup]);
 
   // Update pause state from external source (for multiplayer)
   const updatePauseState = useCallback((isPaused: boolean) => {
@@ -781,6 +1016,44 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     updateTime,
     updatePauseState,
     // Reactive flag for UI components to know whether a transaction is pending
-    isTransactionPending
+    isTransactionPending,
+    // Life event popup & handler
+    lifeEventPopup,
+    applyLifeEvent,
+    clearLifeEventPopup: () => {
+      if (lifeEventAutoCloseTimerRef.current) {
+        clearTimeout(lifeEventAutoCloseTimerRef.current as any);
+        lifeEventAutoCloseTimerRef.current = null;
+      }
+      console.log('🪟 Life Event Popup: manually closed');
+      setLifeEventPopup(null);
+    },
+
+    // Force show a popup (fallback); does NOT apply event amounts to pocketCash — purely visual.
+    forceShowLifeEventPopup: (event: any) => {
+      // Cancel any existing auto-close
+      if (lifeEventAutoCloseTimerRef.current) {
+        clearTimeout(lifeEventAutoCloseTimerRef.current as any);
+        lifeEventAutoCloseTimerRef.current = null;
+      }
+
+      const prevPocket = pocketCashRef.current;
+      const newPocket = typeof event.postPocketCash === 'number' ? event.postPocketCash : (prevPocket + event.amount);
+      const remainingDebt = newPocket < 0 ? Math.abs(newPocket) : 0;
+      const locked = newPocket < 0;
+
+      console.log('🪟 Life Event Popup: forced show (fallback)', { id: event.id, message: event.message, locked, remainingDebt });
+
+      setLifeEventPopup({ ...event, locked, remainingDebt });
+
+      // Schedule auto-close only if sufficient funds (10 seconds)
+      if (!locked) {
+        lifeEventAutoCloseTimerRef.current = window.setTimeout(() => {
+          setLifeEventPopup(null);
+          lifeEventAutoCloseTimerRef.current = null;
+          console.log('🪟 Life Event Popup: auto-closed after 10s (forced show, sufficient funds)');
+        }, 10000);
+      }
+    }
   };
 };

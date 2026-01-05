@@ -25,6 +25,7 @@ export function getAdminSettings(): AdminSettings | null {
       initialPocketCash: row.initial_pocket_cash as number,
       recurringIncome: row.recurring_income as number,
       enableQuiz: (row.enable_quiz as number) === 1,
+      eventsCount: (row.events_count as number) || 3,
     };
 
     return settings;
@@ -41,48 +42,67 @@ export function updateAdminSettings(settings: AdminSettings): { success: boolean
   try {
     const db = getDatabase();
 
-    // Check if settings exist
-    const checkStmt = db.prepare('SELECT id FROM admin_settings WHERE id = 1');
-    const exists = checkStmt.step();
-    checkStmt.free();
-
     const categoriesJson = JSON.stringify(settings.selectedCategories);
 
-    if (exists) {
-      // Update existing settings
-      db.run(
-        `UPDATE admin_settings SET
-          selected_categories = ?,
-          game_start_year = ?,
-          hide_current_year = ?,
-          initial_pocket_cash = ?,
-          recurring_income = ?,
-          enable_quiz = ?,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = 1`,
-        [
-          categoriesJson,
-          settings.gameStartYear,
-          settings.hideCurrentYear ? 1 : 0,
-          settings.initialPocketCash,
-          settings.recurringIncome,
-          settings.enableQuiz ? 1 : 0,
-        ]
-      );
-    } else {
-      // Insert new settings
-      db.run(
-        `INSERT INTO admin_settings (id, selected_categories, game_start_year, hide_current_year, initial_pocket_cash, recurring_income, enable_quiz)
-        VALUES (1, ?, ?, ?, ?, ?, ?)`,
-        [
-          categoriesJson,
-          settings.gameStartYear,
-          settings.hideCurrentYear ? 1 : 0,
-          settings.initialPocketCash,
-          settings.recurringIncome,
-          settings.enableQuiz ? 1 : 0,
-        ]
-      );
+    const performUpdate = () => {
+      // Check if settings exist
+      const checkStmt = db.prepare('SELECT id FROM admin_settings WHERE id = 1');
+      const exists = checkStmt.step();
+      checkStmt.free();
+
+      if (exists) {
+        // Update existing settings
+        db.run(
+          `UPDATE admin_settings SET
+            selected_categories = ?,
+            game_start_year = ?,
+            hide_current_year = ?,
+            initial_pocket_cash = ?,
+            recurring_income = ?,
+            enable_quiz = ?,
+            events_count = ?,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = 1`,
+          [
+            categoriesJson,
+            settings.gameStartYear,
+            settings.hideCurrentYear ? 1 : 0,
+            settings.initialPocketCash,
+            settings.recurringIncome,
+            settings.enableQuiz ? 1 : 0,
+            settings.eventsCount || 3,
+          ]
+        );
+      } else {
+        // Insert new settings
+        db.run(
+          `INSERT INTO admin_settings (id, selected_categories, game_start_year, hide_current_year, initial_pocket_cash, recurring_income, enable_quiz, events_count)
+          VALUES (1, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            categoriesJson,
+            settings.gameStartYear,
+            settings.hideCurrentYear ? 1 : 0,
+            settings.initialPocketCash,
+            settings.recurringIncome,
+            settings.enableQuiz ? 1 : 0,
+            settings.eventsCount || 3,
+          ]
+        );
+      }
+    };
+
+    try {
+      performUpdate();
+    } catch (err: any) {
+      // If the column doesn't exist (older DB), add it and retry once
+      if (err && typeof err.message === 'string' && err.message.includes('no such column: events_count')) {
+        console.warn('Detected missing column events_count; attempting to migrate and retry update');
+        db.run('ALTER TABLE admin_settings ADD COLUMN events_count INTEGER NOT NULL DEFAULT 3');
+        // retry
+        performUpdate();
+      } else {
+        throw err;
+      }
     }
 
     saveDatabase();
@@ -104,6 +124,7 @@ export function getDefaultAdminSettings(): AdminSettings {
     initialPocketCash: 100000,
     recurringIncome: 50000,
     enableQuiz: true,
+    eventsCount: 3,
   };
 }
 
