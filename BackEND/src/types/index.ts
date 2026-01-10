@@ -104,6 +104,9 @@ export interface ServerToClientEvents {
   // Admin settings
   adminSettingsUpdated: (data: { adminSettings: AdminSettings }) => void;
 
+  // Final leaderboard from DB
+  fetchFinalLeaderboardFromDB: (data: { roomId: string }) => void;
+
   // Errors
   error: (data: { message: string }) => void;
 }

@@ -38,6 +38,7 @@ interface GameScreenProps {
   roomId?: string; // Room ID for multiplayer logging
   lifeEventPopup?: any; // Active life event to display
   clearLifeEventPopup?: () => void;
+  onFinalNetworthSync?: (networth: number, portfolioBreakdown: any) => void; // Final networth sync for multiplayer
 }
 
 export const GameScreen: React.FC<GameScreenProps> = ({
@@ -62,7 +63,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   playerAge,
   roomId,
   lifeEventPopup,
-  clearLifeEventPopup
+  clearLifeEventPopup,
+  onFinalNetworthSync
 }) => {
   // Helper function to format numbers with commas (Indian numbering system)
   const formatCurrency = (amount: number, rounded: boolean = false): string => {
@@ -592,6 +594,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         playerName={playerName}
         playerAge={playerAge}
         roomId={roomId}
+        onFinalNetworthSync={onFinalNetworthSync}
       />
     );
   }

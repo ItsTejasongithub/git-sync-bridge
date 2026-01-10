@@ -3,6 +3,19 @@ import { AdminSettings } from '../types';
 // Use environment variable or default to localhost
 const API_BASE_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
 
+export interface LeaderboardEntry {
+  playerId: string;
+  playerName: string;
+  networth: number;
+  portfolioBreakdown: any;
+}
+
+export interface FinalLeaderboardResponse {
+  success: boolean;
+  leaderboard?: LeaderboardEntry[];
+  message?: string;
+}
+
 export interface AdminAccount {
   id: number;
   username: string;
@@ -214,3 +227,21 @@ export const playerLogsApi = {
     }
   },
 };
+
+/**
+ * Game-related API
+ */
+export async function fetchFinalLeaderboard(roomId: string): Promise<FinalLeaderboardResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/game/final-leaderboard/${encodeURIComponent(roomId)}`);
+    if (!response.ok) {
+      console.error('fetchFinalLeaderboard - non-OK response', response.status);
+      return { success: false, message: `Failed to fetch final leaderboard: ${response.statusText}` };
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('fetchFinalLeaderboard error:', error);
+    return { success: false, message: 'Failed to connect to server' };
+  }
+}
+

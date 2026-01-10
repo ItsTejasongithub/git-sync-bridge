@@ -120,6 +120,17 @@ export const PlayerGameWrapper: React.FC = () => {
     updatePlayerState(networth, portfolioBreakdown);
   }, [roomInfo?.isHost, multiplayerGameState, updatePlayerState]);
 
+  // Handle final networth sync from GameEndScreen
+  const handleFinalNetworthSync = useCallback((networth: number, portfolioBreakdown: any) => {
+    // Skip if host
+    if (roomInfo?.isHost) {
+      return;
+    }
+
+    console.log('🔄 PlayerGameWrapper: Sending final networth to server:', networth);
+    updatePlayerState(networth, portfolioBreakdown);
+  }, [roomInfo?.isHost, updatePlayerState]);
+
   // Override quiz completion to notify server
   const handleMarkQuizCompleted = (category: string) => {
     markQuizCompleted(category);
@@ -192,6 +203,8 @@ export const PlayerGameWrapper: React.FC = () => {
         // Life event popup hooks
         lifeEventPopup={lifeEventPopup}
         clearLifeEventPopup={clearLifeEventPopup}
+        // Final networth sync callback
+        onFinalNetworthSync={handleFinalNetworthSync}
       />
     </div>
   );

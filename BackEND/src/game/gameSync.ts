@@ -179,17 +179,48 @@ export class GameSyncManager {
         // Mark game as ended (stops all further updates)
         room.gameState.isStarted = false;
 
-        // Send final leaderboard one last time
-        const finalLeaderboard = this.roomManager.getLeaderboard(roomId);
-        this.io.to(roomId).emit('leaderboardUpdate', {
-          players: finalLeaderboard,
-        });
+        console.log(`🏁 Game ended in room ${roomId}. Waiting for players to log to DB...`);
 
-        // Emit game ended event
+        // Emit game ended event FIRST so players can log to database
         this.io.to(roomId).emit('gameEnded', {
           finalYear: newYear - 1,
           finalMonth: 12,
         });
+
+        // Wait 3 seconds for all players to log their final networth to database
+        setTimeout(() => {
+          console.log(`📊 Emitting signal for host to fetch final leaderboard from DB for room ${roomId}`);
+          // Emit special event telling host to fetch final leaderboard from DB
+          this.io.to(roomId).emit('fetchFinalLeaderboardFromDB', {
+            roomId: roomId,
+          });
+
+          // Additionally, fetch the final leaderboard from DB on the server and broadcast
+          try {
+            const { getPlayerLogs } = require('../database/playerLogs');
+            const logs = getPlayerLogs({ roomId, gameMode: 'multiplayer' });
+
+            // Deduplicate by normalized player name (first occurrence is latest since logs are ordered by completed_at DESC)
+            const latestByPlayer: Map<string, any> = new Map();
+            for (const log of logs) {
+              const key = (log.playerName || '').trim().toLowerCase();
+              if (!latestByPlayer.has(key)) latestByPlayer.set(key, log);
+            }
+
+            const leaderboard = Array.from(latestByPlayer.values()).map(l => ({
+              playerId: l.uniqueId,
+              playerName: l.playerName,
+              networth: l.finalNetworth,
+              portfolioBreakdown: l.portfolioBreakdown,
+            })).sort((a, b) => b.networth - a.networth);
+
+            console.log(`📢 Broadcasting final leaderboard from DB (${leaderboard.length} players) for room ${roomId}`);
+            this.io.to(roomId).emit('finalLeaderboard', { leaderboard });
+          } catch (err) {
+            console.error('Error fetching/broadcasting final leaderboard from DB:', err);
+          }
+        }, 3000);
+
         return;
       }
 

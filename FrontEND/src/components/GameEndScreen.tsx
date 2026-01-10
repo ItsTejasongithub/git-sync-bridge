@@ -28,6 +28,7 @@ interface GameEndScreenProps {
   playerName?: string;
   playerAge?: number;
   roomId?: string;
+  onFinalNetworthSync?: (networth: number, portfolioBreakdown: any) => void;
 }
 
 const GameEndScreen: React.FC<GameEndScreenProps> = ({
@@ -40,6 +41,7 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
   playerName,
   playerAge,
   roomId,
+  onFinalNetworthSync,
 }) => {
   const [isPortfolioExpanded, setIsPortfolioExpanded] = useState(false);
   const [isAIReportOpen, setIsAIReportOpen] = useState(false);
@@ -93,6 +95,17 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
   const cagr = calculateCAGR(totalCapital, finalNetworth, years).toFixed(2);
   const breakdown = calculatePortfolioBreakdown(gameState, assetDataMap, calendarYear);
   const investedBreakdown = getInvestedBreakdown();
+
+  // Sync final networth to server for multiplayer (only once)
+  const hasSyncedRef = useRef(false);
+  useEffect(() => {
+    if (hasSyncedRef.current) return;
+    if (!isMultiplayer || !onFinalNetworthSync) return;
+
+    hasSyncedRef.current = true;
+    console.log('🔄 Syncing final networth to server:', finalNetworth);
+    onFinalNetworthSync(finalNetworth, breakdown);
+  }, [isMultiplayer, finalNetworth, breakdown, onFinalNetworthSync]);
 
   // Log game results when component mounts (only once)
   useEffect(() => {

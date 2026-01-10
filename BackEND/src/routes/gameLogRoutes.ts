@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { logPlayerGame, LogPlayerGameParams } from '../database/playerLogs';
+import { logPlayerGame, LogPlayerGameParams, getPlayerLogs } from '../database/playerLogs';
 
 const router = Router();
 
@@ -62,6 +62,78 @@ router.post('/log', (req: Request, res: Response) => {
   } catch (error) {
     console.error('Log game error:', error);
     return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/game/final-leaderboard/:roomId
+ * Get final leaderboard from database for a completed multiplayer game
+ * This ensures accurate final networth values from DB instead of socket updates
+ */
+router.get('/final-leaderboard/:roomId', (req: Request, res: Response) => {
+  try {
+    const { roomId } = req.params;
+
+    if (!roomId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Room ID is required',
+      });
+    }
+
+    console.log(`📊 Fetching final leaderboard from DB for room: ${roomId}`);
+
+    // Get all player logs for this room from the database
+    const logs = getPlayerLogs({ roomId, gameMode: 'multiplayer' });
+
+    if (logs.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No game logs found for this room',
+      });
+    }
+
+    // Deduplicate logs by playerName (case-insensitive) and pick the latest completed log per player
+    const latestByPlayer = new Map<string, typeof logs[0]>();
+    for (const log of logs) {
+      const key = (log.playerName || '').trim().toLowerCase();
+      if (!latestByPlayer.has(key)) {
+        latestByPlayer.set(key, log);
+      }
+    }
+
+    const uniqueLogs = Array.from(latestByPlayer.values());
+
+    if (uniqueLogs.length !== logs.length) {
+      console.log(`♻️ Deduplicated ${logs.length - uniqueLogs.length} duplicate log(s) for room ${roomId}`);
+    }
+
+    // Transform DB logs to leaderboard format using unique log id as stable identifier
+    const leaderboard = uniqueLogs
+      .map(log => ({
+        playerId: log.uniqueId, // Unique log identifier for this player's final result
+        playerName: log.playerName,
+        networth: log.finalNetworth,
+        portfolioBreakdown: log.portfolioBreakdown,
+        completedAt: log.completedAt,
+      }))
+      .sort((a, b) => b.networth - a.networth); // Sort by networth descending
+
+    console.log(`✅ Final leaderboard from DB (${leaderboard.length} players):`);
+    leaderboard.forEach((player, index) => {
+      console.log(`   ${index + 1}. ${player.playerName}: ₹${player.networth.toLocaleString('en-IN')}`);
+    });
+
+    return res.status(200).json({
+      success: true,
+      leaderboard,
+    });
+  } catch (error) {
+    console.error('Get final leaderboard error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch final leaderboard',
+    });
   }
 });
 

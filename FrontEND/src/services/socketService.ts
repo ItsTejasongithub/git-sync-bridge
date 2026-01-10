@@ -20,6 +20,8 @@ interface ServerToClientEvents {
   gameResumed: () => void;
   gameEnded: (data: { finalYear: number; finalMonth: number }) => void;
   timeProgression: (data: { year: number; month: number }) => void;
+  // Server can send authoritative final leaderboard (broadcast from server DB) or host can send it.
+  finalLeaderboard: (data: { leaderboard: { playerId: string; playerName: string; networth: number; portfolioBreakdown?: any }[] }) => void;
   leaderboardUpdate: (data: { players: PlayerInfo[] }) => void;
   quizTriggered: (data: { playerId: string; quizCategory: string }) => void;
   quizCompleted: (data: { playerId: string; quizCategory: string }) => void;
@@ -119,6 +121,10 @@ class SocketService {
     this.socket.on('timeProgression', (data) => this.emit('timeProgression', data));
     this.socket.on('gameEnded', (data) => this.emit('gameEnded', data));
     this.socket.on('leaderboardUpdate', (data) => this.emit('leaderboardUpdate', data));
+    // Server tells host to fetch the final leaderboard from DB (emitted after it waits for players to log)
+    this.socket.on('fetchFinalLeaderboardFromDB', (data) => this.emit('fetchFinalLeaderboardFromDB', data));
+    // Server-side authoritative broadcast of final leaderboard (optional, emitted after it reads DB)
+    this.socket.on('finalLeaderboard', (data) => this.emit('finalLeaderboard', data));
     this.socket.on('quizTriggered', (data) => this.emit('quizTriggered', data));
     this.socket.on('quizCompleted', (data) => this.emit('quizCompleted', data));
     // Diagnostic: log when lifeEventTriggered arrives from server

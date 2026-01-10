@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { socketService } from '../services/socketService';
+import { fetchFinalLeaderboard } from '../services/adminApi';
 import { TOTAL_GAME_YEARS } from '../utils/constants';
 import { PlayerInfo, RoomInfo, MultiplayerGameState, MultiplayerMode } from '../types/multiplayer';
 import { AdminSettings } from '../types';
@@ -223,6 +224,104 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
       });
     };
 
+    // When server signals, host should fetch the final leaderboard from DB (server waits for players to log)
+    const handleFetchFinalLeaderboardFromDB = async (data: { roomId: string }) => {
+      try {
+        if (!roomInfo?.isHost) {
+          // Only the host needs to fetch from DB and show accurate data on the host leaderboard
+          return;
+        }
+
+        console.log(`📡 Received fetchFinalLeaderboardFromDB for room ${data.roomId} - host fetching from DB...`);
+        const res = await fetchFinalLeaderboard(data.roomId);
+
+        if (res.success && res.leaderboard) {
+          // Map backend leaderboard entries to frontend PlayerInfo shape
+          // Try to match DB entries to room players by name so we preserve socket ids and host flags
+          const mapped = res.leaderboard.map(pl => {
+            // Find in-room player with the same normalized name (trim + lowercase)
+            const normalizedName = pl.playerName?.trim().toLowerCase() || '';
+            const match = roomInfo?.players.find(p => (p.name || '').trim().toLowerCase() === normalizedName);
+
+            if (!match) {
+              console.warn(`Host: No in-room player matched DB playerName='${pl.playerName}' — falling back to DB uniqueId as id`);
+              // No in-room match: use DB unique id (pl.playerId) as identifier
+              return {
+                id: pl.playerId ?? pl.playerName,
+                name: pl.playerName,
+                isHost: false,
+                isReady: false,
+                networth: pl.networth,
+                portfolioBreakdown: pl.portfolioBreakdown || {
+                  cash: 0,
+                  savings: 0,
+                  gold: 0,
+                  funds: 0,
+                  stocks: 0,
+                  crypto: 0,
+                  commodities: 0,
+                  reits: 0,
+                },
+                quizStatus: { currentQuiz: null, isCompleted: false },
+              };
+            }
+
+            // If there are multiple players with the same normalized name, log a warning and pick the first match
+            const duplicates = roomInfo?.players.filter(p => (p.name || '').trim().toLowerCase() === normalizedName) || [];
+            if (duplicates.length > 1) {
+              console.warn(`Ambiguous player name '${pl.playerName}' matched ${duplicates.length} room players; using first match's socket id`);
+            }
+
+            // Use existing in-room id to ensure UI interactions (toggles, quiz flags) map correctly
+            return {
+              id: match.id,
+              name: pl.playerName,
+              isHost: match.isHost || false,
+              isReady: match.isReady || false,
+              networth: pl.networth,
+              portfolioBreakdown: pl.portfolioBreakdown || match.portfolioBreakdown || {
+                cash: 0,
+                savings: 0,
+                gold: 0,
+                funds: 0,
+                stocks: 0,
+                crypto: 0,
+                commodities: 0,
+                reits: 0,
+              },
+              quizStatus: match.quizStatus || { currentQuiz: null, isCompleted: false },
+            };
+          });
+
+          console.log(`✅ Host: final leaderboard fetched from DB (${mapped.length} players)`);
+
+          // Update in-memory room players with final DB values where possible so host UI reflects DB
+          setRoomInfo(prev => {
+            if (!prev) return prev;
+            const updatedPlayers = prev.players.map(p => {
+              const dbMatch = mapped.find(m => (m.name || '').trim().toLowerCase() === (p.name || '').trim().toLowerCase());
+              if (!dbMatch) return p;
+              return {
+                ...p,
+                networth: dbMatch.networth,
+                portfolioBreakdown: dbMatch.portfolioBreakdown || p.portfolioBreakdown,
+              };
+            });
+            return {
+              ...prev,
+              players: updatedPlayers,
+            };
+          });
+
+          setLeaderboard(mapped);
+        } else {
+          console.error('Host: Failed to fetch final leaderboard from DB:', res.message);
+        }
+      } catch (err) {
+        console.error('Error fetching final leaderboard from DB:', err);
+      }
+    };
+
     // Register event handlers
     socketService.on('connect', handleConnect);
     socketService.on('disconnect', handleDisconnect);
@@ -236,6 +335,91 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
     socketService.on('timeProgression', handleTimeProgression);
     socketService.on('gameEnded', handleGameEnded);
     socketService.on('leaderboardUpdate', handleLeaderboardUpdate);
+    socketService.on('fetchFinalLeaderboardFromDB', handleFetchFinalLeaderboardFromDB);
+
+    // Server or Host may broadcast an authoritative finalLeaderboard event - handle for all clients
+    const handleFinalLeaderboard = (data: { leaderboard: { playerId: string; playerName: string; networth: number; portfolioBreakdown?: any }[] }) => {
+      try {
+        if (!data?.leaderboard || !Array.isArray(data.leaderboard)) return;
+
+        // Map DB entries to frontend PlayerInfo-like shape, attempting to preserve existing socket ids
+        const mapped = data.leaderboard.map(pl => {
+          const normalizedName = pl.playerName?.trim().toLowerCase() || '';
+          const match = roomInfo?.players.find(p => (p.name || '').trim().toLowerCase() === normalizedName);
+
+          if (!match) {
+            // No in-room player matched: keep DB id
+            return {
+              id: pl.playerId ?? pl.playerName,
+              name: pl.playerName,
+              isHost: false,
+              isReady: false,
+              networth: pl.networth,
+              portfolioBreakdown: pl.portfolioBreakdown || {
+                cash: 0,
+                savings: 0,
+                gold: 0,
+                funds: 0,
+                stocks: 0,
+                crypto: 0,
+                commodities: 0,
+                reits: 0,
+              },
+              quizStatus: { currentQuiz: null, isCompleted: false },
+            };
+          }
+
+          // If duplicate names exist, warn and pick the first match
+          const duplicates = roomInfo?.players.filter(p => (p.name || '').trim().toLowerCase() === normalizedName) || [];
+          if (duplicates.length > 1) {
+            console.warn(`Ambiguous player name '${pl.playerName}' matched ${duplicates.length} room players; using first match`);
+          }
+
+          return {
+            id: match.id,
+            name: pl.playerName,
+            isHost: match.isHost || false,
+            isReady: match.isReady || false,
+            networth: pl.networth,
+            portfolioBreakdown: pl.portfolioBreakdown || match.portfolioBreakdown || {
+              cash: 0,
+              savings: 0,
+              gold: 0,
+              funds: 0,
+              stocks: 0,
+              crypto: 0,
+              commodities: 0,
+              reits: 0,
+            },
+            quizStatus: match.quizStatus || { currentQuiz: null, isCompleted: false },
+          };
+        });
+
+        // Update in-memory room players with final DB values where possible
+        setRoomInfo(prev => {
+          if (!prev) return prev;
+          const updatedPlayers = prev.players.map(p => {
+            const dbMatch = mapped.find(m => (m.name || '').trim().toLowerCase() === (p.name || '').trim().toLowerCase());
+            if (!dbMatch) return p;
+            return {
+              ...p,
+              networth: dbMatch.networth,
+              portfolioBreakdown: dbMatch.portfolioBreakdown || p.portfolioBreakdown,
+            };
+          });
+          return {
+            ...prev,
+            players: updatedPlayers,
+          };
+        });
+
+        setLeaderboard(mapped);
+      } catch (err) {
+        console.error('Error handling finalLeaderboard event:', err);
+      }
+    };
+
+    socketService.on('finalLeaderboard', handleFinalLeaderboard);
 
     // Cleanup - only on unmount
     return () => {
@@ -251,6 +435,8 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
       socketService.off('timeProgression', handleTimeProgression);
       socketService.off('gameEnded', handleGameEnded);
       socketService.off('leaderboardUpdate', handleLeaderboardUpdate);
+      socketService.off('fetchFinalLeaderboardFromDB', handleFetchFinalLeaderboardFromDB);
+      socketService.off('finalLeaderboard', handleFinalLeaderboard);
 
       // Don't disconnect - keep socket alive for the entire app lifecycle
       // socketService.disconnect();
