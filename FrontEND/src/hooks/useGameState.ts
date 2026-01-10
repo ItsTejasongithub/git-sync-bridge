@@ -16,6 +16,8 @@ import {
 import { generateLifeEvents } from '../utils/lifeEvents';
 import { generateAssetUnlockSchedule, extractSelectedAssetsFromSchedule } from '../utils/assetUnlockCalculator';
 import { generateQuestionIndices } from '../utils/assetEducation';
+import { tradeTracker } from '../utils/tradeTracker';
+import { bankingTracker } from '../utils/bankingTracker';
 
 // Performance optimization: Disable debug logging in production
 const DEBUG_MODE = false; // Set to true only when debugging
@@ -124,6 +126,10 @@ export const useGameState = (isMultiplayer: boolean = false) => {
   useEffect(() => {
     if (gameState.mode !== 'solo' || gameState.isPaused || isMultiplayer) return;
 
+    // Use admin setting for month duration, or default to 5000ms (5 seconds)
+    const monthDuration = gameState.adminSettings?.monthDuration || MONTH_DURATION_MS;
+    console.log(`⏱️  Solo Mode: Month duration set to ${monthDuration}ms (${monthDuration / 1000} seconds)`);
+
     const interval = setInterval(() => {
       setGameState(prev => {
         // CRITICAL FIX: Stop timer if game has ended (year 20, month 12) and mark as ended
@@ -185,7 +191,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
             id: `recurring_${newYear}_${newMonth}_${Date.now()}`,
             type: 'recurring_income',
             amount: prev.adminSettings.recurringIncome,
-            message: 'Monthly Salary',
+            message: 'Recurring Income Received',
             gameYear: newYear,
             gameMonth: newMonth,
             timestamp: Date.now()
@@ -271,16 +277,22 @@ export const useGameState = (isMultiplayer: boolean = false) => {
           lifeEvents: updatedLifeEvents
         };
       });
-    }, MONTH_DURATION_MS);
+    }, monthDuration);
 
     return () => clearInterval(interval);
-  }, [gameState.mode, gameState.isPaused, isMultiplayer]);
+  }, [gameState.mode, gameState.isPaused, isMultiplayer, gameState.adminSettings?.monthDuration]);
 
   const openSettings = useCallback(() => {
     setGameState(prev => ({
       ...prev,
       mode: 'settings'
     }));
+  }, []);
+
+  // Allow external code (App) to apply updated admin settings into running gameState
+  const applyAdminSettings = useCallback((settings?: AdminSettings) => {
+    if (!settings) return;
+    setGameState(prev => ({ ...prev, adminSettings: settings }));
   }, []);
 
   const startMultiplayerGame = useCallback((adminSettings: AdminSettings, initialData?: { selectedAssets?: any; assetUnlockSchedule?: any; yearlyQuotes?: string[]; quizQuestionIndices?: { [category: string]: number } }) => {
@@ -386,11 +398,14 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     // Generate random question indices for quiz (one per category, consistent for this game session)
     const quizQuestionIndices = generateQuestionIndices();
 
-    const soloLifeEvents = generateLifeEvents(adminSettings?.eventsCount || 3, assetUnlockSchedule);
+    const eventsCountToUse = adminSettings?.eventsCount || 3;
+    console.log('🎲 Generating solo life events with count:', eventsCountToUse, '(adminSettings.eventsCount:', adminSettings?.eventsCount, ')');
+    const soloLifeEvents = generateLifeEvents(eventsCountToUse, assetUnlockSchedule);
 
     // Debug: print generated life events so testers can verify schedule and timing
     try {
-      console.log('✨ Solo life events generated:', soloLifeEvents.map((e: any) => ({ id: e.id, msg: e.message, year: e.gameYear, month: e.gameMonth, amount: e.amount })));
+      console.log('✨ Solo life events generated:', soloLifeEvents.length, 'events');
+      console.log('   Event details:', soloLifeEvents.map((e: any) => ({ id: e.id, msg: e.message, year: e.gameYear, month: e.gameMonth, amount: e.amount })));
     } catch (err) {
       // noop
     }
@@ -436,12 +451,17 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     setGameState(prev => {
       if (gameHasEnded(prev)) return prev; // no updates after game end
       if (amount > prev.pocketCash) return prev;
+      
+      const newBalance = prev.savingsAccount.balance + amount;
+      // Log banking transaction
+      bankingTracker.logDeposit(amount, newBalance, prev.currentYear, prev.currentMonth, 'manual_deposit');
+      
       return {
         ...prev,
         pocketCash: prev.pocketCash - amount,
         savingsAccount: {
           ...prev.savingsAccount,
-          balance: prev.savingsAccount.balance + amount,
+          balance: newBalance,
           totalDeposited: (prev.savingsAccount.totalDeposited || 0) + amount
         }
       };
@@ -458,13 +478,17 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       const currentDeposited = prev.savingsAccount.totalDeposited || currentBalance;
       const withdrawalRatio = amount / currentBalance;
       const newTotalDeposited = Math.max(0, currentDeposited - (currentDeposited * withdrawalRatio));
+      const newBalance = currentBalance - amount;
+      
+      // Log banking transaction
+      bankingTracker.logWithdrawal(amount, newBalance, prev.currentYear, prev.currentMonth, 'manual_withdrawal');
 
       return {
         ...prev,
         pocketCash: prev.pocketCash + amount,
         savingsAccount: {
           ...prev.savingsAccount,
-          balance: prev.savingsAccount.balance - amount,
+          balance: newBalance,
           totalDeposited: newTotalDeposited
         }
       };
@@ -490,6 +514,10 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         maturityYear,
         isMatured: false
       };
+      
+      const newBalance = prev.savingsAccount.balance;
+      // Log FD investment transaction
+      bankingTracker.logFDInvestment(newFD.id, amount, duration, interestRate, newBalance, prev.currentYear, prev.currentMonth);
 
       return {
         ...prev,
@@ -503,7 +531,19 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     setGameState(prev => {      if (gameHasEnded(prev)) return prev;      const fd = prev.fixedDeposits.find(f => f.id === fdId);
       if (!fd || !fd.isMatured) return prev;
 
-      const maturityAmount = fd.amount * (1 + fd.interestRate / 100);
+      // FD rates are annual (PA - Per Annum)
+      // Calculate actual return based on duration:
+      // - 3 months: rate * (3/12) = rate * 0.25
+      // - 12 months: rate * (12/12) = rate * 1
+      // - 36 months: rate * (36/12) = rate * 3
+      const durationInYears = fd.duration / 12;
+      const totalReturn = (fd.interestRate / 100) * durationInYears;
+      const maturityAmount = fd.amount * (1 + totalReturn);
+
+      console.log(`💰 FD Maturity: ₹${fd.amount} @ ${fd.interestRate}% PA for ${fd.duration} months = ₹${maturityAmount.toFixed(2)} (return: ${(totalReturn * 100).toFixed(2)}%)`);
+      
+      // Log FD maturity transaction
+      bankingTracker.logFDMaturity(fdId, fd.amount, maturityAmount, prev.pocketCash + maturityAmount, prev.currentYear, prev.currentMonth);
 
       return {
         ...prev,
@@ -520,7 +560,11 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       if (!fd) return prev;
 
       const penalty = 0.01; // 1% penalty
+      const penaltyAmount = fd.amount * penalty;
       const returnAmount = fd.amount * (1 - penalty);
+      
+      // Log FD break transaction with penalty
+      bankingTracker.logFDBreak(fdId, fd.amount, returnAmount, penaltyAmount, prev.pocketCash + returnAmount, prev.currentYear, prev.currentMonth);
 
       return {
         ...prev,
@@ -595,6 +639,16 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         return prev;
       }
 
+      // Get holding quantity before buy
+      let holdingQuantityBefore = 0;
+      if (assetType === 'physicalGold' || assetType === 'digitalGold' || assetType === 'indexFund' ||
+          assetType === 'mutualFund' || assetType === 'commodity') {
+        holdingQuantityBefore = (prev.holdings[assetType as keyof typeof prev.holdings] as AssetHolding).quantity;
+      } else if (assetType === 'stocks' || assetType === 'crypto' || assetType === 'reits') {
+        const assetGroup = prev.holdings[assetType as 'stocks' | 'crypto' | 'reits'];
+        holdingQuantityBefore = assetGroup[assetName]?.quantity || 0;
+      }
+
       // Always clone the nested holdings objects immutably to avoid accidental in-place mutations
       // which can cause duplicate-applied changes when multiple transactions are processed rapidly.
       const newHoldings = { ...prev.holdings } as typeof prev.holdings;
@@ -630,6 +684,23 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         pocketCash: prev.pocketCash - totalCost,
         holdings: newHoldings
       };
+
+      // Log trade for AI analysis
+      tradeTracker.logTrade({
+        transactionType: 'buy',
+        assetType,
+        assetName,
+        quantity,
+        price: currentPrice,
+        totalValue: totalCost,
+        gameYear: prev.currentYear,
+        gameMonth: prev.currentMonth,
+        timestamp: Date.now(),
+        pocketCashBefore: prev.pocketCash,
+        pocketCashAfter: updatedState.pocketCash,
+        holdingQuantityBefore,
+        holdingQuantityAfter: holdingQuantityBefore + quantity,
+      });
 
       // Release the reserved funds for this transaction after the state update settles
       setTimeout(() => {
@@ -733,6 +804,23 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         pocketCash: prev.pocketCash + saleAmount,
         holdings: newHoldings
       };
+
+      // Log trade for AI analysis
+      tradeTracker.logTrade({
+        transactionType: 'sell',
+        assetType,
+        assetName,
+        quantity,
+        price: currentPrice,
+        totalValue: saleAmount,
+        gameYear: prev.currentYear,
+        gameMonth: prev.currentMonth,
+        timestamp: Date.now(),
+        pocketCashBefore: prev.pocketCash,
+        pocketCashAfter: updatedState.pocketCash,
+        holdingQuantityBefore: holding.quantity,
+        holdingQuantityAfter: newQuantity,
+      });
 
       console.log(`✅ Updated Pocket Cash: ₹${prev.pocketCash.toFixed(2)} + ₹${saleAmount.toFixed(2)} = ₹${updatedState.pocketCash.toFixed(2)}`);
       console.log(`🔍 ===== SELL TRANSACTION END =====\n`);
@@ -902,7 +990,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
             id: `recurring_${year}_${month}_${Date.now()}`,
             type: 'recurring_income',
             amount: prev.adminSettings.recurringIncome,
-            message: 'Monthly Salary',
+            message: 'Recurring Income Received',
             gameYear: year,
             gameMonth: month,
             timestamp: Date.now()
@@ -954,7 +1042,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
           id: `recurring_${year}_${month}_${Date.now()}`,
           type: 'recurring_income',
           amount: prev.adminSettings.recurringIncome,
-          message: 'Monthly Salary',
+          message: 'Recurring Income Received',
           gameYear: year,
           gameMonth: month,
           timestamp: Date.now()
@@ -1003,6 +1091,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     openSettings,
     startSoloGame,
     startMultiplayerGame,
+    applyAdminSettings,
     backToMenu,
     depositToSavings,
     withdrawFromSavings,

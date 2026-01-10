@@ -8,6 +8,7 @@ export interface AdminSettings {
   recurringIncome: number; // Amount added to pocket cash every 6 months
   enableQuiz: boolean; // Enable/disable quiz on asset unlock
   eventsCount?: number; // Number of random life events per player (min 1, max 20). Default: 3
+  monthDuration?: number; // Duration of each game month in milliseconds. Default: 5000 (5 seconds)
 }
 
 export interface PlayerInfo {

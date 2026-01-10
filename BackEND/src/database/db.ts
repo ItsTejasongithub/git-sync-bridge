@@ -52,13 +52,122 @@ function runMigrations(): void {
   if (!db) throw new Error('Database not initialized');
 
   // Check admin_settings columns
-  const info = db.exec("PRAGMA table_info('admin_settings')");
+  const infoSettings = db.exec("PRAGMA table_info('admin_settings')");
   const hasEventsCount =
-    info && info.length > 0 && info[0].values && info[0].values.some((row: any) => row[1] === 'events_count');
+    infoSettings && infoSettings.length > 0 && infoSettings[0].values && infoSettings[0].values.some((row: any) => row[1] === 'events_count');
 
   if (!hasEventsCount) {
     console.log('Migration: adding missing column events_count to admin_settings');
     db.run('ALTER TABLE admin_settings ADD COLUMN events_count INTEGER NOT NULL DEFAULT 3');
+    saveDatabase();
+  }
+
+  // Check player_logs columns
+  const infoLogs = db.exec("PRAGMA table_info('player_logs')");
+  const hasPlayerAge =
+    infoLogs && infoLogs.length > 0 && infoLogs[0].values && infoLogs[0].values.some((row: any) => row[1] === 'player_age');
+
+  if (!hasPlayerAge) {
+    console.log('Migration: adding missing column player_age to player_logs');
+    db.run('ALTER TABLE player_logs ADD COLUMN player_age INTEGER');
+    saveDatabase();
+  }
+
+  // Check if unique_id column exists in player_logs
+  const hasUniqueId =
+    infoLogs && infoLogs.length > 0 && infoLogs[0].values && infoLogs[0].values.some((row: any) => row[1] === 'unique_id');
+
+  if (!hasUniqueId) {
+    console.log('Migration: adding missing column unique_id to player_logs');
+    // Add column WITHOUT UNIQUE (sql.js doesn't support UNIQUE in ALTER TABLE)
+    // The index below provides uniqueness constraint enforcement
+    db.run('ALTER TABLE player_logs ADD COLUMN unique_id TEXT');
+    db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_player_logs_unique_id ON player_logs(unique_id)`);
+    saveDatabase();
+  }
+
+  // Check if trading_transactions table exists
+  const tablesList = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='trading_transactions'");
+  const hasTradesTable = tablesList && tablesList.length > 0 && tablesList[0].values && tablesList[0].values.length > 0;
+
+  if (!hasTradesTable) {
+    console.log('Migration: creating trading_transactions table');
+    db.run(`
+      CREATE TABLE IF NOT EXISTS trading_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        log_id INTEGER NOT NULL,
+        player_name TEXT NOT NULL,
+        transaction_type TEXT NOT NULL,
+        asset_type TEXT NOT NULL,
+        asset_name TEXT,
+        quantity REAL NOT NULL,
+        entry_price REAL NOT NULL,
+        exit_price REAL,
+        position_size REAL NOT NULL,
+        profit_loss REAL,
+        game_year INTEGER NOT NULL,
+        game_month INTEGER NOT NULL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (log_id) REFERENCES player_logs(id) ON DELETE CASCADE
+      )
+    `);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_trades_log_id ON trading_transactions(log_id)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_trades_player ON trading_transactions(player_name)`);
+    saveDatabase();
+  }
+
+  // Check if ai_reports table exists
+  const aiReportsList = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='ai_reports'");
+  const hasAiReportsTable = aiReportsList && aiReportsList.length > 0 && aiReportsList[0].values && aiReportsList[0].values.length > 0;
+
+  if (!hasAiReportsTable) {
+    console.log('Migration: creating ai_reports table');
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ai_reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        report_id TEXT UNIQUE NOT NULL,
+        unique_id TEXT NOT NULL,
+        player_name TEXT NOT NULL,
+        summary_json TEXT NOT NULL,
+        trades_json TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_ai_reports_unique_id ON ai_reports(unique_id)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_ai_reports_report_id ON ai_reports(report_id)`);
+    saveDatabase();
+  }
+
+  // Check if banking_transactions table exists
+  const bankingTransList = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='banking_transactions'");
+  const hasBankingTable = bankingTransList && bankingTransList.length > 0 && bankingTransList[0].values && bankingTransList[0].values.length > 0;
+
+  if (!hasBankingTable) {
+    console.log('Migration: creating banking_transactions table');
+    db.run(`
+      CREATE TABLE IF NOT EXISTS banking_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        log_id INTEGER NOT NULL,
+        player_name TEXT NOT NULL,
+        transaction_type TEXT NOT NULL,
+        sub_type TEXT,
+        amount REAL NOT NULL,
+        balance_after REAL NOT NULL,
+        fd_id TEXT,
+        fd_duration_months INTEGER,
+        interest_rate REAL,
+        maturity_amount REAL,
+        penalty_amount REAL,
+        remarks TEXT,
+        game_year INTEGER NOT NULL,
+        game_month INTEGER NOT NULL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (log_id) REFERENCES player_logs(id) ON DELETE CASCADE
+      )
+    `);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_banking_log_id ON banking_transactions(log_id)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_banking_player ON banking_transactions(player_name)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_banking_type ON banking_transactions(transaction_type)`);
     saveDatabase();
   }
 }
@@ -99,8 +208,10 @@ async function createTables(): Promise<void> {
   db.run(`
     CREATE TABLE IF NOT EXISTS player_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      unique_id TEXT UNIQUE NOT NULL,
       game_mode TEXT NOT NULL,
       player_name TEXT NOT NULL,
+      player_age INTEGER,
       room_id TEXT,
       final_networth REAL NOT NULL,
       final_cagr REAL,
@@ -113,9 +224,34 @@ async function createTables(): Promise<void> {
   `);
 
   // Indexes for better query performance
+  db.run(`CREATE INDEX IF NOT EXISTS idx_player_logs_unique_id ON player_logs(unique_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_player_logs_game_mode ON player_logs(game_mode)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_player_logs_completed_at ON player_logs(completed_at)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_player_logs_room_id ON player_logs(room_id)`);
+
+  // Trading transactions table for AI analysis
+  db.run(`
+    CREATE TABLE IF NOT EXISTS trading_transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      log_id INTEGER NOT NULL,
+      player_name TEXT NOT NULL,
+      transaction_type TEXT NOT NULL,
+      asset_type TEXT NOT NULL,
+      asset_name TEXT,
+      quantity REAL NOT NULL,
+      entry_price REAL NOT NULL,
+      exit_price REAL,
+      position_size REAL NOT NULL,
+      profit_loss REAL,
+      game_year INTEGER NOT NULL,
+      game_month INTEGER NOT NULL,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (log_id) REFERENCES player_logs(id) ON DELETE CASCADE
+    )
+  `);
+
+  db.run(`CREATE INDEX IF NOT EXISTS idx_trades_log_id ON trading_transactions(log_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_trades_player ON trading_transactions(player_name)`);
 
   console.log('Database tables created successfully');
 }

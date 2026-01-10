@@ -29,7 +29,8 @@
       "Bash(sqlite3:*)",
       "Bash(node inspectDB.js:*)",
       "Bash(node viewLogs.js:*)",
-      "Bash(del game.db)"
+      "Bash(del game.db)",
+      "Bash(node -e:*)"
     ]
   }
 }

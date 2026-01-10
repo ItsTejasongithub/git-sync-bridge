@@ -30,7 +30,14 @@ export const FixedDepositCard: React.FC<FixedDepositCardProps> = ({
     const monthsElapsed = (currentYear - fd.startYear) * 12 + (currentMonth - fd.startMonth);
     const totalMonths = fd.duration;
     const progress = Math.min(monthsElapsed / totalMonths, 1);
-    const fullMaturityValue = fd.amount * (1 + fd.interestRate / 100);
+
+    // FD rates are annual (PA - Per Annum)
+    // Calculate total return based on full duration
+    const durationInYears = fd.duration / 12;
+    const totalReturn = (fd.interestRate / 100) * durationInYears;
+    const fullMaturityValue = fd.amount * (1 + totalReturn);
+
+    // Pro-rate the interest based on time elapsed
     const accruedInterest = (fullMaturityValue - fd.amount) * progress;
     return fd.amount + accruedInterest;
   };
@@ -113,15 +120,15 @@ export const FixedDepositCard: React.FC<FixedDepositCardProps> = ({
       <div className="fd-rates">
         <div className="rate-item">
           <span className="rate-label">3Mo</span>
-          <span className="rate-value">{currentRates.threeMonth}%</span>
+          <span className="rate-value">{currentRates.threeMonth}% PA</span>
         </div>
         <div className="rate-item">
           <span className="rate-label">1Yr</span>
-          <span className="rate-value">{currentRates.oneYear}%</span>
+          <span className="rate-value">{currentRates.oneYear}% PA</span>
         </div>
         <div className="rate-item">
           <span className="rate-label">3Yr</span>
-          <span className="rate-value">{currentRates.threeYear}%</span>
+          <span className="rate-value">{currentRates.threeYear}% PA</span>
         </div>
       </div>
 
@@ -213,7 +220,7 @@ export const FixedDepositCard: React.FC<FixedDepositCardProps> = ({
               <div className="fd-info">
                 <span>₹{fd.amount.toFixed(0)}</span>
                 <span>{fd.duration === 3 ? '3Mo' : fd.duration === 12 ? '1Yr' : '3Yr'}</span>
-                <span>{fd.interestRate}%</span>
+                <span>{fd.interestRate}%PA</span>
                 <div className="fd-pnl" style={{ color: pnl >= 0 ? '#288d00ff' : 'rgba(175, 1, 1, 1)' }}>
                   {pnl >= 0 ? '+' : ''}₹{pnl.toFixed(0)} ({pnl >= 0 ? '+' : ''}{pnlPercentage.toFixed(2)}%)
                 </div>

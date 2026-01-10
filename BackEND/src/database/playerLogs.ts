@@ -3,8 +3,10 @@ import { AdminSettings, PortfolioBreakdown } from '../types';
 
 export interface PlayerLog {
   id: number;
+  uniqueId: string; // Unique identifier: YYYYMMDDHHMMSS-XXXXX
   gameMode: 'solo' | 'multiplayer';
   playerName: string;
+  playerAge: number | null;
   roomId: string | null;
   finalNetworth: number;
   finalCAGR: number | null;
@@ -18,6 +20,7 @@ export interface PlayerLog {
 export interface LogPlayerGameParams {
   gameMode: 'solo' | 'multiplayer';
   playerName: string;
+  playerAge?: number;
   roomId?: string;
   finalNetworth: number;
   finalCAGR?: number;
@@ -28,19 +31,45 @@ export interface LogPlayerGameParams {
 }
 
 /**
+ * Generate a unique log ID using timestamp + random component
+ * Format: YYYYMMDDHHMMSS-XXXXX (e.g., 20260109143045-A7B2C)
+ */
+function generateUniqueLogId(): string {
+  const now = new Date();
+  const timestamp = now.toISOString()
+    .replace(/[-:T]/g, '')
+    .slice(0, 14); // YYYYMMDDHHMMSS
+
+  // Generate 5-character random alphanumeric string
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let random = '';
+  for (let i = 0; i < 5; i++) {
+    random += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return `${timestamp}-${random}`;
+}
+
+/**
  * Log a completed game for a player
  */
-export function logPlayerGame(params: LogPlayerGameParams): { success: boolean; message: string; logId?: number } {
+export function logPlayerGame(params: LogPlayerGameParams): { success: boolean; message: string; logId?: number; uniqueId?: string } {
   try {
     const db = getDatabase();
 
     const portfolioJson = JSON.stringify(params.portfolioBreakdown);
     const settingsJson = JSON.stringify(params.adminSettings);
 
+    // Generate unique string ID for this log entry
+    const uniqueLogId = generateUniqueLogId();
+    console.log(`🔑 Generated unique log ID: ${uniqueLogId}`);
+
     db.run(
       `INSERT INTO player_logs (
+        unique_id,
         game_mode,
         player_name,
+        player_age,
         room_id,
         final_networth,
         final_cagr,
@@ -48,10 +77,12 @@ export function logPlayerGame(params: LogPlayerGameParams): { success: boolean; 
         portfolio_breakdown,
         admin_settings,
         game_duration_minutes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        uniqueLogId,
         params.gameMode,
         params.playerName,
+        params.playerAge !== undefined ? params.playerAge : null,
         params.roomId || null,
         params.finalNetworth,
         params.finalCAGR || null,
@@ -64,7 +95,7 @@ export function logPlayerGame(params: LogPlayerGameParams): { success: boolean; 
 
     saveDatabase();
 
-    // Get the last inserted row ID
+    // Get the auto-increment ID (still used internally for database)
     const lastIdStmt = db.prepare('SELECT last_insert_rowid() as id');
     lastIdStmt.step();
     const result = lastIdStmt.getAsObject();
@@ -74,6 +105,7 @@ export function logPlayerGame(params: LogPlayerGameParams): { success: boolean; 
 
     console.log(`\n🎮 ═══════════════════════════════════════════════════════════════`);
     console.log(`   Player Game Logged: ${params.playerName} (${params.gameMode.toUpperCase()})`);
+    console.log(`   📋 Unique ID: ${uniqueLogId}`);
     console.log(`   Log ID: ${logId}`);
     console.log(`   💰 Final Networth: ₹${params.finalNetworth.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`);
     if (params.finalCAGR) {
@@ -96,12 +128,14 @@ export function logPlayerGame(params: LogPlayerGameParams): { success: boolean; 
       success: true,
       message: 'Player game logged successfully',
       logId,
+      uniqueId: uniqueLogId,
     };
   } catch (error) {
     console.error('Log player game error:', error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     return {
       success: false,
-      message: 'Failed to log player game',
+      message: `Failed to log player game: ${errMsg}`,
     };
   }
 }
@@ -160,8 +194,10 @@ export function getPlayerLogs(filters?: {
       const row = stmt.getAsObject();
       logs.push({
         id: row.id as number,
+        uniqueId: row.unique_id as string,
         gameMode: row.game_mode as 'solo' | 'multiplayer',
         playerName: row.player_name as string,
+        playerAge: row.player_age as number | null,
         roomId: row.room_id as string | null,
         finalNetworth: row.final_networth as number,
         finalCAGR: row.final_cagr as number | null,
@@ -178,6 +214,38 @@ export function getPlayerLogs(filters?: {
   } catch (error) {
     console.error('Get player logs error:', error);
     return [];
+  }
+}
+
+export function getPlayerLogByUniqueId(uniqueId: string): PlayerLog | null {
+  try {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT * FROM player_logs WHERE unique_id = ? LIMIT 1');
+    stmt.bind([uniqueId]);
+    if (!stmt.step()) {
+      stmt.free();
+      return null;
+    }
+    const row = stmt.getAsObject();
+    stmt.free();
+    return {
+      id: row.id as number,
+      uniqueId: row.unique_id as string,
+      gameMode: row.game_mode as 'solo' | 'multiplayer',
+      playerName: row.player_name as string,
+      playerAge: row.player_age as number | null,
+      roomId: row.room_id as string | null,
+      finalNetworth: row.final_networth as number,
+      finalCAGR: row.final_cagr as number | null,
+      profitLoss: row.profit_loss as number | null,
+      portfolioBreakdown: JSON.parse(row.portfolio_breakdown as string),
+      adminSettings: JSON.parse(row.admin_settings as string),
+      gameDurationMinutes: row.game_duration_minutes as number | null,
+      completedAt: row.completed_at as string,
+    };
+  } catch (error) {
+    console.error('Get player log by uniqueId error:', error);
+    return null;
   }
 }
 

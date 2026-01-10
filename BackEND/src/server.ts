@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
@@ -14,6 +15,8 @@ import * as os from 'os';
 import { initializeDatabase, closeDatabase } from './database/db';
 import adminRoutes from './routes/adminRoutes';
 import gameLogRoutes from './routes/gameLogRoutes';
+import aiReportRoutes from './routes/aiReportRoutes';
+import tradeRoutes from './routes/tradeRoutes';
 
 // Performance: Reduce logging for better performance
 const VERBOSE_LOGGING = false; // Set to true only for debugging
@@ -97,6 +100,12 @@ app.use('/api/admin', adminRoutes);
 
 // Game logging API routes
 app.use('/api/game', gameLogRoutes);
+
+// AI Report API routes
+app.use('/api/ai-report', aiReportRoutes);
+
+// Trade logging API routes
+app.use('/api/trades', tradeRoutes);
 
 // DEV-ONLY: Trigger game end for all rooms or a specific room
 // Only enabled when NODE_ENV is not 'production' to avoid accidental use
@@ -279,8 +288,9 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
       // Broadcast initial leaderboard so UI shows up immediately
       gameSyncManager.broadcastLeaderboard(roomId);
 
-      // Start server-side time progression (5 seconds = 1 month)
-      const MONTH_DURATION_MS = 5000;
+      // Start server-side time progression - use admin setting or default 5000ms (5 seconds)
+      const MONTH_DURATION_MS = data.adminSettings.monthDuration || 5000;
+      console.log(`⏱️  Month duration set to: ${MONTH_DURATION_MS}ms (${MONTH_DURATION_MS / 1000} seconds)`);
       const interval = gameSyncManager.startTimeProgression(roomId, MONTH_DURATION_MS);
       if (interval) {
         room.timeProgressionInterval = interval;

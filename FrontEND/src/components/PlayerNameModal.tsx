@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 
 interface PlayerNameModalProps {
   isOpen: boolean;
-  onSubmit: (name: string) => void;
+  onSubmit: (name: string, age: number) => void;
   onCancel: () => void;
 }
 
 export const PlayerNameModal: React.FC<PlayerNameModalProps> = ({ isOpen, onSubmit, onCancel }) => {
   const [playerName, setPlayerName] = useState('');
+  const [playerAge, setPlayerAge] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -28,13 +29,26 @@ export const PlayerNameModal: React.FC<PlayerNameModalProps> = ({ isOpen, onSubm
       return;
     }
 
-    onSubmit(playerName.trim());
+    if (!playerAge.trim()) {
+      setError('Please enter your age');
+      return;
+    }
+
+    const age = parseInt(playerAge.trim());
+    if (isNaN(age) || age < 10 || age > 100) {
+      setError('Age must be between 10 and 100');
+      return;
+    }
+
+    onSubmit(playerName.trim(), age);
     setPlayerName('');
+    setPlayerAge('');
     setError('');
   };
 
   const handleCancel = () => {
     setPlayerName('');
+    setPlayerAge('');
     setError('');
     onCancel();
   };
@@ -89,6 +103,30 @@ export const PlayerNameModal: React.FC<PlayerNameModalProps> = ({ isOpen, onSubm
               }}
               placeholder="Enter your name"
               autoFocus
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '5px',
+                border: error ? '2px solid #ff6b6b' : '1px solid #4ecca3',
+                backgroundColor: '#16213e',
+                color: '#fff',
+                fontSize: '16px',
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ color: '#fff', display: 'block', marginBottom: '8px', fontSize: '14px' }}>
+              Age
+            </label>
+            <input
+              type="number"
+              value={playerAge}
+              onChange={(e) => {
+                setPlayerAge(e.target.value);
+                setError('');
+              }}
+              placeholder="Enter your age"
               style={{
                 width: '100%',
                 padding: '12px',

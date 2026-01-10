@@ -148,6 +148,7 @@ export const playerLogsApi = {
   async logGame(params: {
     gameMode: 'solo' | 'multiplayer';
     playerName: string;
+    playerAge?: number;
     roomId?: string;
     finalNetworth: number;
     finalCAGR?: number;
@@ -155,7 +156,7 @@ export const playerLogsApi = {
     portfolioBreakdown: any;
     adminSettings: AdminSettings;
     gameDurationMinutes?: number;
-  }): Promise<ApiResponse & { logId?: number }> {
+  }): Promise<ApiResponse & { logId?: number; uniqueId?: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/api/game/log`, {
         method: 'POST',

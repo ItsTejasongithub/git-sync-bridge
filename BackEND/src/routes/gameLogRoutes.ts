@@ -12,6 +12,7 @@ router.post('/log', (req: Request, res: Response) => {
     const {
       gameMode,
       playerName,
+      playerAge,
       roomId,
       finalNetworth,
       finalCAGR,
@@ -39,6 +40,7 @@ router.post('/log', (req: Request, res: Response) => {
     const params: LogPlayerGameParams = {
       gameMode,
       playerName,
+      playerAge,
       roomId,
       finalNetworth,
       finalCAGR,
@@ -47,6 +49,8 @@ router.post('/log', (req: Request, res: Response) => {
       adminSettings,
       gameDurationMinutes,
     };
+
+    console.log('Logging game with params:', { playerName, playerAge, gameMode, finalNetworth });
 
     const result = logPlayerGame(params);
 

@@ -36,6 +36,7 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
   const [initialPocketCash, setInitialPocketCash] = useState(initialSettings?.initialPocketCash || 100000);
   const [recurringIncome, setRecurringIncome] = useState(initialSettings?.recurringIncome || 50000);
   const [eventsCount, setEventsCount] = useState(initialSettings?.eventsCount || 3);
+  const [monthDuration, setMonthDuration] = useState(initialSettings?.monthDuration || 5000);
   const [calculatedStartYear, setCalculatedStartYear] = useState<number>(2005);
   const [latestAssetYear, setLatestAssetYear] = useState<number>(2005);
 
@@ -83,7 +84,8 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
       initialPocketCash,
       recurringIncome,
       enableQuiz,
-      eventsCount
+      eventsCount,
+      monthDuration
     };
 
     if (isMultiplayerMode && onApply) {
@@ -198,6 +200,20 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
                 ))}
               </select>
               <small>Number of random life events per player (1 - 20)</small>
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="monthDuration">Month Duration (seconds)</label>
+              <input
+                id="monthDuration"
+                type="number"
+                min="1000"
+                max="30000"
+                step="1000"
+                value={monthDuration}
+                onChange={(e) => setMonthDuration(Number(e.target.value))}
+              />
+              <small>Duration of each game month in milliseconds (1000ms = 1 second). Default: 5000ms (5 seconds)</small>
             </div>
           </div>
         </div>

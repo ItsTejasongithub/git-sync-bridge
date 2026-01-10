@@ -40,6 +40,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
     enableQuiz: true,
     // Number of random life events per player (default 3, 1..20)
     eventsCount: 3,
+    monthDuration: 5000, // Default: 5 seconds per month
   });
 
   // Track latest asset year
@@ -101,6 +102,13 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
 
     if (response.success) {
       setSaveMessage('Settings saved successfully!');
+      // Notify the app that admin settings were updated so running games can react
+      try {
+        const evt = new CustomEvent('adminSettingsUpdated', { detail: response.settings });
+        window.dispatchEvent(evt);
+      } catch (err) {
+        // noop
+      }
       setTimeout(() => setSaveMessage(''), 3000);
     } else {
       setError(response.message || 'Failed to save settings');
@@ -118,6 +126,13 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
 
     if (response.success && response.settings) {
       setSettings(response.settings);
+      // Notify the app about reset settings as well
+      try {
+        const evt = new CustomEvent('adminSettingsUpdated', { detail: response.settings });
+        window.dispatchEvent(evt);
+      } catch (err) {
+        // noop
+      }
       setSaveMessage('Settings reset to default!');
       setTimeout(() => setSaveMessage(''), 3000);
     } else {
@@ -444,6 +459,33 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
               </select>
               <p style={{ color: '#888', fontSize: '12px', marginTop: '5px' }}>
                 Number of random life events scheduled per player during a game (1 - 20)
+              </p>
+            </div>
+
+            {/* Month Duration */}
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ color: '#fff', display: 'block', marginBottom: '5px' }}>
+                Month Duration (milliseconds)
+              </label>
+              <input
+                type="number"
+                min="1000"
+                max="30000"
+                step="1000"
+                value={settings.monthDuration || 5000}
+                onChange={(e) => setSettings({ ...settings, monthDuration: Number(e.target.value) })}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '5px',
+                  border: '1px solid #4ecca3',
+                  backgroundColor: '#16213e',
+                  color: '#fff',
+                  fontSize: '14px',
+                }}
+              />
+              <p style={{ color: '#888', fontSize: '12px', marginTop: '5px' }}>
+                Duration of each game month in milliseconds (1000ms = 1 second). Default: 5000ms (5 sec). Use 1000ms for fast testing.
               </p>
             </div>
 

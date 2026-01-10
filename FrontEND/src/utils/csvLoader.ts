@@ -62,11 +62,19 @@ export const parseFDRates = (csvText: string): FDRate[] => {
       const dateRange = parts[0];
       const yearMatch = dateRange.match(/\d{4}/);
       if (yearMatch) {
+        // CSV columns: 1 Year, 2 Year, 3 Year, 5 Year
+        // Map them correctly:
+        // - 3 months: Use 1 Year rate / 4 (annualized for 3 months)
+        // - 1 year: Use 1 Year rate directly
+        // - 3 years: Use 3 Year rate directly
+        const oneYearRate = parseFloat(parts[1]) || 0;
+        const threeYearRate = parseFloat(parts[3]) || 0;
+
         rates.push({
           year: parseInt(yearMatch[0]),
-          threeMonth: parseFloat(parts[1]) || 0,
-          oneYear: parseFloat(parts[2]) || 0,
-          threeYear: parseFloat(parts[3]) || 0
+          threeMonth: oneYearRate,  // Store annual rate, will be adjusted in getFDRateForYear
+          oneYear: oneYearRate,
+          threeYear: threeYearRate
         });
       }
     }
@@ -115,7 +123,7 @@ export const getAssetPriceAtDate = (assetData: AssetData[], calendarYear: number
 
 export const getFDRateForYear = (fdRates: FDRate[], calendarYear: number, duration: 3 | 12 | 36): number => {
   if (!fdRates || fdRates.length === 0) {
-    // Default rates if no data available
+    // Default rates if no data available (annualized)
     if (duration === 3) return 6.9;
     if (duration === 12) return 7.0;
     return 7.5;
@@ -127,13 +135,15 @@ export const getFDRateForYear = (fdRates: FDRate[], calendarYear: number, durati
   const rate = sortedRates.find(r => r.year <= calendarYear) || fdRates[fdRates.length - 1];
 
   if (!rate) {
-    // Fallback to default rates
+    // Fallback to default rates (annualized)
     if (duration === 3) return 6.9;
     if (duration === 12) return 7.0;
     return 7.5;
   }
 
-  if (duration === 3) return rate.threeMonth;
-  if (duration === 12) return rate.oneYear;
-  return rate.threeYear;
+  // All rates in CSV are annual (PA - Per Annum)
+  // Return the annual rate - calculation will be adjusted based on duration
+  if (duration === 3) return rate.threeMonth;  // Annual rate for 1 year (will be adjusted for 3 months in maturity calc)
+  if (duration === 12) return rate.oneYear;    // Annual rate for 1 year
+  return rate.threeYear;                        // Annual rate for 3 years (will be adjusted for 3 years in maturity calc)
 };

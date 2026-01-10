@@ -26,6 +26,7 @@ export function getAdminSettings(): AdminSettings | null {
       recurringIncome: row.recurring_income as number,
       enableQuiz: (row.enable_quiz as number) === 1,
       eventsCount: (row.events_count as number) || 3,
+      monthDuration: (row.month_duration as number) || 5000,
     };
 
     return settings;
@@ -61,6 +62,7 @@ export function updateAdminSettings(settings: AdminSettings): { success: boolean
             recurring_income = ?,
             enable_quiz = ?,
             events_count = ?,
+            month_duration = ?,
             updated_at = CURRENT_TIMESTAMP
           WHERE id = 1`,
           [
@@ -71,13 +73,14 @@ export function updateAdminSettings(settings: AdminSettings): { success: boolean
             settings.recurringIncome,
             settings.enableQuiz ? 1 : 0,
             settings.eventsCount || 3,
+            settings.monthDuration || 5000,
           ]
         );
       } else {
         // Insert new settings
         db.run(
-          `INSERT INTO admin_settings (id, selected_categories, game_start_year, hide_current_year, initial_pocket_cash, recurring_income, enable_quiz, events_count)
-          VALUES (1, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO admin_settings (id, selected_categories, game_start_year, hide_current_year, initial_pocket_cash, recurring_income, enable_quiz, events_count, month_duration)
+          VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             categoriesJson,
             settings.gameStartYear,
@@ -86,6 +89,7 @@ export function updateAdminSettings(settings: AdminSettings): { success: boolean
             settings.recurringIncome,
             settings.enableQuiz ? 1 : 0,
             settings.eventsCount || 3,
+            settings.monthDuration || 5000,
           ]
         );
       }
@@ -95,11 +99,18 @@ export function updateAdminSettings(settings: AdminSettings): { success: boolean
       performUpdate();
     } catch (err: any) {
       // If the column doesn't exist (older DB), add it and retry once
-      if (err && typeof err.message === 'string' && err.message.includes('no such column: events_count')) {
-        console.warn('Detected missing column events_count; attempting to migrate and retry update');
-        db.run('ALTER TABLE admin_settings ADD COLUMN events_count INTEGER NOT NULL DEFAULT 3');
-        // retry
-        performUpdate();
+      if (err && typeof err.message === 'string') {
+        if (err.message.includes('no such column: events_count')) {
+          console.warn('Detected missing column events_count; attempting to migrate and retry update');
+          db.run('ALTER TABLE admin_settings ADD COLUMN events_count INTEGER NOT NULL DEFAULT 3');
+          performUpdate();
+        } else if (err.message.includes('no such column: month_duration')) {
+          console.warn('Detected missing column month_duration; attempting to migrate and retry update');
+          db.run('ALTER TABLE admin_settings ADD COLUMN month_duration INTEGER NOT NULL DEFAULT 5000');
+          performUpdate();
+        } else {
+          throw err;
+        }
       } else {
         throw err;
       }
@@ -125,6 +136,7 @@ export function getDefaultAdminSettings(): AdminSettings {
     recurringIncome: 50000,
     enableQuiz: true,
     eventsCount: 3,
+    monthDuration: 5000,
   };
 }
 

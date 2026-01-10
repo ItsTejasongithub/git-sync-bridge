@@ -40,10 +40,13 @@ export function calculateNetworth(
   // Add savings
   currentValue += gameState.savingsAccount.balance;
 
-  // Add FD values with accrued interest
+  // Add FD values with accrued interest (rates are PA)
   gameState.fixedDeposits.forEach((fd) => {
+    const durationInYears = fd.duration / 12;
+    const totalReturn = (fd.interestRate / 100) * durationInYears;
+
     if (fd.isMatured) {
-      currentValue += fd.amount * (1 + fd.interestRate / 100);
+      currentValue += fd.amount * (1 + totalReturn);
     } else {
       // Calculate time-weighted interest for non-matured FDs
       const startYear = fd.startYear;
@@ -52,8 +55,8 @@ export function calculateNetworth(
       const currentMonth = gameState.currentMonth;
       let monthsElapsed = (currentYear - startYear) * 12 + (currentMonth - startMonth);
       monthsElapsed = Math.max(0, Math.min(monthsElapsed, fd.duration));
-      const totalMonths = fd.duration;
-      const interestAccrued = (fd.amount * (fd.interestRate / 100)) * (monthsElapsed / totalMonths);
+      const progress = monthsElapsed / fd.duration;
+      const interestAccrued = (fd.amount * totalReturn) * progress;
       currentValue += fd.amount + interestAccrued;
     }
   });
@@ -206,11 +209,14 @@ export function calculatePortfolioBreakdown(
     reitsValue += gameState.holdings.reits['MINDSPACE'].quantity * price;
   }
 
-  // Calculate FD value with accrued interest
+  // Calculate FD value with accrued interest (rates are PA)
   let fdValue = 0;
   gameState.fixedDeposits.forEach((fd) => {
+    const durationInYears = fd.duration / 12;
+    const totalReturn = (fd.interestRate / 100) * durationInYears;
+
     if (fd.isMatured) {
-      fdValue += fd.amount * (1 + fd.interestRate / 100);
+      fdValue += fd.amount * (1 + totalReturn);
     } else {
       const startYear = fd.startYear;
       const startMonth = fd.startMonth;
@@ -218,8 +224,8 @@ export function calculatePortfolioBreakdown(
       const currentMonth = gameState.currentMonth;
       let monthsElapsed = (currentYear - startYear) * 12 + (currentMonth - startMonth);
       monthsElapsed = Math.max(0, Math.min(monthsElapsed, fd.duration));
-      const totalMonths = fd.duration;
-      const interestAccrued = (fd.amount * (fd.interestRate / 100)) * (monthsElapsed / totalMonths);
+      const progress = monthsElapsed / fd.duration;
+      const interestAccrued = (fd.amount * totalReturn) * progress;
       fdValue += fd.amount + interestAccrued;
     }
   });

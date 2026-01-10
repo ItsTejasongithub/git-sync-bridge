@@ -256,9 +256,9 @@ export const generateAssetUnlockSchedule = (
              (calendarYear === stockData.firstYear && calendarMonth >= stockData.firstMonth);
     });
 
-    // ALWAYS unlock exactly 2 fixed stocks initially
+    // ALWAYS unlock exactly 2 random stocks initially
     const initialStockCount = 2;
-    const initialStocks = availableStocks.slice(0, initialStockCount);
+    const initialStocks = getRandomItems(availableStocks, initialStockCount);
 
     if (initialStocks.length >= 2) {
       // Select 1-3 additional stocks randomly (minimum 1, maximum 3)

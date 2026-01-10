@@ -15,6 +15,7 @@ function AppContent() {
   const {
     gameState,
     startSoloGame,
+    applyAdminSettings,
     backToMenu,
     depositToSavings,
     withdrawFromSavings,
@@ -33,20 +34,40 @@ function AppContent() {
   const [isMultiplayerMode, setIsMultiplayerMode] = useState(false);
   const [showPlayerNameModal, setShowPlayerNameModal] = useState(false);
   const [currentPlayerName, setCurrentPlayerName] = useState('');
+  const [currentPlayerAge, setCurrentPlayerAge] = useState(0);
   const [adminSettings, setAdminSettings] = useState<AdminSettings | null>(null);
   const [loadingSettings, setLoadingSettings] = useState(false);
 
   // Load admin settings on mount
   useEffect(() => {
     loadAdminSettings();
+    // Listen for settings changes made via AdminPanelModal and update local state
+    const handler = (e: any) => {
+      if (e && e.detail) {
+        console.log('🔔 Received adminSettingsUpdated event', e.detail);
+        setAdminSettings(e.detail);
+        try {
+          // Apply into running game state (solo) so timers and recurring income adjust
+          if (applyAdminSettings) applyAdminSettings(e.detail);
+        } catch (err) {
+          // noop
+        }
+      }
+    };
+    window.addEventListener('adminSettingsUpdated', handler as any);
+
+    return () => window.removeEventListener('adminSettingsUpdated', handler as any);
   }, []);
 
   const loadAdminSettings = async () => {
     setLoadingSettings(true);
     const response = await adminSettingsApi.getSettings();
     if (response.success && response.settings) {
+      console.log('✅ Admin settings loaded from API:', response.settings);
+      console.log('   eventsCount:', response.settings.eventsCount);
       setAdminSettings(response.settings);
     } else {
+      console.log('⚠️ Failed to load admin settings from API, using defaults');
       // Use default settings if server is unavailable
       setAdminSettings({
         selectedCategories: ['BANKING', 'GOLD', 'STOCKS', 'FUNDS', 'CRYPTO', 'REIT', 'COMMODITIES'],
@@ -55,6 +76,8 @@ function AppContent() {
         initialPocketCash: 100000,
         recurringIncome: 50000,
         enableQuiz: true,
+        eventsCount: 3,
+        monthDuration: 5000, // Default: 5 seconds per month
       });
     }
     setLoadingSettings(false);
@@ -64,8 +87,9 @@ function AppContent() {
     setShowPlayerNameModal(true);
   };
 
-  const handlePlayerNameSubmit = (name: string) => {
+  const handlePlayerNameSubmit = (name: string, age: number) => {
     setCurrentPlayerName(name);
+    setCurrentPlayerAge(age);
     setShowPlayerNameModal(false);
 
     // Start solo game with admin settings
@@ -129,6 +153,7 @@ function AppContent() {
           onMarkQuizCompleted={markQuizCompleted}
           onReturnToMenu={backToMenu}
           playerName={currentPlayerName}
+          playerAge={currentPlayerAge}
           lifeEventPopup={lifeEventPopup}
           clearLifeEventPopup={clearLifeEventPopup}
         />

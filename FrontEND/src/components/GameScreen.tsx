@@ -34,6 +34,7 @@ interface GameScreenProps {
   leaderboardData?: Array<{ playerId: string; playerName: string; networth: number; portfolioBreakdown?: any; }>;
   isTransacting?: boolean; // When true, disable buy/sell UI to avoid duplicate transactions
   playerName?: string; // Player name for logging
+  playerAge?: number; // Player age for logging
   roomId?: string; // Room ID for multiplayer logging
   lifeEventPopup?: any; // Active life event to display
   clearLifeEventPopup?: () => void;
@@ -58,6 +59,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   leaderboardData,
   isTransacting = false,
   playerName,
+  playerAge,
   roomId,
   lifeEventPopup,
   clearLifeEventPopup
@@ -460,17 +462,21 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     const savingsValue = gameState.savingsAccount.balance;
     currentValue += savingsValue;
 
-// Fixed deposits (include time-weighted accrued interest for non-matured FDs)
+// Fixed deposits (include time-weighted accrued interest for non-matured FDs, rates are PA)
   let fdTotal = 0;
   gameState.fixedDeposits.forEach(fd => {
+    const durationInYears = fd.duration / 12;
+    const totalReturn = (fd.interestRate / 100) * durationInYears;
+
     if (fd.isMatured) {
-      fdTotal += fd.amount * (1 + fd.interestRate / 100);
+      fdTotal += fd.amount * (1 + totalReturn);
     } else {
       const startYear = fd.startYear;
       const startMonth = fd.startMonth;
       let monthsElapsed = (gameState.currentYear - startYear) * 12 + (gameState.currentMonth - startMonth);
       monthsElapsed = Math.max(0, Math.min(monthsElapsed, fd.duration));
-      const interestAccrued = (fd.amount * (fd.interestRate / 100)) * (monthsElapsed / fd.duration);
+      const progress = monthsElapsed / fd.duration;
+      const interestAccrued = (fd.amount * totalReturn) * progress;
       fdTotal += fd.amount + interestAccrued;
     }
   });
@@ -563,6 +569,16 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     console.debug('GameScreen: detected game end', { isStarted: gameState.isStarted, currentYear: gameState.currentYear, currentMonth: gameState.currentMonth, mode: gameState.mode });
   }
 
+  // Debug: log popup prop changes
+  // IMPORTANT: This hook must be before the early return to avoid hooks order violation
+  useEffect(() => {
+    if (lifeEventPopup) {
+      console.log('🪟 GameScreen: lifeEventPopup prop set', lifeEventPopup);
+    } else {
+      // console.log('🪟 GameScreen: lifeEventPopup cleared');
+    }
+  }, [lifeEventPopup]);
+
   // If game ended, show end screen
   if (isGameEnded) {
     return (
@@ -574,19 +590,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         leaderboardData={leaderboardData}
         onReturnToMenu={onReturnToMenu || (() => window.location.reload())}
         playerName={playerName}
+        playerAge={playerAge}
         roomId={roomId}
       />
     );
   }
-
-  // Debug: log popup prop changes
-  useEffect(() => {
-    if (lifeEventPopup) {
-      console.log('🪟 GameScreen: lifeEventPopup prop set', lifeEventPopup);
-    } else {
-      // console.log('🪟 GameScreen: lifeEventPopup cleared');
-    }
-  }, [lifeEventPopup]);
 
   return (
     <div className="game-screen">

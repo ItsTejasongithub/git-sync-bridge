@@ -91,7 +91,7 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
     setMode('none'); // Hide controls after transaction
 
     // Clear local lock after a short delay (parent will also clear via isTransacting)
-    setTimeout(() => setLocalLock(false), 1200);
+    setTimeout(() => setLocalLock(false), 300);
   };
 
   const handleSell = () => {
@@ -126,7 +126,7 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
     setCustomQuantity('');
     setMode('none'); // Hide controls after transaction
 
-    setTimeout(() => setLocalLock(false), 1200);
+    setTimeout(() => setLocalLock(false), 300);
   };
 
   // MAX quantity based on mode

@@ -12,7 +12,7 @@
   position: absolute;
   bottom: 105%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(100%);
   background: linear-gradient(135deg, #2D2416 0%, #3D3021 100%);
   color: #FEFDF8;
   padding: 12px 16px;
@@ -34,7 +34,7 @@
 .stock-tooltip-wrapper:hover .stock-tooltip {
   opacity: 1;
   visibility: visible;
-  transform: translateX(-50%) translateY(-8px);
+  transform: translateX(-50%) translateY(50px);
 }
 
 /* Tooltip arrow */

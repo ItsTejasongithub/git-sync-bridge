@@ -1,8 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './GameEndScreen.css';
 import { GameState, AssetData } from '../types';
 import { calculateNetworth, calculatePortfolioBreakdown, calculateTotalCapital, calculateCAGR } from '../utils/networthCalculator';
 import { playerLogsApi } from '../services/adminApi';
+import { AIReportModal } from './AIReportModal';
+import { tradeTracker } from '../utils/tradeTracker';
 
 interface GameEndScreenProps {
   gameState: GameState;
@@ -24,6 +26,7 @@ interface GameEndScreenProps {
   }>;
   onReturnToMenu: () => void;
   playerName?: string;
+  playerAge?: number;
   roomId?: string;
 }
 
@@ -35,9 +38,13 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
   leaderboardData,
   onReturnToMenu,
   playerName,
+  playerAge,
   roomId,
 }) => {
-  const [isPortfolioExpanded, setIsPortfolioExpanded] = React.useState(false);
+  const [isPortfolioExpanded, setIsPortfolioExpanded] = useState(false);
+  const [isAIReportOpen, setIsAIReportOpen] = useState(false);
+  const [loggedGameId, setLoggedGameId] = useState<number | null>(null);
+  const [loggedGameUniqueId, setLoggedGameUniqueId] = useState<string | null>(null);
   const hasLoggedRef = useRef(false); // Prevent double logging
 
   const getAssetCategoryColor = (category: string): string => {
@@ -91,9 +98,12 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
   useEffect(() => {
     if (hasLoggedRef.current) return;
 
+    console.log('🎮 GameEndScreen mounted:', { playerName, playerAge, hasAdminSettings: !!gameState.adminSettings });
+
     // Only log if we have player name and admin settings
     if (playerName && gameState.adminSettings) {
       hasLoggedRef.current = true;
+      console.log('✅ Logging game to database...');
 
       // Calculate game duration in minutes
       const gameDuration = gameState.gameStartTime
@@ -103,6 +113,7 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
       playerLogsApi.logGame({
         gameMode: isMultiplayer ? 'multiplayer' : 'solo',
         playerName: playerName,
+        playerAge: playerAge,
         roomId: roomId,
         finalNetworth: finalNetworth,
         finalCAGR: parseFloat(cagr),
@@ -110,14 +121,28 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
         portfolioBreakdown: breakdown,
         adminSettings: gameState.adminSettings,
         gameDurationMinutes: gameDuration,
-      }).then(response => {
+      }).then(async response => {
         if (response.success) {
-          console.log('Game logged successfully:', response.logId);
+          console.log('✅ Game logged successfully! Log ID:', response.logId, 'Unique ID:', response.uniqueId);
+          setLoggedGameId(response.logId !== undefined ? response.logId : null);
+          setLoggedGameUniqueId(response.uniqueId || null);
+
+          // Upload all trades to database for AI analysis using uniqueId
+          if (response.uniqueId && playerName) {
+            console.log('📊 Uploading trades to database...');
+            await tradeTracker.uploadToDatabase(
+              response.uniqueId,
+              playerName,
+              playerAge,
+              gameState.savingsAccount,
+              gameState.fixedDeposits
+            );
+          }
         } else {
-          console.error('Failed to log game:', response.message);
+          console.error('❌ Failed to log game:', response.message);
         }
       }).catch(error => {
-        console.error('Error logging game:', error);
+        console.error('❌ Error logging game:', error);
       });
     }
   }, [playerName, gameState.adminSettings, isMultiplayer, roomId, finalNetworth, cagr, profit, breakdown, gameState.gameStartTime]);
@@ -278,10 +303,41 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
           </div>
         )}
 
-        <button className="return-menu-button" onClick={onReturnToMenu}>
-          Return to Main Menu
-        </button>
+        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
+          {!isMultiplayer && loggedGameId !== null && (
+            <button
+              style={{
+                padding: '15px 30px',
+                backgroundColor: '#9C27B0',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+              }}
+              onClick={() => setIsAIReportOpen(true)}
+            >
+              📊 Generate My Trading Report
+            </button>
+          )}
+          <button className="return-menu-button" onClick={onReturnToMenu}>
+            Return to Main Menu
+          </button>
+        </div>
       </div>
+
+      <AIReportModal
+        isOpen={isAIReportOpen}
+        onClose={() => setIsAIReportOpen(false)}
+        logId={loggedGameId}
+        logUniqueId={loggedGameUniqueId}
+        playerName={playerName}
+        playerAge={playerAge}
+        finalNetworth={finalNetworth}
+        cagr={parseFloat(cagr)}
+        profitLoss={profit}
+      />
     </div>
   );
 };
