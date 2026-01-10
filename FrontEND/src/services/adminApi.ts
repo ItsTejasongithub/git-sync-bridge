@@ -1,7 +1,8 @@
 import { AdminSettings } from '../types';
+import { getServerUrl } from '../utils/getServerUrl';
 
-// Use environment variable or default to localhost
-const API_BASE_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+// Use runtime override -> build env -> inferred from page hostname
+const API_BASE_URL = getServerUrl();
 
 export interface LeaderboardEntry {
   playerId: string;

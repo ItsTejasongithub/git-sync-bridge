@@ -1,5 +1,6 @@
 // Trade tracking utility for comprehensive AI analysis
 import { bankingTracker, BankingLog } from './bankingTracker';
+import { getServerUrl } from './getServerUrl';
 
 export interface TradeLog {
   id: string;
@@ -104,10 +105,20 @@ class TradeTracker {
       maturityMonth: number;
       maturityYear: number;
       isMatured: boolean;
+    }>,
+    cashTransactions?: Array<{
+      type?: string;
+      subType?: string | null;
+      amount: number;
+      message?: string | null;
+      gameYear?: number | null;
+      gameMonth?: number | null;
+      timestamp?: number;
     }>
   ) {
-    if (this.trades.length === 0) {
-      console.log('📊 No trades to upload');
+    const bankingLogs = bankingTracker.getBankingLogs();
+    if (this.trades.length === 0 && (!bankingLogs || bankingLogs.length === 0) && (!cashTransactions || cashTransactions.length === 0)) {
+      console.log('📊 No trades, banking transactions, or cash transactions to upload');
       return;
     }
 
@@ -198,6 +209,7 @@ class TradeTracker {
           gameMonth: trade.gameMonth,
         })),
         bankingTransactions: bankingTracker.getBankingLogs(),
+        cashTransactions: cashTransactions || [],
       };
       console.log('📤 Upload payload:', {
         uniqueId: logUniqueId,
@@ -206,7 +218,7 @@ class TradeTracker {
         bankingTransactionCount: payload.bankingTransactions.length,
       });
 
-      const response = await fetch('http://localhost:3001/api/trades/bulk', {
+      const response = await fetch(`${getServerUrl()}/api/trades/bulk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

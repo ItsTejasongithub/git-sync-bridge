@@ -1,12 +1,14 @@
 import { io, Socket } from 'socket.io-client';
 import { PlayerInfo, MultiplayerGameState, PortfolioBreakdown } from '../types/multiplayer';
 import { AdminSettings } from '../types';
+import { getServerUrl } from '../utils/getServerUrl';
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+const SERVER_URL = getServerUrl();
 console.log('\n🔧 ===== SOCKET SERVICE INITIALIZATION =====');
 console.log('🔧 Server URL:', SERVER_URL);
 console.log('🔧 Environment Mode:', import.meta.env.MODE);
-console.log('🔧 VITE_SERVER_URL:', import.meta.env.VITE_SERVER_URL || 'NOT SET (using default)');
+console.log('🔧 VITE_SERVER_URL:', import.meta.env.VITE_SERVER_URL || 'NOT SET (using runtime or inferred)');
+console.log('🔧 Window __SERVER_URL:', (window as any).__SERVER_URL || 'NOT SET');
 console.log('🔧 ==========================================\n');
 
 interface ServerToClientEvents {

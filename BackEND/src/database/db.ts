@@ -130,12 +130,31 @@ function runMigrations(): void {
         player_name TEXT NOT NULL,
         summary_json TEXT NOT NULL,
         trades_json TEXT,
+        cash_json TEXT,
+        banking_summary_json TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
     db.run(`CREATE INDEX IF NOT EXISTS idx_ai_reports_unique_id ON ai_reports(unique_id)`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_ai_reports_report_id ON ai_reports(report_id)`);
     saveDatabase();
+  } else {
+    // If table exists (older installations), ensure new columns exist
+    try {
+      const cols = db.exec("PRAGMA table_info(ai_reports)");
+      const columns = (cols && cols[0] && cols[0].values) ? cols[0].values.map((r:any) => r[1]) : [];
+      if (!columns.includes('cash_json')) {
+        console.log('Migration: adding cash_json column to ai_reports');
+        db.run(`ALTER TABLE ai_reports ADD COLUMN cash_json TEXT`);
+      }
+      if (!columns.includes('banking_summary_json')) {
+        console.log('Migration: adding banking_summary_json column to ai_reports');
+        db.run(`ALTER TABLE ai_reports ADD COLUMN banking_summary_json TEXT`);
+      }
+      saveDatabase();
+    } catch (err) {
+      console.warn('Migration: failed to ensure ai_reports columns, continuing:', err);
+    }
   }
 
   // Check if banking_transactions table exists
@@ -168,6 +187,32 @@ function runMigrations(): void {
     db.run(`CREATE INDEX IF NOT EXISTS idx_banking_log_id ON banking_transactions(log_id)`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_banking_player ON banking_transactions(player_name)`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_banking_type ON banking_transactions(transaction_type)`);
+    saveDatabase();
+  }
+
+  // Ensure cash_transactions table exists to store life events and recurring income separately
+  const cashTransList = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='cash_transactions'");
+  const hasCashTable = cashTransList && cashTransList.length > 0 && cashTransList[0].values && cashTransList[0].values.length > 0;
+
+  if (!hasCashTable) {
+    console.log('Migration: creating cash_transactions table');
+    db.run(`
+      CREATE TABLE IF NOT EXISTS cash_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        log_id INTEGER NOT NULL,
+        player_name TEXT NOT NULL,
+        tx_type TEXT NOT NULL,
+        sub_type TEXT,
+        amount REAL NOT NULL,
+        message TEXT,
+        game_year INTEGER,
+        game_month INTEGER,
+        timestamp INTEGER,
+        FOREIGN KEY (log_id) REFERENCES player_logs(id) ON DELETE CASCADE
+      )
+    `);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_cash_log_id ON cash_transactions(log_id)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_cash_player ON cash_transactions(player_name)`);
     saveDatabase();
   }
 }

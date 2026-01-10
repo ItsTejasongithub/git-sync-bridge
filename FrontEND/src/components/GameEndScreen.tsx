@@ -148,7 +148,8 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
               playerName,
               playerAge,
               gameState.savingsAccount,
-              gameState.fixedDeposits
+              gameState.fixedDeposits,
+              gameState.cashTransactions
             );
           }
         } else {

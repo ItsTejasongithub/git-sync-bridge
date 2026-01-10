@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getTradesByLogId } from '../database/tradingTransactions';
+import { getBankingTransactionSummary } from '../database/bankingTransactions';
+import { getCashTransactionsByLogId, getCashSummaryByLogId } from '../database/cashTransactions';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -101,11 +103,60 @@ export async function generateTradingReport(params: AIReportParams): Promise<{ s
       ? params.precomputedTrades
       : getTradesByLogId(params.logId);
 
+    // Fetch server-side precomputed summaries (banking + cash events)
+    const bankingSummary = getBankingTransactionSummary(params.logId);
+    const cashTxns = getCashTransactionsByLogId(params.logId);
+    const cashSummary = getCashSummaryByLogId(params.logId);
+
     if (!trades || trades.length === 0) {
-      return {
-        success: true,
-        report: `# Trading Performance Report\n\nPlayer: ${params.playerName} (Age: ${params.playerAge})\nFinal Networth: ₹${params.finalNetworth.toLocaleString('en-IN')}\nCAGR: ${params.finalCAGR.toFixed(2)}%\nProfit/Loss: ₹${params.profitLoss.toLocaleString('en-IN')}\n\nNo trades recorded during this session.`
-      };
+      // Short, templated report to save AI tokens when no trades exist
+      const lines: string[] = [];
+      lines.push(`# Trading Performance Report`);
+      lines.push(``);
+      lines.push(`Player: ${params.playerName} (Age: ${params.playerAge})`);
+      lines.push(`Report ID: ${params.reportId || params.uniqueId}`);
+      lines.push(`Final Networth: ₹${params.finalNetworth.toLocaleString('en-IN')}`);
+      lines.push(`CAGR: ${params.finalCAGR.toFixed(2)}%`);
+      lines.push(`Profit/Loss: ₹${params.profitLoss.toLocaleString('en-IN')}`);
+      lines.push(``);
+      lines.push(`Summary of cash events (life events & recurring income):`);
+      if (cashSummary) {
+        lines.push(`  - Total incoming: ₹${(cashSummary.totalIncoming || 0).toLocaleString('en-IN')}`);
+        lines.push(`  - Total outgoing: ₹${(cashSummary.totalOutgoing || 0).toLocaleString('en-IN')}`);
+        lines.push(`  - Recurring income total: ₹${(cashSummary.recurringIncomeTotal || 0).toLocaleString('en-IN')}`);
+        lines.push(`  - Life event gains: ₹${(cashSummary.lifeEventGains || 0).toLocaleString('en-IN')}`);
+        lines.push(`  - Life event losses: ₹${(cashSummary.lifeEventLosses || 0).toLocaleString('en-IN')}`);
+        lines.push(`  - Events recorded: ${cashSummary.eventsCount || 0}`);
+      } else {
+        lines.push(`  No cash events recorded`);
+      }
+      lines.push(``);
+      lines.push(`Banking summary:`);
+      if (bankingSummary) {
+        // Banking summary shape can vary depending on what was computed; safely extract fields
+        const bankAny: any = bankingSummary as any;
+        const savingsBalance = bankAny.totalDeposits ?? bankAny.savingsBalance ?? 0;
+        const fdInvested = bankAny.totalFdInvestments ?? bankAny.fdTotalInvested ?? 0;
+        const totalInterest = bankAny.totalInterestEarned ?? bankAny.totalInterest ?? 0;
+
+        lines.push(`  - Savings balance: ₹${Number(savingsBalance).toLocaleString('en-IN')}`);
+        lines.push(`  - FD investments: ₹${Number(fdInvested).toLocaleString('en-IN')}`);
+        lines.push(`  - Total interest earned: ₹${Number(totalInterest).toLocaleString('en-IN')}`);
+      } else {
+        lines.push(`  No banking transactions recorded`);
+      }
+      lines.push(``);
+      lines.push(`Short analysis:`);
+      lines.push(`  You made no trades during this session. Your networth changed mainly due to cash flows (recurring income or life events) and banking activity. Consider using a simple strategy next time — allocate a portion of recurring income to a low-risk instrument (e.g., FDs or index funds) and gradually experiment with small trades to learn. Keep your emergency fund (savings) intact before taking risks.`);
+      lines.push(``);
+      lines.push(`Top-level metrics: Networth: ₹${params.finalNetworth.toLocaleString('en-IN')}, P&L: ₹${params.profitLoss.toLocaleString('en-IN')}, CAGR: ${params.finalCAGR.toFixed(2)}%`);
+
+      const report = lines.join('\n');
+
+      // Store templated response for auditing
+      storeAIResponse(params, report);
+
+      return { success: true, report };
     }
 
     // If precomputed summary provided, use it to reduce token usage
@@ -123,10 +174,17 @@ export async function generateTradingReport(params: AIReportParams): Promise<{ s
       systemInstruction: systemInstruction,
     });
 
-    // If a precomputed summary exists, include it in the prompt to save tokens
-    const tradeHistoryText = params.precomputedSummary
+    // Build a short preamble with server-side computed summaries to save AI tokens
+    const preambleParts: string[] = [];
+    if (bankingSummary) preambleParts.push(`BANKING_SUMMARY:${JSON.stringify(bankingSummary)}`);
+    if (cashSummary) preambleParts.push(`CASH_SUMMARY:${JSON.stringify(cashSummary)}`);
+    if (params.precomputedSummary) preambleParts.push(`PRECOMPUTED_SUMMARY:${JSON.stringify(params.precomputedSummary)}`);
+    const preambleText = preambleParts.length > 0 ? preambleParts.join('\n') + '\n\n' : '';
+
+    // If a precomputed summary exists, include it in the prompt to save tokens, otherwise include formatted trades
+    const tradeHistoryText = preambleText + (params.precomputedSummary
       ? `PRECOMPUTED SUMMARY:\n${JSON.stringify(params.precomputedSummary)}\n\n` + formatTradesForAI(trades, analysis, params.precomputedSummary?.banking)
-      : formatTradesForAI(trades, analysis);
+      : formatTradesForAI(trades, analysis));
 
     const prompt = `Generate a Comprehensive Trading & Financial Discipline Report for:
   Player: ${params.playerName}, Age: ${params.playerAge}

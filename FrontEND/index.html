@@ -8,6 +8,11 @@
   </head>
   <body>
     <div id="root"></div>
+    <!--
+      Optional runtime override for backend server URL (useful when serving the front-end from a different host):
+      <script>window.__SERVER_URL = 'http://192.168.0.67:3001';</script>
+      Place the script ABOVE the module script so it's available to the app on startup.
+    -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

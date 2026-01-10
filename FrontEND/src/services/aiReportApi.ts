@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://localhost:3001/api';
+import { getServerUrl } from '../utils/getServerUrl';
+const API_BASE_URL = `${getServerUrl()}/api`;
 
 export const aiReportApi = {
   async generateReport(params: { logId?: number; uniqueId?: string; reportId?: string; summary?: any; trades?: any[] }): Promise<{

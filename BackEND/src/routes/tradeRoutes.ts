@@ -7,7 +7,7 @@ const router = Router();
 
 router.post('/bulk', async (req: Request, res: Response) => {
   try {
-    const { logId, uniqueId, playerName: bodyPlayerName, player, trades, bankingTransactions, reportId, summary } = req.body;
+    const { logId, uniqueId, playerName: bodyPlayerName, player, trades, bankingTransactions, cashTransactions, reportId, summary } = req.body;
 
     const playerName = bodyPlayerName || (player && player.name) || null;
 
@@ -46,6 +46,7 @@ router.post('/bulk', async (req: Request, res: Response) => {
     const results = {
       trades: [],
       bankingTransactions: [],
+      cashTransactions: [],
     };
 
     // Log trades
@@ -89,13 +90,57 @@ router.post('/bulk', async (req: Request, res: Response) => {
       console.log('⚠️ No banking transactions to upload');
     }
 
+    // Log cash transactions (life events & recurring income)
+    if (Array.isArray(cashTransactions) && cashTransactions.length > 0) {
+      try {
+        const { logCashTransaction } = await import('../database/cashTransactions');
+        for (const ct of cashTransactions) {
+          const result = logCashTransaction({
+            logId: resolvedLogId as number,
+            playerName,
+            txType: ct.type || ct.txType || 'life_event',
+            subType: ct.subType || null,
+            amount: ct.amount,
+            message: ct.message || null,
+            gameYear: ct.gameYear || ct.game_year || null,
+            gameMonth: ct.gameMonth || ct.game_month || null,
+            timestamp: ct.timestamp || Date.now(),
+          });
+          results.cashTransactions.push(result);
+        }
+        console.log(`✅ Cash transactions uploaded: ${results.cashTransactions.filter(r => r.success).length}/${cashTransactions.length}`);
+      } catch (err) {
+        console.warn('⚠️ Failed to upload cash transactions:', err);
+      }
+    } else {
+      console.log('⚠️ No cash transactions to upload');
+    }
+
     // Persist AI report summary (if provided) for later retrieval
     try {
       if (reportId && summary) {
         const db = getDatabase();
+
+        // Try to compute banking summary server-side to avoid recomputing in AI step
+        let bankingSummary = null;
+        try {
+          const { getBankingTransactionSummary } = await import('../database/bankingTransactions');
+          bankingSummary = getBankingTransactionSummary(resolvedLogId as number);
+        } catch (err) {
+          // noop
+        }
+
         db.run(
-          `INSERT OR REPLACE INTO ai_reports (report_id, unique_id, player_name, summary_json, trades_json) VALUES (?, ?, ?, ?, ?)`,
-          [reportId, uniqueId || null, playerName, JSON.stringify(summary), JSON.stringify(trades || [])]
+          `INSERT OR REPLACE INTO ai_reports (report_id, unique_id, player_name, summary_json, trades_json, cash_json, banking_summary_json) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            reportId,
+            uniqueId || null,
+            playerName,
+            JSON.stringify(summary),
+            JSON.stringify(trades || []),
+            JSON.stringify(cashTransactions || []),
+            bankingSummary ? JSON.stringify(bankingSummary) : null,
+          ]
         );
         saveDatabase();
         console.log('💾 AI report summary saved:', reportId);

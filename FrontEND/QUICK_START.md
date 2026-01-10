@@ -91,6 +91,10 @@ The timer runs automatically! Watch your year/month counter.
 - Breaking FDs early costs 1% penalty
 - Prices are based on real historical data
 
+**Multiplayer networking note:** The front-end determines which backend to talk to using this priority: `window.__SERVER_URL` (runtime override) → `VITE_SERVER_URL` in `FrontEND/.env.local` (build/dev) → inferred from the page host as `http://<hostname>:3001`.
+
+If you deploy the front-end to `http://192.168.0.67:5173`, players that open that URL will automatically connect to `http://192.168.0.67:3001`. To override manually, set `VITE_SERVER_URL` in `FrontEND/.env.local` or set `window.__SERVER_URL` in a small script in `index.html` before the app loads.
+
 ## 🎮 Currently Implemented
 
 ✅ Savings Account
