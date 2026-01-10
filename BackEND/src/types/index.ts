@@ -107,6 +107,9 @@ export interface ServerToClientEvents {
   // Final leaderboard from DB
   fetchFinalLeaderboardFromDB: (data: { roomId: string }) => void;
 
+  // Broadcast final leaderboard (from DB) - simplified entry structure
+  finalLeaderboard: (data: { leaderboard: Array<{ playerId: string; playerName: string; networth: number; portfolioBreakdown?: any }> }) => void;
+
   // Errors
   error: (data: { message: string }) => void;
 }

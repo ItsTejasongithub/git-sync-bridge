@@ -3,6 +3,7 @@ import { bankingTracker, BankingLog } from './bankingTracker';
 import { getServerUrl } from './getServerUrl';
 
 export interface TradeLog {
+  positionSize: number;
   id: string;
   transactionType: 'buy' | 'sell';
   assetType: string;

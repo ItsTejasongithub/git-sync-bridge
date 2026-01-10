@@ -366,6 +366,8 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
                     wordWrap: 'break-word',
                     overflowWrap: 'break-word',
                     width: '100%',
+                    minHeight: '100%',
+                    paddingBottom: '30px',
                   }}
                 >
                   <ReactMarkdown
@@ -482,7 +484,7 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
                   style={{
                     padding: '10px 20px',
                     backgroundColor: '#0f3460',
-                    color: '#fff',
+                    color: '#ffffff',
                     border: '1px solid #4ecca3',
                     borderRadius: '5px',
                     cursor: 'pointer',

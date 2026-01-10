@@ -209,8 +209,10 @@ export function generateReportPDF(data: ReportData): void {
           if (yPosition + codeHeight > pageHeight - 30) {
             addPageNumber();
             pdf.addPage();
-            pdf.setFillColor(249, 250, 251);
-            pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+          // ===== MAIN CONTENT SECTION =====
+          // Dark background for content area (match UI)
+          pdf.setFillColor(26, 26, 46); // #00326b
+          pdf.rect(0, yPosition - 5, pageWidth, pageHeight - yPosition + 5, 'F');
             yPosition = margin;
           }
 
@@ -254,8 +256,8 @@ export function generateReportPDF(data: ReportData): void {
       addPageNumber();
       pdf.addPage();
       // Continue light background
-      pdf.setFillColor(249, 250, 251);
-      pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+      pdf.setFillColor(26, 26, 46); // #03649c
+      pdf.rect(0, 0, pageWidth, pageHeight, 'F'); 
       yPosition = margin;
     }
 

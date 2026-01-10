@@ -43,7 +43,15 @@ router.post('/bulk', async (req: Request, res: Response) => {
       });
     }
 
-    const results = {
+    type TradeResult = { success: boolean; message: string; tradeId?: number };
+    type BankingResult = { success: boolean; id?: number; error?: string };
+    type CashResult = { success: boolean; id?: number; error?: string };
+
+    const results: {
+      trades: TradeResult[];
+      bankingTransactions: BankingResult[];
+      cashTransactions: CashResult[];
+    } = {
       trades: [],
       bankingTransactions: [],
       cashTransactions: [],
