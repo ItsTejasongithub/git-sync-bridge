@@ -5,6 +5,7 @@ import { calculateNetworth, calculatePortfolioBreakdown, calculateTotalCapital, 
 import { playerLogsApi } from '../services/adminApi';
 import { AIReportModal } from './AIReportModal';
 import { tradeTracker } from '../utils/tradeTracker';
+import { extractHoldingsData } from '../utils/holdingsExtractor';
 
 interface GameEndScreenProps {
   gameState: GameState;
@@ -140,16 +141,22 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
           setLoggedGameId(response.logId !== undefined ? response.logId : null);
           setLoggedGameUniqueId(response.uniqueId || null);
 
-          // Upload all trades to database for AI analysis using uniqueId
+          // Upload all trades, banking, cash transactions, and holdings to database
           if (response.uniqueId && playerName) {
-            console.log('📊 Uploading trades to database...');
+            console.log('📊 Uploading game data to database...');
+
+            // Extract holdings data with current prices for accurate P&L tracking
+            const holdingsData = extractHoldingsData(gameState, assetDataMap, calendarYear);
+            console.log(`💼 Extracted ${holdingsData.length} holdings positions`);
+
             await tradeTracker.uploadToDatabase(
               response.uniqueId,
               playerName,
               playerAge,
               gameState.savingsAccount,
               gameState.fixedDeposits,
-              gameState.cashTransactions
+              gameState.cashTransactions,
+              holdingsData
             );
           }
         } else {

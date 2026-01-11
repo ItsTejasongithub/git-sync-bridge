@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getTradesByLogId } from '../database/tradingTransactions';
 import { getBankingTransactionSummary } from '../database/bankingTransactions';
 import { getCashTransactionsByLogId, getCashSummaryByLogId } from '../database/cashTransactions';
+import { getHoldingsByLogId, getTotalUnrealizedPL, getHoldingsSummaryByCategory } from '../database/playerHoldings';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -103,53 +104,75 @@ export async function generateTradingReport(params: AIReportParams): Promise<{ s
       ? params.precomputedTrades
       : getTradesByLogId(params.logId);
 
-    // Fetch server-side precomputed summaries (banking + cash events)
+    // Fetch server-side precomputed summaries (banking + cash events + holdings)
     const bankingSummary = getBankingTransactionSummary(params.logId);
     const cashTxns = getCashTransactionsByLogId(params.logId);
     const cashSummary = getCashSummaryByLogId(params.logId);
 
+    // Fetch holdings data for unrealized P&L analysis
+    const holdings = getHoldingsByLogId(params.logId);
+    const totalUnrealizedPL = getTotalUnrealizedPL(params.logId);
+    const holdingsSummary = getHoldingsSummaryByCategory(params.logId);
+
     if (!trades || trades.length === 0) {
-      // Short, templated report to save AI tokens when no trades exist
+      // Short, templated report for players who didn't make investment choices
       const lines: string[] = [];
-      lines.push(`# Trading Performance Report`);
+
+      lines.push(`## 1. Your Learning Style: 🎯 The Patient Observer`);
       lines.push(``);
-      lines.push(`Player: ${params.playerName} (Age: ${params.playerAge})`);
-      lines.push(`Report ID: ${params.reportId || params.uniqueId}`);
-      lines.push(`Final Networth: ₹${params.finalNetworth.toLocaleString('en-IN')}`);
-      lines.push(`CAGR: ${params.finalCAGR.toFixed(2)}%`);
-      lines.push(`Profit/Loss: ₹${params.profitLoss.toLocaleString('en-IN')}`);
+      lines.push(`You showed excellent patience this month by taking time to watch and learn before making any investment choices. This is actually a smart approach - understanding how money works before jumping in shows maturity!`);
       lines.push(``);
-      lines.push(`Summary of cash events (life events & recurring income):`);
+
+      lines.push(`## 2. Your Money Journey This Month`);
+      lines.push(``);
       if (cashSummary) {
-        lines.push(`  - Total incoming: ₹${(cashSummary.totalIncoming || 0).toLocaleString('en-IN')}`);
-        lines.push(`  - Total outgoing: ₹${(cashSummary.totalOutgoing || 0).toLocaleString('en-IN')}`);
-        lines.push(`  - Recurring income total: ₹${(cashSummary.recurringIncomeTotal || 0).toLocaleString('en-IN')}`);
-        lines.push(`  - Life event gains: ₹${(cashSummary.lifeEventGains || 0).toLocaleString('en-IN')}`);
-        lines.push(`  - Life event losses: ₹${(cashSummary.lifeEventLosses || 0).toLocaleString('en-IN')}`);
-        lines.push(`  - Events recorded: ${cashSummary.eventsCount || 0}`);
-      } else {
-        lines.push(`  No cash events recorded`);
+        const totalEvents = cashSummary.eventsCount || 0;
+        lines.push(`💸 **Money You Received**: ₹${(cashSummary.totalIncoming || 0).toLocaleString('en-IN')}`);
+        lines.push(`- Regular income (salary/allowance): ₹${(cashSummary.recurringIncomeTotal || 0).toLocaleString('en-IN')}`);
+        lines.push(`- Bonuses and happy surprises: ₹${(cashSummary.lifeEventGains || 0).toLocaleString('en-IN')}`);
+        lines.push(``);
+        lines.push(`💰 **Money You Spent**: ₹${(cashSummary.totalOutgoing || 0).toLocaleString('en-IN')}`);
+        lines.push(`- Life expenses and challenges: ₹${(cashSummary.lifeEventLosses || 0).toLocaleString('en-IN')}`);
+        lines.push(``);
+        lines.push(`🎮 **Life Events You Experienced**: ${totalEvents} moments`);
+        lines.push(`You handled ${totalEvents} different situations - each one taught you something about managing money!`);
       }
       lines.push(``);
-      lines.push(`Banking summary:`);
+
+      lines.push(`## 3. Your Banking Habits`);
+      lines.push(``);
       if (bankingSummary) {
-        // Banking summary shape can vary depending on what was computed; safely extract fields
         const bankAny: any = bankingSummary as any;
         const savingsBalance = bankAny.totalDeposits ?? bankAny.savingsBalance ?? 0;
         const fdInvested = bankAny.totalFdInvestments ?? bankAny.fdTotalInvested ?? 0;
         const totalInterest = bankAny.totalInterestEarned ?? bankAny.totalInterest ?? 0;
 
-        lines.push(`  - Savings balance: ₹${Number(savingsBalance).toLocaleString('en-IN')}`);
-        lines.push(`  - FD investments: ₹${Number(fdInvested).toLocaleString('en-IN')}`);
-        lines.push(`  - Total interest earned: ₹${Number(totalInterest).toLocaleString('en-IN')}`);
-      } else {
-        lines.push(`  No banking transactions recorded`);
+        if (savingsBalance > 0 || fdInvested > 0) {
+          lines.push(`Great job using safe banking tools!`);
+          if (savingsBalance > 0) lines.push(`- 🏦 Savings Account: ₹${Number(savingsBalance).toLocaleString('en-IN')} (emergency fund ready!)`);
+          if (fdInvested > 0) lines.push(`- 📊 Fixed Deposits: ₹${Number(fdInvested).toLocaleString('en-IN')} (smart long-term saving!)`);
+          if (totalInterest > 0) lines.push(`- ⭐ Interest Earned: ₹${Number(totalInterest).toLocaleString('en-IN')} (money grew while you slept!)`);
+        } else {
+          lines.push(`💡 **Learning Opportunity**: Next time, try putting some money in savings or FDs. They're super safe and grow your money automatically!`);
+        }
       }
       lines.push(``);
-      lines.push(`Short analysis:`);
-      lines.push(`  You made no trades during this session. Your networth changed mainly due to cash flows (recurring income or life events) and banking activity. Consider using a simple strategy next time — allocate a portion of recurring income to a low-risk instrument (e.g., FDs or index funds) and gradually experiment with small trades to learn. Keep your emergency fund (savings) intact before taking risks.`);
+
+      lines.push(`## 4. What You Did Great`);
       lines.push(``);
-      lines.push(`Top-level metrics: Networth: ₹${params.finalNetworth.toLocaleString('en-IN')}, P&L: ₹${params.profitLoss.toLocaleString('en-IN')}, CAGR: ${params.finalCAGR.toFixed(2)}%`);
+      lines.push(`✅ **Zero Rushed Decisions**: You didn't make impulsive choices - that's excellent self-control!`);
+      lines.push(`✅ **Income Awareness**: You managed your cash flow and life events responsibly`);
+      lines.push(`✅ **Learning Mindset**: You're building understanding before taking action`);
+      lines.push(``);
+
+      lines.push(`## 5. Next Learning Challenges`);
+      lines.push(``);
+      lines.push(`1. **Try Saving**: Put ₹10,000-50,000 in a savings account or FD next month`);
+      lines.push(`2. **Make 1 Small Choice**: Pick a safe, low-risk investment to practice with`);
+      lines.push(`3. **Watch Patterns**: Notice which life events help your money grow vs those that cost money`);
+      lines.push(`4. **Ask Questions**: Learn about different investment types before trying them`);
+      lines.push(``);
+      lines.push(`Remember: Smart money grows **slowly and safely**. You're on the right path! 🌱`);
 
       const report = lines.join('\n');
 
@@ -167,7 +190,58 @@ export async function generateTradingReport(params: AIReportParams): Promise<{ s
 
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-    const systemInstruction = `You are a Professional Trading Performance Analyst. Your role is to analyze player trading behavior based on logged in-game actions such as buy, sell, hold, timing, frequency, risk taken, and reaction to outcomes. Your goal is to identify the player’s underlying trading mindset and potential, not financial profit alone. Generate a single-page performance report that includes: Trading Style Classification Identify the closest matching trader type based on behavior patterns. Best and Worst Trades Highlight decisions with clear reasoning (timing, risk, patience, impulsiveness). Actionable Improvement Advice Give age-appropriate, constructive guidance to improve decision-making, discipline, and strategy. Use professional, concise language, but keep insights simple and interpretable for kids and educators. Avoid financial jargon unless necessary. Focus on decision quality, consistency, and learning potential. TRADER TYPES TO IDENTIFY (COMPLETE LIST) CORE TRADING STYLES (PRIMARY) Scalper Very frequent buy/sell actions Short holding time Reacts quickly to small changes Strength: Speed, alertness Risk: Overtrading, impatience Day Trader Trades multiple times within a session Closes positions quickly but not instantly Watches trends and momentum Strength: Focus, adaptability Risk: Emotional decisions under pressure Swing Trader Holds positions for medium duration Waits for better opportunities Less frequent but more deliberate trades Strength: Patience, planning Risk: Missed opportunities Long-Term / Position Trader Buys and holds for long periods Minimal reaction to short-term events Focuses on big-picture outcomes Strength: Discipline, confidence Risk: Ignoring warning signals Investor-Mindset Player Rare trades Prioritizes stability over action Avoids unnecessary risk Strength: Risk control Risk: Low engagement or slow learning BEHAVIOR-BASED PROFILES (VERY IMPORTANT FOR KIDS) Impulsive Trader Trades immediately after events No consistent pattern Emotion-driven decisions Indicator: High excitement, low patience Overconfident Trader Increases risk after wins Ignores losses or repeats mistakes Indicator: Strong belief, weak reflection Fear-Driven Trader Sells quickly after small losses Avoids buying again Indicator: Risk aversion, low confidence Random / No Clear Strategy Buy/sell actions lack consistency No timing logic Indicator: Exploration phase or confusion Adaptive Learner Changes strategy after losses Improves timing over time Indicator: High learning potential GAME-SPECIFIC / EDUCATIONAL TYPES (OPTIONAL BUT POWERFUL) Experimenter Tries many approaches intentionally Learning-focused, not result-focused Rule Follower Trades only when conditions are clear Consistent, cautious behavior Trend Chaser Buys after others succeed Sells when trend weakens Opportunistic Player Waits, then acts decisively Few but high-impact moves WHAT YOUR LOGS SHOULD TRACK (FOR BEST ANALYSIS) To enable accurate classification, log: Time between buy and sell Trade frequency Risk size per trade Reaction after wins/losses Strategy changes over time Holding duration OUTCOME YOU WILL GET From gameplay alone, your AI will be able to infer: Decision-making style Emotional control Risk appetite Learning ability Strategic thinking level This makes your game a behavioral intelligence tool, not just a trading simulation.`;
+    const systemInstruction = `You are a friendly, encouraging Financial Education Coach analyzing a young learner's money simulation gameplay.
+
+CRITICAL DESIGN PHILOSOPHY:
+- This is an EDUCATIONAL GAME for kids and teens, NOT real trading
+- Parents will read this report - it must feel SAFE, RESPONSIBLE, and EDUCATIONAL
+- Focus on LEARNING and DECISION-MAKING, not profit/loss
+- Use WARM, ENCOURAGING language that celebrates patience and discipline
+- NEVER use gambling terminology or create stress/pressure
+- Frame mistakes as "learning opportunities" and challenges as "practice moments"
+
+TONE & LANGUAGE RULES:
+✅ DO USE: "learning journey", "money choices", "patience score", "smart decision", "practice", "understanding", "growth"
+✅ DO USE: Calm, friendly, story-based explanations
+✅ DO USE: Age-appropriate vocabulary (Grade 6 reading level)
+❌ NEVER USE: "trading", "speculation", "gambling", "win/lose", "beat the market", "failure"
+❌ NEVER USE: Fear language like "risky", "dangerous", "warning", "avoid at all costs"
+❌ REPLACE "loss" with "learning expense" or "challenge"
+❌ REPLACE "profit" with "growth" or "money gained from smart choices"
+
+BEHAVIORAL PROFILE TYPES (EDUCATIONAL FRAMING):
+🌱 The Patient Learner: Takes time to think, waits for right moment
+🎯 The Strategic Planner: Makes decisions with clear reasons
+🔍 The Curious Explorer: Tries different approaches to learn
+⚡ The Quick Decider: Acts fast, learns from immediate results
+🎓 The Rule Follower: Sticks to safe, clear patterns
+🧠 The Adaptive Thinker: Adjusts strategy based on what happens
+
+WHAT TO ANALYZE:
+- Decision-making patterns (impulsive vs thoughtful)
+- Patience and discipline
+- Learning from outcomes
+- Money management skills
+- Consistency and planning
+- Reaction to challenges
+
+TONE EXAMPLES:
+❌ BAD: "You had a terrible loss of ₹50,000 on this trade."
+✅ GOOD: "This decision cost ₹50,000 - let's understand what happened and learn from it."
+
+❌ BAD: "Your win rate is only 25%, which is poor."
+✅ GOOD: "You made 4 smart choices out of every 10 tries - that shows you're learning! As you practice more, this will improve."
+
+❌ BAD: "You failed to identify the trend."
+✅ GOOD: "This was a tricky situation! Next time, watching the pattern over a few months might help."
+
+PARENT SAFETY ELEMENTS TO HIGHLIGHT:
+- Emphasize when player showed patience (didn't rush)
+- Celebrate safe choices (savings, steady investments)
+- Note when player avoided impulsive decisions
+- Show learning progression over time
+- Make clear this is simulation, not real money`;
+
 
     const model = genAI.getGenerativeModel({
       model: 'gemini-3-flash-preview',
@@ -178,6 +252,8 @@ export async function generateTradingReport(params: AIReportParams): Promise<{ s
     const preambleParts: string[] = [];
     if (bankingSummary) preambleParts.push(`BANKING_SUMMARY:${JSON.stringify(bankingSummary)}`);
     if (cashSummary) preambleParts.push(`CASH_SUMMARY:${JSON.stringify(cashSummary)}`);
+    if (holdingsSummary && holdingsSummary.length > 0) preambleParts.push(`HOLDINGS_SUMMARY:${JSON.stringify(holdingsSummary)}`);
+    if (totalUnrealizedPL !== 0) preambleParts.push(`TOTAL_UNREALIZED_PL:₹${totalUnrealizedPL.toLocaleString('en-IN')}`);
     if (params.precomputedSummary) preambleParts.push(`PRECOMPUTED_SUMMARY:${JSON.stringify(params.precomputedSummary)}`);
     const preambleText = preambleParts.length > 0 ? preambleParts.join('\n') + '\n\n' : '';
 
@@ -186,45 +262,91 @@ export async function generateTradingReport(params: AIReportParams): Promise<{ s
       ? `PRECOMPUTED SUMMARY:\n${JSON.stringify(params.precomputedSummary)}\n\n` + formatTradesForAI(trades, analysis, params.precomputedSummary?.banking)
       : formatTradesForAI(trades, analysis));
 
-    const prompt = `Generate a Comprehensive Trading & Financial Discipline Report for:
+    const prompt = `Generate a CHILD & PARENT FRIENDLY Learning Journey Report for:
   Player: ${params.playerName}, Age: ${params.playerAge}
   Report ID: ${params.reportId || params.uniqueId}
-  Final Networth: ₹${params.finalNetworth.toLocaleString('en-IN')}
-  CAGR: ${params.finalCAGR.toFixed(2)}%
-  Profit/Loss: ₹${params.profitLoss.toLocaleString('en-IN')}
+  Final Money Managed: ₹${params.finalNetworth.toLocaleString('en-IN')}
+  Growth Rate: ${params.finalCAGR.toFixed(2)}%
+  Money Change: ${params.profitLoss >= 0 ? '+' : ''}₹${params.profitLoss.toLocaleString('en-IN')}
+  ${totalUnrealizedPL !== 0 ? `Money in Active Choices: ₹${totalUnrealizedPL.toLocaleString('en-IN')}` : ''}
+  ${totalUnrealizedPL !== 0 ? `Money from Completed Choices: ₹${(params.profitLoss - totalUnrealizedPL).toLocaleString('en-IN')}` : ''}
 
-  Trade History:
+  Gameplay Data:
   ${tradeHistoryText}
 
-  ANALYSIS FRAMEWORK:
+  ${holdings.length > 0 ? `\nChoices Still Active (${holdings.length} items):` : ''}
+  ${holdings.length > 0 ? holdings.map(h => `- ${h.assetName} (${h.assetCategory}): ${h.quantity} units @ ₹${h.avgPrice.toFixed(2)} avg | Current: ₹${h.currentPrice.toFixed(2)} | Value: ₹${h.currentValue.toLocaleString('en-IN')} | Change: ₹${h.unrealizedPL.toLocaleString('en-IN')} (${h.totalInvested > 0 ? ((h.unrealizedPL / h.totalInvested) * 100).toFixed(2) : '0'}%)`).join('\n') : ''}
 
-  ## 1. Trading Style Classification
-  Classify the player into the closest matching trading style based strictly on observed behavior (frequency, holding time, risk, reactions, consistency).
-  
-  ## 2. Banking Discipline Assessment
-  Analyze the player's banking decisions including:
-  - Savings Account Balance: Emergency fund adequacy
-  - Fixed Deposits: Commitment to long-term goals, lock-in patience
-  - Liquidity Management: Balance between safety and growth investments
-  - Interest Rate Awareness: Strategic use of banking products
-  
-  ## 3. Combined Risk Profile
-  Identify the player's overall financial personality by combining:
-  - Trading Aggressiveness (scalper vs. long-term investor)
-  - Banking Conservatism (savings focus vs. investment drive)
-  - Decision Pattern (impulsive vs. deliberate)
-  - Learning Capacity (adaptive vs. rigid)
-  
-  ## 4. Best Trade Analysis
-  Identify the most effective trade and explain why it was good.
-  
-  ## 5. Worst Trade Analysis
-  Identify the weakest trade and explain what went wrong.
-  
-  ## 6. Key Recommendations
-  Provide 3-5 actionable recommendations to improve financial decision-making.
-  
-  Format as a professional single-page report with clear sections.`;
+  CRITICAL FORMATTING REQUIREMENTS:
+  - DO NOT include header with player name, age, report ID, or final numbers
+  - These are shown separately in the report card
+  - Start DIRECTLY with section 1
+  - Use markdown: ## for main sections (numbered)
+  - Keep sections CONCISE - max 3-4 sentences each
+  - Use DIRECT, HONEST language - this is for ADULTS
+  - Call out mistakes clearly - use words like "worst", "poor", "risky", "impulsive"
+  - Give REALITY CHECKS - don't sugarcoat losses or bad decisions
+  - Be STRAIGHTFORWARD and ANALYTICAL
+
+  REQUIRED REPORT STRUCTURE:
+
+  ## 1. Your Trading Style
+  Identify the player's trading approach with HONEST LABELS (Aggressive Trader, Conservative Investor, FOMO-Driven, Panic Seller, Strategic Planner, Risk-Taker, etc.). Be DIRECT about what their pattern reveals - both good and bad.
+
+  ## 2. Banking Habits
+  Analyze banking choices with HONEST assessment:
+  - Did they maintain emergency reserves or blow through savings?
+  - Did they use FDs strategically or ignore safe options?
+  - Are they balancing risk properly or going all-in recklessly?
+  - Point out POOR cash management if applicable
+
+  ## 3. What You're Holding
+  Evaluate current positions HONESTLY:
+  - Are they holding winners or bag-holding losers?
+  - Are they diversified or over-concentrated in one asset?
+  - Are they showing patience or stuck in bad positions?
+  - Call out POOR holdings that are dragging down returns
+
+  ## 4. Your Decision-Making Personality
+  Create an HONEST psychological profile:
+  - Impulsive vs Calculated
+  - Risk-seeking vs Risk-averse
+  - Disciplined vs Emotional
+  - Data-driven vs Gut-feeling
+  - Be BLUNT about negative patterns (FOMO, panic selling, greed, poor timing)
+
+  ## 5. Your Money Journey
+  Analyze P&L HONESTLY:
+  - Realized gains/losses from closed positions (be direct about wins and losses)
+  - Unrealized P&L from active positions (are they winning or losing?)
+  - Overall performance (did they grow wealth or destroy it?)
+  - Point out if they're underwater or crushing it
+
+  ## 6. Your Best Trade
+  Highlight their BEST decision with specific numbers. Explain why it worked and what they did right.
+
+  ## 7. Your Worst Trade
+  Identify their WORST decision without sugarcoating. Call out the mistake clearly:
+  - What went wrong?
+  - Why was this a poor decision?
+  - What did they lose?
+  - What's the hard lesson here?
+
+  ## 8. What You Need to Fix
+  Give 3-5 DIRECT, ACTIONABLE improvements:
+  - Point out specific weaknesses
+  - Tell them what to stop doing
+  - Tell them what to start doing
+  - Focus on FIXING MISTAKES and BUILDING DISCIPLINE
+  - Be HONEST about what's holding them back
+
+  TONE GUIDELINES:
+  - Write like a trading mentor giving HONEST feedback
+  - Be DIRECT and ANALYTICAL - this is reality, not therapy
+  - Use actual trading/investment terminology
+  - Don't avoid words like "loss", "mistake", "poor decision", "risky", "worst"
+  - Balance honesty with constructive guidance
+  - Adults can handle the truth - give them the REAL picture`;
 
     let result;
     if (useCache) {

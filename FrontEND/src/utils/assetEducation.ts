@@ -23,10 +23,10 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'What is the main benefit of a savings account?',
         options: [
-          'High returns and growth',
-          'Safe storage with guaranteed interest',
-          'Tax-free income',
-          'Double your money quickly'
+          'Tax-free income guaranteed',
+          'Safe storage with interest',
+          'Double money in 1 year',
+          'Highest returns available'
         ],
         correctAnswer: 1,
         hint: 'Think about safety and guaranteed returns!'
@@ -34,32 +34,32 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'Can you withdraw money from a savings account at any time?',
         options: [
-          'No, money is locked for 1 year',
-          'Yes, with easy access anytime',
-          'Only on weekends',
-          'Only after 6 months'
+          'Only after 6 months',
+          'Only on weekdays',
+          'Yes, anytime you need',
+          'Locked for 1 year'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Savings accounts offer liquidity!'
       },
       {
         question: 'What type of interest does a savings account typically earn?',
         options: [
-          'No interest',
           'Very high interest (10%+)',
-          'Low but guaranteed interest (3-4%)',
-          'Variable negative interest'
+          'No interest at all',
+          'Variable negative interest',
+          'Low but stable interest'
         ],
-        correctAnswer: 2,
+        correctAnswer: 3,
         hint: 'Interest is modest but stable!'
       },
       {
         question: 'Is money in a savings account safe?',
         options: [
+          'Safe only in private banks',
+          'Yes, deposit insurance protects it',
           'No, it can disappear',
-          'Yes, protected by deposit insurance',
-          'Only if you invest more than ₹1 lakh',
-          'Safe only in private banks'
+          'Only safe above ₹1 lakh'
         ],
         correctAnswer: 1,
         hint: 'Banks provide insurance protection!'
@@ -67,10 +67,10 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'What happens to interest in a savings account?',
         options: [
-          'Interest is paid annually',
-          'Interest is lost after 1 year',
-          'Interest compounds over time',
-          'You must claim interest manually'
+          'You must claim manually',
+          'Lost after 1 year',
+          'It compounds over time',
+          'Paid once annually'
         ],
         correctAnswer: 2,
         hint: 'Interest earns more interest!'
@@ -80,8 +80,8 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
         options: [
           'Only wealthy individuals',
           'Everyone for emergency funds',
-          'Only business owners',
-          'Only senior citizens'
+          'Only senior citizens',
+          'Only business owners'
         ],
         correctAnswer: 1,
         hint: 'Everyone needs emergency savings!'
@@ -89,10 +89,10 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'What is the minimum balance requirement in most savings accounts?',
         options: [
-          'No minimum required',
+          'Minimum ₹10 lakhs needed',
           'Usually ₹1,000 - ₹10,000',
-          'Minimum ₹1 lakh',
-          'Minimum ₹10 lakhs'
+          'Minimum ₹1 lakh required',
+          'No minimum required ever'
         ],
         correctAnswer: 1,
         hint: 'Requirements are typically low!'
@@ -100,10 +100,10 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'How does inflation affect savings account returns?',
         options: [
-          'Inflation increases returns',
+          'Inflation doubles your money',
           'No effect on savings',
-          'Inflation may reduce real value over time',
-          'Inflation doubles your money'
+          'It may reduce real value',
+          'Inflation increases returns'
         ],
         correctAnswer: 2,
         hint: 'Inflation erodes purchasing power!'
@@ -111,21 +111,21 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'Can you have multiple savings accounts?',
         options: [
-          'No, only one per person',
-          'Yes, you can have multiple accounts',
+          'Only in different countries',
           'Only if you are married',
-          'Only in different countries'
+          'No, just one per person',
+          'Yes, you can have multiple'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'You can diversify across banks!'
       },
       {
         question: 'What is the typical interest rate for savings accounts in India?',
         options: [
+          '20% per year',
           '10-15% per year',
-          '0.5-1% per year',
           '2.5-4% per year',
-          '20% per year'
+          '0.5-1% per year'
         ],
         correctAnswer: 2,
         hint: 'Rates are modest but stable!'
@@ -142,64 +142,64 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
         question: 'What happens if you break an FD before maturity?',
         options: [
           'You get bonus interest',
-          'Nothing happens',
           'You pay a penalty',
-          'You lose all money'
+          'You lose all money',
+          'Nothing happens at all'
         ],
-        correctAnswer: 2,
+        correctAnswer: 1,
         hint: 'Breaking early comes with a cost!'
       },
       {
         question: 'What is the main advantage of a Fixed Deposit?',
         options: [
-          'High liquidity',
-          'Guaranteed fixed returns',
-          'Tax-free income',
-          'Daily withdrawals allowed'
+          'Tax-free income always',
+          'Daily withdrawals allowed',
+          'High liquidity anytime',
+          'Guaranteed fixed returns'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'FDs offer predictable returns!'
       },
       {
         question: 'Which FD tenure typically offers the highest interest rate?',
         options: [
-          '1 month',
-          '3 months',
-          '1 year',
-          '3 years or more'
+          '3 years or more',
+          '1 month only',
+          '3 months only',
+          '1 year only'
         ],
-        correctAnswer: 3,
+        correctAnswer: 0,
         hint: 'Longer lock-in means better rates!'
       },
       {
         question: 'Are FD returns guaranteed?',
         options: [
-          'No, they fluctuate daily',
-          'Yes, interest rate is locked at start',
           'Only for government FDs',
-          'Depends on stock market'
+          'Depends on stock market',
+          'Yes, rate locked at start',
+          'No, they fluctuate daily'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Rate is fixed when you invest!'
       },
       {
         question: 'What is the typical penalty for breaking an FD early?',
         options: [
-          'No penalty',
+          'You lose all interest',
           '50% of principal amount',
-          '0.5-2% interest reduction',
-          'You lose all interest earned'
+          'No penalty charged',
+          '0.5-2% interest reduction'
         ],
-        correctAnswer: 2,
+        correctAnswer: 3,
         hint: 'Small penalty on interest rate!'
       },
       {
         question: 'Can you renew an FD automatically after maturity?',
         options: [
-          'No, manual renewal only',
-          'Yes, with auto-renewal option',
           'Only for 1-year FDs',
-          'Only senior citizens can renew'
+          'Yes, auto-renewal available',
+          'Manual renewal only',
+          'Only seniors can renew'
         ],
         correctAnswer: 1,
         hint: 'Auto-renewal is a common feature!'
@@ -207,21 +207,21 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'How is FD interest typically paid?',
         options: [
-          'Daily',
-          'Monthly, quarterly, or at maturity',
-          'Only when you break the FD',
-          'Never paid, only added to principal'
+          'Monthly, quarterly, or maturity',
+          'Only when you break FD',
+          'Daily to your account',
+          'Never paid, just added'
         ],
-        correctAnswer: 1,
+        correctAnswer: 0,
         hint: 'Multiple payout frequency options!'
       },
       {
         question: 'Who offers Fixed Deposits in India?',
         options: [
-          'Only government',
+          'Only stock exchanges',
           'Banks and some NBFCs',
           'Only private companies',
-          'Only stock exchanges'
+          'Only government offices'
         ],
         correctAnswer: 1,
         hint: 'Multiple institutions offer FDs!'
@@ -229,23 +229,23 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'What is the deposit insurance limit for FDs in India?',
         options: [
-          'No insurance',
-          'Up to ₹1 lakh per depositor',
-          'Up to ₹5 lakhs per depositor',
-          'Unlimited insurance'
+          'Up to ₹5 lakhs',
+          'Up to ₹1 lakh',
+          'Unlimited insurance',
+          'No insurance exists'
         ],
-        correctAnswer: 2,
+        correctAnswer: 0,
         hint: 'DICGC provides protection!'
       },
       {
         question: 'Can you take a loan against your FD?',
         options: [
-          'No, never allowed',
-          'Yes, typically up to 80-90% of FD value',
+          'Never allowed legally',
           'Only after 5 years',
+          'Yes, up to 80-90% value',
           'Only for senior citizens'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'FDs can be used as collateral!'
       }
     ]
@@ -259,34 +259,34 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'Why do people invest in gold?',
         options: [
-          'To get monthly income',
-          'To protect against inflation',
           'To earn high interest',
-          'For quick profits'
+          'To get monthly income',
+          'For quick daily profits',
+          'To protect against inflation'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Gold protects your wealth when prices rise!'
       },
       {
         question: 'What are the two main types of gold investment?',
         options: [
-          'Physical and Digital Gold',
           'Indian and Foreign Gold',
+          'Physical and Digital Gold',
           'Old and New Gold',
           'Pure and Mixed Gold'
         ],
-        correctAnswer: 0,
+        correctAnswer: 1,
         hint: 'You can buy real or online gold!'
       },
       {
         question: 'Does gold provide regular income like dividends?',
         options: [
+          'Yes, annual interest payments',
+          'Only during festivals',
           'Yes, monthly dividends',
-          'Yes, annual interest',
-          'No, returns come from price appreciation',
-          'Only during festivals'
+          'No, only price appreciation'
         ],
-        correctAnswer: 2,
+        correctAnswer: 3,
         hint: 'Gold gains value over time!'
       },
       {
@@ -294,8 +294,8 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
         options: [
           'During economic uncertainty',
           'Only during weddings',
-          'When stock market is rising',
-          'Never performs well'
+          'Never performs well',
+          'When stocks are rising'
         ],
         correctAnswer: 0,
         hint: 'Safe haven during crisis!'
@@ -303,67 +303,67 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'What is the purity measure for gold?',
         options: [
-          'Percentage',
-          'Carats (e.g., 22K, 24K)',
-          'Grams only',
-          'Degrees'
+          'Percentage only',
+          'Degrees of temperature',
+          'Carats (22K, 24K)',
+          'Grams and kilograms'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Higher number means purer gold!'
       },
       {
         question: 'What storage costs are involved when physical gold is kept in a bank?',
         options: [
-          'No storage costs',
-          'Locker rent and insurance',
+          'Government pays storage',
           'Only electricity cost',
-          'Government pays for storage'
+          'Locker rent and insurance',
+          'No storage costs'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Security comes at a cost!'
       },
       {
         question: 'What is Digital Gold backed by?',
         options: [
           'Nothing, it is virtual',
-          'Government promise',
-          'Physical gold stored in vaults',
-          'Cryptocurrency'
+          'Government promise only',
+          'Cryptocurrency tokens',
+          'Physical gold in vaults'
         ],
-        correctAnswer: 2,
+        correctAnswer: 3,
         hint: 'Real gold secures digital gold!'
       },
       {
         question: 'Can you sell gold easily when needed?',
         options: [
-          'No, very difficult',
+          'Only during business hours',
+          'No, very difficult always',
           'Yes, gold is highly liquid',
-          'Only to government',
-          'Only during business hours'
+          'Only to government agencies'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Gold is easy to convert to cash!'
       },
       {
         question: 'What is making charge on gold jewelry?',
         options: [
-          'Tax on gold',
-          'Cost for crafting jewelry',
-          'Storage fee',
-          'Delivery charge'
+          'Storage fee charged',
+          'Tax on gold purchases',
+          'Delivery charge only',
+          'Cost for crafting jewelry'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Jewelers charge for workmanship!'
       },
       {
         question: 'Which gold investment has lower making charges?',
         options: [
-          'Jewelry',
-          'Digital Gold',
           'Gold coins and bars',
+          'Jewelry items',
+          'Digital Gold online',
           'All have same charges'
         ],
-        correctAnswer: 2,
+        correctAnswer: 0,
         hint: 'Simple forms have lower costs!'
       }
     ]
@@ -378,31 +378,31 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
         question: 'What do you become when you buy stocks?',
         options: [
           'A company employee',
-          'A part-owner of the company',
-          'A lender to the company',
-          'A customer of the company'
+          'A lender to company',
+          'A part-owner of company',
+          'A customer of company'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'You own a piece of the company!'
       },
       {
         question: 'How do stock investors make money?',
         options: [
           'Only through salary',
-          'Price appreciation and dividends',
+          'Government subsidy payments',
           'Monthly fixed interest',
-          'Government subsidy'
+          'Price appreciation and dividends'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Two ways to profit from stocks!'
       },
       {
         question: 'What makes stock prices go up or down?',
         options: [
-          'Government orders',
-          'Company performance and market sentiment',
-          'Time of day only',
-          'Number of shareholders'
+          'Number of shareholders',
+          'Company performance and sentiment',
+          'Time of day',
+          'Government orders only'
         ],
         correctAnswer: 1,
         hint: 'Performance and perception matter!'
@@ -410,78 +410,78 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'What is a dividend?',
         options: [
-          'Company debt',
-          'Share of company profits paid to shareholders',
+          'Share of company profits',
           'Stock purchase fee',
-          'Government tax'
+          'Company debt payment',
+          'Government tax levy'
         ],
-        correctAnswer: 1,
+        correctAnswer: 0,
         hint: 'Companies share profits with owners!'
       },
       {
         question: 'What is the risk level of stock investing?',
         options: [
-          'No risk at all',
-          'Higher risk, higher potential returns',
+          'Higher risk, higher returns',
           'Same as savings account',
-          'Only risk is paperwork'
+          'No risk at all',
+          'Only paperwork risk'
         ],
-        correctAnswer: 1,
+        correctAnswer: 0,
         hint: 'Risk and reward go together!'
       },
       {
         question: 'Can you lose money in stocks?',
         options: [
           'No, stocks always go up',
-          'Yes, if stock price falls',
           'Only if company closes',
+          'Yes, if price falls',
           'Government protects all losses'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Prices can fall below purchase price!'
       },
       {
         question: 'What does market capitalization mean?',
         options: [
-          'Company profits',
-          'Total value of company shares',
-          'CEO salary',
-          'Number of employees'
+          'CEO salary package',
+          'Number of employees',
+          'Total value of shares',
+          'Company annual profits'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Total worth of all shares!'
       },
       {
         question: 'What is diversification in stock investing?',
         options: [
           'Buying only one stock',
-          'Spreading investments across multiple stocks',
-          'Selling all stocks',
-          'Trading every day'
+          'Selling all stocks quickly',
+          'Trading every single day',
+          'Spreading across multiple stocks'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Don\'t put all eggs in one basket!'
       },
       {
         question: 'What is a stock exchange?',
         options: [
-          'A bank',
-          'Marketplace where stocks are bought and sold',
+          'Marketplace for buying/selling stocks',
+          'A bank branch',
           'Government office',
           'Company headquarters'
         ],
-        correctAnswer: 1,
+        correctAnswer: 0,
         hint: 'Where buyers meet sellers!'
       },
       {
         question: 'What does BSE and NSE stand for?',
         options: [
-          'Bank Savings Entity',
-          'Bombay/National Stock Exchange',
           'Business Sales Enterprise',
-          'Basic Stock Establishment'
+          'Basic Stock Establishment',
+          'Bank Savings Entity',
+          'Bombay/National Stock Exchange'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'India\'s major stock exchanges!'
       }
     ]
@@ -495,8 +495,8 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'What is the main characteristic of cryptocurrency?',
         options: [
-          'Guaranteed returns',
           'Government backing',
+          'Guaranteed returns',
           'High volatility and risk',
           'Fixed interest rate'
         ],
@@ -506,30 +506,30 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'What technology powers cryptocurrency?',
         options: [
-          'Traditional banking',
-          'Blockchain technology',
+          'Traditional banking system',
           'Paper currency system',
-          'Gold standard'
+          'Blockchain technology',
+          'Gold standard backing'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Distributed ledger technology!'
       },
       {
         question: 'Is cryptocurrency regulated in India?',
         options: [
-          'Yes, fully regulated like banks',
-          'Partially regulated, taxation applied',
+          'Yes, fully like banks',
+          'Only Bitcoin is regulated',
           'No regulation exists',
-          'Only Bitcoin is regulated'
+          'Partially, taxation applied'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Gray area with tax implications!'
       },
       {
         question: 'What is Bitcoin?',
         options: [
-          'A bank',
-          'First and most famous cryptocurrency',
+          'A traditional bank',
+          'First famous cryptocurrency',
           'A stock exchange',
           'Government currency'
         ],
@@ -540,66 +540,66 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
         question: 'Can cryptocurrency prices crash suddenly?',
         options: [
           'No, prices are stable',
-          'Yes, extreme volatility is common',
           'Only during weekends',
-          'Government protects prices'
+          'Government protects prices',
+          'Yes, extreme volatility common'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'High risk, high reward asset!'
       },
       {
         question: 'Where do you store cryptocurrency?',
         options: [
-          'In a bank account',
           'In a digital wallet',
+          'In a bank account',
           'In a physical safe',
           'In government treasury'
         ],
-        correctAnswer: 1,
+        correctAnswer: 0,
         hint: 'Digital assets need digital storage!'
       },
       {
         question: 'What is crypto mining?',
         options: [
-          'Digging for gold',
-          'Process of validating transactions and creating new coins',
           'Buying crypto on exchange',
-          'Government printing money'
+          'Government printing money',
+          'Digging for gold underground',
+          'Validating transactions for coins'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Computational work for rewards!'
       },
       {
         question: 'Are cryptocurrency transactions anonymous?',
         options: [
-          'Completely anonymous',
-          'Pseudonymous - traceable but not directly linked to identity',
-          'Fully public with names',
-          'Only government can see'
+          'Completely anonymous always',
+          'Only government can see',
+          'Pseudonymous - traceable',
+          'Fully public with names'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Public ledger, private identity!'
       },
       {
         question: 'What is the maximum supply of Bitcoin?',
         options: [
-          'Unlimited',
-          '21 million coins',
+          'Unlimited supply',
           '100 million coins',
-          'Changes every year'
+          'Changes every year',
+          '21 million coins'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Limited supply creates scarcity!'
       },
       {
         question: 'Should beginners invest heavily in cryptocurrency?',
         options: [
-          'Yes, invest all savings',
-          'No, only invest what you can afford to lose',
           'Yes, guaranteed profits',
-          'Only if friends recommend'
+          'Only if friends recommend',
+          'No, only affordable losses',
+          'Yes, invest all savings'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'High risk means caution needed!'
       }
     ]
@@ -614,9 +614,9 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
         question: 'What are commodities?',
         options: [
           'Company stocks',
-          'Bank deposits',
-          'Raw materials like oil and metals',
-          'Digital currencies'
+          'Digital currencies',
+          'Raw materials like metals',
+          'Bank deposits'
         ],
         correctAnswer: 2,
         hint: 'Think about physical resources!'
@@ -625,31 +625,31 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
         question: 'What factors affect commodity prices?',
         options: [
           'Only time of day',
-          'Global demand, weather, and economic conditions',
           'Number of investors',
-          'Government orders only'
+          'Government orders only',
+          'Demand, weather, economy'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Multiple real-world factors!'
       },
       {
         question: 'Which is an example of an agricultural commodity?',
         options: [
-          'Bitcoin',
           'Wheat and Cotton',
+          'Bitcoin token',
           'Gold jewelry',
           'Real estate'
         ],
-        correctAnswer: 1,
+        correctAnswer: 0,
         hint: 'Grown on farms!'
       },
       {
         question: 'Which is an example of an energy commodity?',
         options: [
-          'Silver',
-          'Wheat',
-          'Crude Oil and Natural Gas',
-          'Stocks'
+          'Silver metal',
+          'Company stocks',
+          'Crude Oil and Gas',
+          'Wheat crops'
         ],
         correctAnswer: 2,
         hint: 'Powers vehicles and homes!'
@@ -657,21 +657,21 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'How do investors typically trade commodities?',
         options: [
-          'By physically storing them',
-          'Through futures contracts and commodity exchanges',
           'Only at grocery stores',
-          'Cannot be traded'
+          'Cannot be traded',
+          'By physically storing them',
+          'Through futures contracts'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Standardized contracts on exchanges!'
       },
       {
         question: 'What is a metal commodity example?',
         options: [
-          'Cotton',
-          'Crude Oil',
+          'Cotton fabric',
+          'Bitcoin digital',
           'Copper and Aluminium',
-          'Bitcoin'
+          'Crude Oil'
         ],
         correctAnswer: 2,
         hint: 'Industrial metals!'
@@ -682,7 +682,7 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
           'Guaranteed daily income',
           'Diversification and inflation hedge',
           'No risk involved',
-          'Tax-free returns'
+          'Tax-free returns always'
         ],
         correctAnswer: 1,
         hint: 'Protection during inflation!'
@@ -690,30 +690,30 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'What can affect agricultural commodity prices?',
         options: [
-          'Weather and crop yields',
           'Only government policy',
+          'Weather and crop yields',
           'Stock market only',
           'Interest rates only'
         ],
-        correctAnswer: 0,
+        correctAnswer: 1,
         hint: 'Nature plays a big role!'
       },
       {
         question: 'Are commodity prices stable?',
         options: [
           'Yes, never change',
-          'No, they can be quite volatile',
+          'Government fixes all prices',
           'Only change annually',
-          'Government fixes all prices'
+          'No, they can be volatile'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Supply and demand fluctuate!'
       },
       {
         question: 'What is crude oil used for?',
         options: [
-          'Only decoration',
-          'Fuel, plastics, and various products',
+          'Only decoration purposes',
+          'Fuel, plastics, products',
           'Building houses',
           'Making jewelry'
         ],
@@ -732,30 +732,30 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
         question: 'What is the main advantage of index funds?',
         options: [
           'Guaranteed high returns',
-          'Diversification across many companies',
+          'Daily fixed income',
           'No market risk',
-          'Daily fixed income'
+          'Diversification across companies'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Don\'t put all eggs in one basket!'
       },
       {
         question: 'What does an index fund track?',
         options: [
           'A single company',
-          'Market indices like Nifty 50 or Sensex',
-          'Gold prices',
+          'Gold prices only',
+          'Market indices like Nifty',
           'Fixed deposit rates'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Follows the whole market index!'
       },
       {
         question: 'What is the Nifty 50?',
         options: [
           'A savings account',
-          'Index of top 50 companies on NSE',
-          'A single company stock',
+          'Index of top 50 companies',
+          'A single stock',
           'A government bond'
         ],
         correctAnswer: 1,
@@ -764,63 +764,63 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'Are index funds actively or passively managed?',
         options: [
-          'Actively managed by fund managers',
-          'Passively managed to track an index',
+          'Passively to track index',
+          'Actively by fund managers',
           'Not managed at all',
-          'Only government manages them'
+          'Only government manages'
         ],
-        correctAnswer: 1,
+        correctAnswer: 0,
         hint: 'Just follows the index automatically!'
       },
       {
         question: 'What are the fees like for index funds?',
         options: [
           'Very high fees',
-          'Lower fees than actively managed funds',
-          'No fees at all',
-          'Fees change daily'
+          'Fees change daily',
+          'Lower than active funds',
+          'No fees at all'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Passive management means lower costs!'
       },
       {
         question: 'Can you lose money in index funds?',
         options: [
           'No, they are risk-free',
-          'Yes, if the overall market falls',
+          'Government protects all losses',
           'Only during weekends',
-          'Government protects all losses'
+          'Yes, if market falls'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Market risk still exists!'
       },
       {
         question: 'What is an ETF?',
         options: [
-          'A type of savings account',
-          'Exchange Traded Fund that trades like stocks',
+          'Exchange Traded Fund',
+          'A savings account',
           'A government scheme',
           'A cryptocurrency'
         ],
-        correctAnswer: 1,
+        correctAnswer: 0,
         hint: 'Traded on exchanges like stocks!'
       },
       {
         question: 'Who should invest in index funds?',
         options: [
-          'Only experts',
-          'Beginners and long-term investors',
+          'Only experts traders',
           'Only wealthy people',
-          'Only senior citizens'
+          'Only senior citizens',
+          'Beginners and long-term investors'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Great for passive investors!'
       },
       {
         question: 'How many companies do you own in a Nifty 50 index fund?',
         options: [
           'Only 1 company',
-          'All 50 companies in Nifty',
+          'All 50 companies',
           '5 companies',
           '100 companies'
         ],
@@ -830,8 +830,8 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'Can index funds outperform the market?',
         options: [
-          'Yes, they always beat the market',
-          'No, they aim to match market returns',
+          'Yes, always beat market',
+          'No, aim to match returns',
           'Only in bull markets',
           'Depends on weather'
         ],
@@ -851,109 +851,109 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
         options: [
           'The investors themselves',
           'Bank managers',
-          'Professional fund managers',
-          'Government officials'
+          'Government officials',
+          'Professional fund managers'
         ],
-        correctAnswer: 2,
+        correctAnswer: 3,
         hint: 'Experts handle your investments!'
       },
       {
         question: 'What is a mutual fund?',
         options: [
+          'Pooled money by professionals',
           'A single stock',
-          'Pooled money invested by professionals',
           'A savings account',
           'A cryptocurrency'
         ],
-        correctAnswer: 1,
+        correctAnswer: 0,
         hint: 'Many investors pooling together!'
       },
       {
         question: 'What do mutual funds invest in?',
         options: [
-          'Only gold',
-          'Stocks, bonds, or mix of assets',
+          'Only gold metal',
           'Only real estate',
-          'Only government schemes'
+          'Only government schemes',
+          'Stocks, bonds, assets'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Diversified portfolio of assets!'
       },
       {
         question: 'What is NAV in mutual funds?',
         options: [
-          'Name of fund manager',
-          'Net Asset Value - price per unit',
+          'Name of manager',
           'Number of investors',
+          'Net Asset Value',
           'New Account Value'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Price of one unit of the fund!'
       },
       {
         question: 'What is an equity mutual fund?',
         options: [
+          'Invests in stocks primarily',
           'Invests only in gold',
-          'Invests primarily in stocks',
           'Invests only in FDs',
-          'Invests in real estate only'
+          'Invests in real estate'
         ],
-        correctAnswer: 1,
+        correctAnswer: 0,
         hint: 'Stock market focused fund!'
       },
       {
         question: 'What is a debt mutual fund?',
         options: [
-          'Invests in stocks only',
-          'Invests in bonds and fixed income',
-          'Lends money to friends',
-          'Invests in cryptocurrencies'
+          'Invests in stocks',
+          'Lends to friends',
+          'Invests in cryptocurrencies',
+          'Invests in bonds'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Lower risk fixed income!'
       },
       {
         question: 'Can you start a mutual fund SIP with small amounts?',
         options: [
-          'No, minimum ₹1 lakh required',
-          'Yes, can start with ₹500-₹1000',
+          'No, ₹1 lakh minimum',
           'Minimum ₹10 lakhs',
-          'Only lumpsum allowed'
+          'Only lumpsum allowed',
+          'Yes, ₹500-₹1000 start'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Accessible for small investors!'
       },
       {
         question: 'What is SIP in mutual funds?',
         options: [
           'Savings Interest Plan',
-          'Systematic Investment Plan',
           'Stock Investment Portfolio',
+          'Systematic Investment Plan',
           'Special Insurance Policy'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Regular monthly investments!'
       },
       {
         question: 'Are mutual fund returns guaranteed?',
         options: [
           'Yes, always guaranteed',
-          'No, returns depend on market performance',
           'Only debt funds guaranteed',
-          'Government guarantees all'
+          'Government guarantees all',
+          'No, market-linked'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Market-linked, not guaranteed!'
       },
       {
         question: 'What is an expense ratio?',
         options: [
           'Your investment amount',
-          'Annual fee charged by the fund',
           'Your profit percentage',
-          'Government tax'
+          'Government tax rate',
+          'Annual fund fee'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Cost of managing the fund!'
       }
     ]
@@ -979,55 +979,55 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
         question: 'What is a REIT?',
         options: [
           'A type of stock',
-          'Real Estate Investment Trust',
           'Retirement Income Tax',
-          'A mutual fund'
+          'A mutual fund',
+          'Real Estate Investment Trust'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Invest in real estate collectively!'
       },
       {
         question: 'Can you invest in real estate without buying property?',
         options: [
           'No, must buy property',
-          'Yes, through REITs',
           'Only through gold',
+          'Yes, through REITs',
           'Only for rich people'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'REITs make real estate accessible!'
       },
       {
         question: 'What type of properties do REITs typically own?',
         options: [
           'Only residential homes',
-          'Commercial properties like offices and malls',
           'Only agricultural land',
-          'Only parking lots'
+          'Only parking lots',
+          'Commercial properties'
         ],
-        correctAnswer: 1,
+        correctAnswer: 3,
         hint: 'Business and commercial spaces!'
       },
       {
         question: 'How do REIT investors make money?',
         options: [
-          'Only from property sale',
-          'Rental income and property appreciation',
+          'Only from sale',
           'Government grants',
+          'Rental income and appreciation',
           'Fixed interest only'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Rent and value growth!'
       },
       {
         question: 'Are REITs traded on stock exchanges?',
         options: [
-          'No, only private sales',
-          'Yes, publicly traded REITs exist',
+          'No, only private',
           'Only on weekends',
+          'Yes, publicly traded',
           'Only to government'
         ],
-        correctAnswer: 1,
+        correctAnswer: 2,
         hint: 'Can buy and sell like stocks!'
       },
       {
@@ -1044,8 +1044,8 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'Do REITs provide regular income?',
         options: [
-          'No income, only capital gains',
-          'Yes, distribute rental income regularly',
+          'No income, only gains',
+          'Yes, distribute rental income',
           'Only annual income',
           'No income at all'
         ],
@@ -1055,7 +1055,7 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'What percentage of income must REITs distribute?',
         options: [
-          'No requirement',
+          'No requirement exists',
           'Typically 90% or more',
           '10% only',
           '50% maximum'
@@ -1066,12 +1066,12 @@ export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
       {
         question: 'Are REITs more liquid than physical property?',
         options: [
+          'Yes, easier to trade',
           'No, same liquidity',
-          'Yes, easier to buy and sell',
           'Less liquid than property',
           'Cannot be sold'
         ],
-        correctAnswer: 1,
+        correctAnswer: 0,
         hint: 'Traded easily on exchanges!'
       }
     ]

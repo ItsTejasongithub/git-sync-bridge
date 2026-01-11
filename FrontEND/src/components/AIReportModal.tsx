@@ -3,7 +3,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { aiReportApi } from '../services/aiReportApi';
 import { generateReportPDF } from '../utils/pdfGenerator';
-import { generateHTMLReportPDF } from '../utils/htmlToPdfGenerator';
 
 interface AIReportModalProps {
   isOpen: boolean;
@@ -21,68 +20,81 @@ const markdownComponentStyles = {
   h1: {
     fontSize: '28px',
     fontWeight: 'bold',
-    color: '#4ecca3',
+    color: '#FFFFFF',
     marginBottom: '16px',
     marginTop: '8px',
-    borderBottom: '2px solid #4ecca3',
+    borderBottom: '2px solid #854CE6',
     paddingBottom: '12px',
   } as React.CSSProperties,
   h2: {
     fontSize: '20px',
     fontWeight: 'bold',
-    color: '#4ecca3',
+    color: '#FFFFFF',
     marginTop: '20px',
     marginBottom: '12px',
+    border: 'none',
+    background: 'transparent',
+    padding: '0',
+    boxShadow: 'none',
   } as React.CSSProperties,
   h3: {
     fontSize: '16px',
     fontWeight: 'bold',
-    color: '#b0e0d6',
+    color: '#FFFFFF',
     marginTop: '16px',
     marginBottom: '10px',
   } as React.CSSProperties,
   p: {
     marginBottom: '14px',
     lineHeight: '1.8',
-    color: '#e0e0e0',
+    color: '#C8C8C8',
   } as React.CSSProperties,
   ul: {
     marginLeft: '24px',
     marginBottom: '14px',
-    color: '#e0e0e0',
+    color: '#C8C8C8',
   } as React.CSSProperties,
   ol: {
-    marginLeft: '24px',
+    marginLeft: '0px',
     marginBottom: '14px',
-    color: '#e0e0e0',
+    color: '#C8C8C8',
+    paddingLeft: '0px',
+    listStyleType: 'none',
   } as React.CSSProperties,
   li: {
-    marginBottom: '8px',
-    lineHeight: '1.6',
+    marginBottom: '12px',
+    lineHeight: '1.7',
+    border: 'none',
+    background: 'transparent',
+    padding: '0px',
+    color: '#C8C8C8',
   } as React.CSSProperties,
   blockquote: {
-    borderLeft: '4px solid #4ecca3',
+    borderLeft: '4px solid #854CE6',
     paddingLeft: '16px',
     marginLeft: '0',
     marginRight: '0',
     marginBottom: '14px',
-    color: '#b0e0d6',
+    color: '#854CE6',
     fontStyle: 'italic',
+    backgroundColor: '#282828',
+    padding: '12px 16px',
+    borderRadius: '6px',
   } as React.CSSProperties,
   hr: {
-    borderColor: '#4ecca3',
-    opacity: 0.3,
+    borderColor: '#3C3C3C',
+    opacity: 0.5,
     margin: '20px 0',
   } as React.CSSProperties,
   code: {
-    backgroundColor: '#0f3460',
+    backgroundColor: '#282828',
     padding: '2px 6px',
     borderRadius: '4px',
-    color: '#4ecca3',
+    color: '#854CE6',
     fontSize: '14px',
   } as React.CSSProperties,
   pre: {
-    backgroundColor: '#0f3460',
+    backgroundColor: '#282828',
     padding: '16px',
     borderRadius: '6px',
     overflowX: 'auto' as const,
@@ -90,11 +102,11 @@ const markdownComponentStyles = {
   } as React.CSSProperties,
   strong: {
     fontWeight: 'bold',
-    color: '#4ecca3',
+    color: '#FFFFFF',
   } as React.CSSProperties,
   em: {
     fontStyle: 'italic',
-    color: '#b0e0d6',
+    color: '#969696',
   } as React.CSSProperties,
   table: {
     width: '100%',
@@ -103,23 +115,23 @@ const markdownComponentStyles = {
     overflow: 'auto',
   } as React.CSSProperties,
   thead: {
-    backgroundColor: '#0f3460',
+    backgroundColor: '#282828',
   } as React.CSSProperties,
   th: {
-    border: '1px solid #4ecca3',
+    border: '1px solid #3C3C3C',
     padding: '10px',
     textAlign: 'left' as const,
-    color: '#4ecca3',
+    color: '#FFFFFF',
     fontWeight: 'bold',
   } as React.CSSProperties,
   td: {
-    border: '1px solid #4ecca380',
+    border: '1px solid #3C3C3C',
     padding: '10px',
     textAlign: 'left' as const,
-    color: '#e0e0e0',
+    color: '#C8C8C8',
   } as React.CSSProperties,
   tr: {
-    borderBottom: '1px solid #4ecca330',
+    borderBottom: '1px solid #3C3C3C',
   } as React.CSSProperties,
 };
 
@@ -164,28 +176,10 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
   };
 
   const handleDownloadPDF = async () => {
-    if (!report || !reportContentRef.current) return;
+    if (!report) return;
 
     try {
-      // Capture the beautiful UI as an image and convert to PDF
-      await generateHTMLReportPDF(reportContentRef.current, {
-        playerName,
-        playerAge,
-        finalNetworth,
-        cagr,
-        profitLoss,
-        reportContent: report,
-        reportId: logUniqueId || undefined,
-        generatedDate: new Date().toLocaleDateString('en-IN', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        }),
-      });
-    } catch (error) {
-      console.error('HTML-to-PDF failed, falling back to basic PDF generation:', error);
-
-      // Fallback to basic PDF generation
+      // Use text-based PDF generation for selectable/copyable text
       generateReportPDF({
         playerName,
         playerAge,
@@ -200,6 +194,11 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
           day: 'numeric',
         }),
       });
+
+      console.log('✅ PDF generated with selectable text');
+    } catch (error) {
+      console.error('❌ PDF generation failed:', error);
+      alert('Failed to generate PDF. Please try again.');
     }
   };
 
@@ -224,50 +223,127 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
     >
       <div
         style={{
-          backgroundColor: '#1a1a2e',
-          borderRadius: '12px',
-          border: '2px solid #4ecca3',
+          backgroundColor: '#121212',
+          borderRadius: '16px',
+          border: '1px solid #3C3C3C',
           display: 'flex',
           flexDirection: 'column',
           width: '100%',
           maxWidth: '900px',
           height: '90vh',
           maxHeight: '90vh',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div
-          style={{
-            padding: '24px 30px',
-            borderBottom: '1px solid #4ecca3',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexShrink: 0,
-          }}
-        >
-          <h2 style={{ color: '#4ecca3', margin: 0, fontSize: '22px', fontWeight: 'bold' }}>
-            AI Trading Performance Report
-          </h2>
-          <button
-            onClick={onClose}
+        {/* Header with Purple Accent Bar */}
+        <div style={{ borderTopLeftRadius: '16px', borderTopRightRadius: '16px', overflow: 'hidden' }}>
+          <div style={{ width: '100%', height: '3px', background: '#854CE6' }} />
+          <div
             style={{
-              background: 'none',
-              border: 'none',
-              color: '#4ecca3',
-              fontSize: '28px',
-              cursor: 'pointer',
-              padding: '0',
-              width: '36px',
-              height: '36px',
+              padding: '20px 30px',
+              borderBottom: '1px solid #3C3C3C',
               display: 'flex',
+              justifyContent: 'space-between',
               alignItems: 'center',
-              justifyContent: 'center',
+              backgroundColor: '#121212',
             }}
           >
-            ×
-          </button>
+            <h2 style={{ color: '#FFFFFF', margin: 0, fontSize: '20px', fontWeight: 'bold' }}>
+              AI-Powered Trading Analysis Report
+            </h2>
+            <button
+              onClick={onClose}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#969696',
+                fontSize: '28px',
+                cursor: 'pointer',
+                padding: '0',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'color 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#969696')}
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Player Data Cards */}
+          <div style={{ padding: '20px 30px', backgroundColor: '#121212', borderBottom: '1px solid #3C3C3C' }}>
+            {/* Player Info */}
+            <div style={{
+              backgroundColor: '#1E1E1E',
+              borderRadius: '12px',
+              padding: '16px 20px',
+              marginBottom: '16px'
+            }}>
+              <div style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 'bold', marginBottom: '4px' }}>
+                {playerName}
+              </div>
+              <div style={{ color: '#969696', fontSize: '13px' }}>
+                Age {playerAge} • {new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+              {/* Total Networth */}
+              <div style={{
+                backgroundColor: '#1E1E1E',
+                borderRadius: '12px',
+                padding: '14px 16px',
+                textAlign: 'center'
+              }}>
+                <div style={{ color: '#969696', fontSize: '11px', fontWeight: 'bold', marginBottom: '6px', letterSpacing: '0.5px' }}>
+                  TOTAL MONEY
+                </div>
+                <div style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 'bold' }}>
+                  ₹{finalNetworth.toLocaleString('en-IN')}
+                </div>
+              </div>
+
+              {/* Growth Rate */}
+              <div style={{
+                backgroundColor: '#1E1E1E',
+                borderRadius: '12px',
+                padding: '14px 16px',
+                textAlign: 'center'
+              }}>
+                <div style={{ color: '#969696', fontSize: '11px', fontWeight: 'bold', marginBottom: '6px', letterSpacing: '0.5px' }}>
+                  GROWTH RATE
+                </div>
+                <div style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 'bold' }}>
+                  {cagr.toFixed(2)}%
+                </div>
+              </div>
+
+              {/* Profit/Loss */}
+              <div style={{
+                backgroundColor: '#1E1E1E',
+                borderRadius: '12px',
+                padding: '14px 16px',
+                textAlign: 'center'
+              }}>
+                <div style={{ color: '#969696', fontSize: '11px', fontWeight: 'bold', marginBottom: '6px', letterSpacing: '0.5px' }}>
+                  MONEY CHANGE
+                </div>
+                <div style={{
+                  color: profitLoss >= 0 ? '#22C55E' : '#EF4444',
+                  fontSize: '16px',
+                  fontWeight: 'bold'
+                }}>
+                  {profitLoss >= 0 ? '+' : ''}₹{Math.abs(profitLoss).toLocaleString('en-IN')}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Content Area */}
@@ -291,32 +367,35 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
           >
             {!report && !isLoading && !error && (
               <div style={{ textAlign: 'center', maxWidth: '600px' }}>
-                <p style={{ color: '#e0e0e0', marginBottom: '24px', fontSize: '16px', lineHeight: '1.6' }}>
-                  Generate an AI-powered analysis of your trading performance and financial behavior.
+                <p style={{ color: '#C8C8C8', marginBottom: '24px', fontSize: '16px', lineHeight: '1.7' }}>
+                  Ready to see your learning journey? Get a friendly, educational analysis of your money choices and smart decisions!
                 </p>
                 <button
                   onClick={handleGenerateReport}
                   style={{
-                    padding: '14px 36px',
-                    backgroundColor: '#4ecca3',
-                    color: '#1a1a2e',
+                    padding: '16px 40px',
+                    backgroundColor: '#854CE6',
+                    color: '#FFFFFF',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: '10px',
                     fontSize: '16px',
                     fontWeight: 'bold',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 12px rgba(133, 76, 230, 0.3)',
                   }}
                   onMouseEnter={(e) => {
-                    (e.target as HTMLButtonElement).style.backgroundColor = '#3bb894';
+                    (e.target as HTMLButtonElement).style.backgroundColor = '#9D6FF2';
                     (e.target as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                    (e.target as HTMLButtonElement).style.boxShadow = '0 6px 16px rgba(133, 76, 230, 0.5)';
                   }}
                   onMouseLeave={(e) => {
-                    (e.target as HTMLButtonElement).style.backgroundColor = '#4ecca3';
+                    (e.target as HTMLButtonElement).style.backgroundColor = '#854CE6';
                     (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+                    (e.target as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(133, 76, 230, 0.3)';
                   }}
                 >
-                  Generate My Report
+                  Generate My Learning Report
                 </button>
               </div>
             )}
@@ -327,14 +406,14 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
                   style={{
                     width: '50px',
                     height: '50px',
-                    border: '5px solid #16213e',
-                    borderTop: '5px solid #4ecca3',
+                    border: '5px solid #3C3C3C',
+                    borderTop: '5px solid #854CE6',
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite',
                     margin: '0 auto 20px',
                   }}
                 />
-                <p style={{ color: '#4ecca3', fontSize: '16px' }}>Analyzing your trading performance...</p>
+                <p style={{ color: '#854CE6', fontSize: '16px', fontWeight: '500' }}>Creating your AI-powered trading analysis report...</p>
               </div>
             )}
 
@@ -342,10 +421,10 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
               <div
                 style={{
                   padding: '20px',
-                  backgroundColor: '#ff6b6b20',
-                  border: '1px solid #ff6b6b',
+                  backgroundColor: '#3C1616',
+                  border: '1px solid #EF4444',
                   borderRadius: '8px',
-                  color: '#ff6b6b',
+                  color: '#EF4444',
                   alignSelf: 'center',
                   maxWidth: '600px',
                   width: '100%',
@@ -361,7 +440,7 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
                   ref={reportContentRef}
                   className="markdown-report"
                   style={{
-                    color: '#e0e0e0',
+                    color: '#C8C8C8',
                     fontSize: '15px',
                     wordWrap: 'break-word',
                     overflowWrap: 'break-word',
@@ -377,7 +456,20 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
                         <h1 style={markdownComponentStyles.h1}>{children}</h1>
                       ),
                       h2: ({ children }: any) => (
-                        <h2 style={markdownComponentStyles.h2}>{children}</h2>
+                        <div style={{
+                          fontSize: '20px',
+                          fontWeight: 'bold',
+                          color: '#FFFFFF',
+                          marginTop: '24px',
+                          marginBottom: '12px',
+                          border: 'none',
+                          background: 'transparent',
+                          padding: '0',
+                          boxShadow: 'none',
+                          outline: 'none',
+                        }}>
+                          {children}
+                        </div>
                       ),
                       h3: ({ children }: any) => (
                         <h3 style={markdownComponentStyles.h3}>{children}</h3>
@@ -439,12 +531,14 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
         <div
           style={{
             padding: '20px 30px',
-            borderTop: '1px solid #4ecca3',
+            borderTop: '1px solid #3C3C3C',
             display: 'flex',
             gap: '12px',
             justifyContent: 'space-between',
             flexShrink: 0,
-            backgroundColor: '#16213e',
+            backgroundColor: '#121212',
+            borderBottomLeftRadius: '16px',
+            borderBottomRightRadius: '16px',
           }}
         >
           <div style={{ display: 'flex', gap: '12px' }}>
@@ -453,25 +547,28 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
                 <button
                   onClick={handleDownloadPDF}
                   style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#FF5722',
+                    padding: '12px 24px',
+                    backgroundColor: '#854CE6',
                     color: '#fff',
                     border: 'none',
-                    borderRadius: '5px',
+                    borderRadius: '8px',
                     fontWeight: 'bold',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
                     transition: 'all 0.3s ease',
+                    boxShadow: '0 2px 8px rgba(133, 76, 230, 0.3)',
                   }}
                   onMouseEnter={(e) => {
-                    (e.target as HTMLButtonElement).style.backgroundColor = '#E64A19';
+                    (e.target as HTMLButtonElement).style.backgroundColor = '#9D6FF2';
                     (e.target as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                    (e.target as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(133, 76, 230, 0.5)';
                   }}
                   onMouseLeave={(e) => {
-                    (e.target as HTMLButtonElement).style.backgroundColor = '#FF5722';
+                    (e.target as HTMLButtonElement).style.backgroundColor = '#854CE6';
                     (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+                    (e.target as HTMLButtonElement).style.boxShadow = '0 2px 8px rgba(133, 76, 230, 0.3)';
                   }}
                 >
                   <span>📄</span> Download PDF
@@ -482,24 +579,25 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
                     setError(null);
                   }}
                   style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#0f3460',
-                    color: '#ffffff',
-                    border: '1px solid #4ecca3',
-                    borderRadius: '5px',
+                    padding: '12px 24px',
+                    backgroundColor: '#1E1E1E',
+                    color: '#FFFFFF',
+                    border: '1px solid #3C3C3C',
+                    borderRadius: '8px',
+                    fontWeight: 'bold',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
                   }}
                   onMouseEnter={(e) => {
-                    (e.target as HTMLButtonElement).style.backgroundColor = '#1a5276';
+                    (e.target as HTMLButtonElement).style.backgroundColor = '#282828';
                     (e.target as HTMLButtonElement).style.transform = 'translateY(-2px)';
                   }}
                   onMouseLeave={(e) => {
-                    (e.target as HTMLButtonElement).style.backgroundColor = '#0f3460';
+                    (e.target as HTMLButtonElement).style.backgroundColor = '#1E1E1E';
                     (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
                   }}
                 >
-                  Generate New Report
+                  🔄 Generate New Report
                 </button>
               </>
             )}
@@ -507,21 +605,21 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
           <button
             onClick={onClose}
             style={{
-              padding: '10px 20px',
-              backgroundColor: '#4ecca3',
-              color: '#1a1a2e',
-              border: 'none',
-              borderRadius: '5px',
+              padding: '12px 24px',
+              backgroundColor: '#1E1E1E',
+              color: '#FFFFFF',
+              border: '1px solid #3C3C3C',
+              borderRadius: '8px',
               fontWeight: 'bold',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
             }}
             onMouseEnter={(e) => {
-              (e.target as HTMLButtonElement).style.backgroundColor = '#3bb894';
+              (e.target as HTMLButtonElement).style.backgroundColor = '#282828';
               (e.target as HTMLButtonElement).style.transform = 'translateY(-2px)';
             }}
             onMouseLeave={(e) => {
-              (e.target as HTMLButtonElement).style.backgroundColor = '#4ecca3';
+              (e.target as HTMLButtonElement).style.backgroundColor = '#1E1E1E';
               (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
             }}
           >
@@ -553,6 +651,23 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
         .markdown-report h6 {
           word-wrap: break-word;
           overflow-wrap: break-word;
+          border: none !important;
+          background: transparent !important;
+          padding: 0 !important;
+        }
+
+        .markdown-report h2::before,
+        .markdown-report h2::after,
+        .markdown-report h2 *::before,
+        .markdown-report h2 *::after {
+          display: none !important;
+          content: none !important;
+        }
+
+        .markdown-report h2,
+        .markdown-report h2 * {
+          box-shadow: none !important;
+          outline: none !important;
         }
 
         .markdown-report > h1:first-child,
@@ -591,17 +706,17 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
         }
 
         .markdown-report::-webkit-scrollbar-track {
-          background: #16213e;
+          background: #1E1E1E;
           border-radius: 4px;
         }
 
         .markdown-report::-webkit-scrollbar-thumb {
-          background: #4ecca3;
+          background: #854CE6;
           border-radius: 4px;
         }
 
         .markdown-report::-webkit-scrollbar-thumb:hover {
-          background: #3bb894;
+          background: #9D6FF2;
         }
       `}</style>
     </div>

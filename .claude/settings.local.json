@@ -30,7 +30,10 @@
       "Bash(node inspectDB.js:*)",
       "Bash(node viewLogs.js:*)",
       "Bash(del game.db)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(start \"\" \"C:/Users/dell/Downloads/TradingReport_Admin_as_tester_2026-01-10 \\(1\\).pdf\")",
+      "Bash(start \"\" \"C:/Users/dell/Downloads/TradingReport_Admin_as_tester_2026-01-10 \\(2\\).pdf\")",
+      "Bash(node convert-fonts.js:*)"
     ]
   }
 }

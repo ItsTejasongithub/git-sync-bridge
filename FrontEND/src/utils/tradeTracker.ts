@@ -115,6 +115,18 @@ class TradeTracker {
       gameYear?: number | null;
       gameMonth?: number | null;
       timestamp?: number;
+    }>,
+    holdings?: Array<{
+      assetCategory: string;
+      assetName: string;
+      quantity: number;
+      avgPrice: number;
+      totalInvested: number;
+      currentPrice: number;
+      currentValue: number;
+      unrealizedPL: number;
+      gameYear: number;
+      gameMonth: number;
     }>
   ) {
     const bankingLogs = bankingTracker.getBankingLogs();
@@ -211,12 +223,15 @@ class TradeTracker {
         })),
         bankingTransactions: bankingTracker.getBankingLogs(),
         cashTransactions: cashTransactions || [],
+        holdings: holdings || [],
       };
       console.log('📤 Upload payload:', {
         uniqueId: logUniqueId,
         playerName,
         tradeCount: payload.trades.length,
         bankingTransactionCount: payload.bankingTransactions.length,
+        cashTransactionCount: payload.cashTransactions.length,
+        holdingsCount: payload.holdings.length,
       });
 
       const response = await fetch(`${getServerUrl()}/api/trades/bulk`, {
