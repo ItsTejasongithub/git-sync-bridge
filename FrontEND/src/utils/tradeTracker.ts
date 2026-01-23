@@ -1,5 +1,5 @@
 // Trade tracking utility for comprehensive AI analysis
-import { bankingTracker, BankingLog } from './bankingTracker';
+import { bankingTracker } from './bankingTracker';
 import { getServerUrl } from './getServerUrl';
 
 export interface TradeLog {
@@ -329,7 +329,6 @@ class TradeTracker {
 
       // Determine risk profile based on FD durations and rates
       const shortTermCount = fixedDeposits.filter(fd => fd.duration === 3).length;
-      const mediumTermCount = fixedDeposits.filter(fd => fd.duration === 12).length;
       const longTermCount = fixedDeposits.filter(fd => fd.duration === 36).length;
 
       if (shortTermCount > longTermCount) {

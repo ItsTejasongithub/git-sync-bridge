@@ -1,5 +1,6 @@
 import { GameState, AssetData } from '../types';
 import { getAssetPriceAtDate } from './csvLoader';
+import type { PriceGetter } from './networthCalculator';
 
 export interface HoldingData {
   assetCategory: string;
@@ -306,4 +307,229 @@ export function getHoldingsSummaryByCategory(holdings: HoldingData[]): {
   });
 
   return summary;
+}
+
+/**
+ * Extract all holdings from game state with current prices using a price getter function
+ * This is the API-based version that doesn't require assetDataMap
+ */
+export function extractHoldingsDataWithPrices(
+  gameState: GameState,
+  getPrice: PriceGetter
+): HoldingData[] {
+  const holdings: HoldingData[] = [];
+  const { currentYear: gameYear, currentMonth: gameMonth } = gameState;
+
+  // Physical Gold
+  if (gameState.holdings.physicalGold.quantity > 0) {
+    const currentPrice = getPrice('Physical_Gold');
+    const holding = gameState.holdings.physicalGold;
+    const currentValue = holding.quantity * currentPrice;
+    const unrealizedPL = currentValue - holding.totalInvested;
+
+    holdings.push({
+      assetCategory: 'gold',
+      assetName: 'Physical_Gold',
+      quantity: holding.quantity,
+      avgPrice: holding.avgPrice,
+      totalInvested: holding.totalInvested,
+      currentPrice,
+      currentValue,
+      unrealizedPL,
+      gameYear,
+      gameMonth,
+    });
+  }
+
+  // Digital Gold
+  if (gameState.holdings.digitalGold.quantity > 0) {
+    const currentPrice = getPrice('Digital_Gold');
+    const holding = gameState.holdings.digitalGold;
+    const currentValue = holding.quantity * currentPrice;
+    const unrealizedPL = currentValue - holding.totalInvested;
+
+    holdings.push({
+      assetCategory: 'gold',
+      assetName: 'Digital_Gold',
+      quantity: holding.quantity,
+      avgPrice: holding.avgPrice,
+      totalInvested: holding.totalInvested,
+      currentPrice,
+      currentValue,
+      unrealizedPL,
+      gameYear,
+      gameMonth,
+    });
+  }
+
+  // Index Fund
+  if (gameState.holdings.indexFund.quantity > 0 && gameState.selectedAssets?.fundName) {
+    const currentPrice = getPrice(gameState.selectedAssets.fundName);
+    const holding = gameState.holdings.indexFund;
+    const currentValue = holding.quantity * currentPrice;
+    const unrealizedPL = currentValue - holding.totalInvested;
+
+    holdings.push({
+      assetCategory: 'funds',
+      assetName: gameState.selectedAssets.fundName,
+      quantity: holding.quantity,
+      avgPrice: holding.avgPrice,
+      totalInvested: holding.totalInvested,
+      currentPrice,
+      currentValue,
+      unrealizedPL,
+      gameYear,
+      gameMonth,
+    });
+  }
+
+  // Mutual Fund
+  if (gameState.holdings.mutualFund.quantity > 0 && gameState.selectedAssets?.fundName) {
+    const currentPrice = getPrice(gameState.selectedAssets.fundName);
+    const holding = gameState.holdings.mutualFund;
+    const currentValue = holding.quantity * currentPrice;
+    const unrealizedPL = currentValue - holding.totalInvested;
+
+    holdings.push({
+      assetCategory: 'funds',
+      assetName: gameState.selectedAssets.fundName,
+      quantity: holding.quantity,
+      avgPrice: holding.avgPrice,
+      totalInvested: holding.totalInvested,
+      currentPrice,
+      currentValue,
+      unrealizedPL,
+      gameYear,
+      gameMonth,
+    });
+  }
+
+  // Stocks
+  Object.entries(gameState.holdings.stocks).forEach(([stockName, holding]) => {
+    if (holding.quantity > 0) {
+      const currentPrice = getPrice(stockName);
+      const currentValue = holding.quantity * currentPrice;
+      const unrealizedPL = currentValue - holding.totalInvested;
+
+      holdings.push({
+        assetCategory: 'stocks',
+        assetName: stockName,
+        quantity: holding.quantity,
+        avgPrice: holding.avgPrice,
+        totalInvested: holding.totalInvested,
+        currentPrice,
+        currentValue,
+        unrealizedPL,
+        gameYear,
+        gameMonth,
+      });
+    }
+  });
+
+  // Crypto - BTC
+  if (gameState.holdings.crypto['BTC']?.quantity > 0) {
+    const currentPrice = getPrice('BTC');
+    const holding = gameState.holdings.crypto['BTC'];
+    const currentValue = holding.quantity * currentPrice;
+    const unrealizedPL = currentValue - holding.totalInvested;
+
+    holdings.push({
+      assetCategory: 'crypto',
+      assetName: 'BTC',
+      quantity: holding.quantity,
+      avgPrice: holding.avgPrice,
+      totalInvested: holding.totalInvested,
+      currentPrice,
+      currentValue,
+      unrealizedPL,
+      gameYear,
+      gameMonth,
+    });
+  }
+
+  // Crypto - ETH
+  if (gameState.holdings.crypto['ETH']?.quantity > 0) {
+    const currentPrice = getPrice('ETH');
+    const holding = gameState.holdings.crypto['ETH'];
+    const currentValue = holding.quantity * currentPrice;
+    const unrealizedPL = currentValue - holding.totalInvested;
+
+    holdings.push({
+      assetCategory: 'crypto',
+      assetName: 'ETH',
+      quantity: holding.quantity,
+      avgPrice: holding.avgPrice,
+      totalInvested: holding.totalInvested,
+      currentPrice,
+      currentValue,
+      unrealizedPL,
+      gameYear,
+      gameMonth,
+    });
+  }
+
+  // Commodity
+  if (gameState.holdings.commodity.quantity > 0 && gameState.selectedAssets?.commodity) {
+    const currentPrice = getPrice(gameState.selectedAssets.commodity);
+    const holding = gameState.holdings.commodity;
+    const currentValue = holding.quantity * currentPrice;
+    const unrealizedPL = currentValue - holding.totalInvested;
+
+    holdings.push({
+      assetCategory: 'commodities',
+      assetName: gameState.selectedAssets.commodity,
+      quantity: holding.quantity,
+      avgPrice: holding.avgPrice,
+      totalInvested: holding.totalInvested,
+      currentPrice,
+      currentValue,
+      unrealizedPL,
+      gameYear,
+      gameMonth,
+    });
+  }
+
+  // REITs - EMBASSY
+  if (gameState.holdings.reits['EMBASSY']?.quantity > 0) {
+    const currentPrice = getPrice('EMBASSY');
+    const holding = gameState.holdings.reits['EMBASSY'];
+    const currentValue = holding.quantity * currentPrice;
+    const unrealizedPL = currentValue - holding.totalInvested;
+
+    holdings.push({
+      assetCategory: 'reits',
+      assetName: 'EMBASSY',
+      quantity: holding.quantity,
+      avgPrice: holding.avgPrice,
+      totalInvested: holding.totalInvested,
+      currentPrice,
+      currentValue,
+      unrealizedPL,
+      gameYear,
+      gameMonth,
+    });
+  }
+
+  // REITs - MINDSPACE
+  if (gameState.holdings.reits['MINDSPACE']?.quantity > 0) {
+    const currentPrice = getPrice('MINDSPACE');
+    const holding = gameState.holdings.reits['MINDSPACE'];
+    const currentValue = holding.quantity * currentPrice;
+    const unrealizedPL = currentValue - holding.totalInvested;
+
+    holdings.push({
+      assetCategory: 'reits',
+      assetName: 'MINDSPACE',
+      quantity: holding.quantity,
+      avgPrice: holding.avgPrice,
+      totalInvested: holding.totalInvested,
+      currentPrice,
+      currentValue,
+      unrealizedPL,
+      gameYear,
+      gameMonth,
+    });
+  }
+
+  return holdings;
 }

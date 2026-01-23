@@ -1,16 +1,206 @@
 import { Server, Socket } from 'socket.io';
 import { RoomManager } from '../rooms/roomManager';
-import { ServerToClientEvents, ClientToServerEvents } from '../types';
+import { ServerToClientEvents, ClientToServerEvents, PortfolioBreakdown } from '../types';
+import {
+  getPricesForDate,
+  getGameSymbols,
+  preloadPricesForGame,
+  PriceSnapshot,
+} from '../services/marketDataService';
+import {
+  initializeRoomKeys,
+  encryptPriceData,
+  cleanupRoomKeys,
+  getSessionKeyForExchange,
+  getAssetIndexMapping,
+  hasRoomKeys,
+} from '../services/roomKeyManager';
+import { isPostgresPoolInitialized } from '../database/postgresDb';
 
 export class GameSyncManager {
   // Throttle leaderboard updates to reduce CPU usage (update every 2 seconds max)
   private leaderboardThrottleMap: Map<string, NodeJS.Timeout> = new Map();
   private readonly LEADERBOARD_UPDATE_INTERVAL = 2000; // 2 seconds
 
+  // Store current prices per room for networth validation
+  private roomPrices: Map<string, PriceSnapshot> = new Map();
+
   constructor(
     private io: Server<ClientToServerEvents, ServerToClientEvents>,
     private roomManager: RoomManager
-  ) {}
+  ) { }
+
+  /**
+   * Initialize market data for a game session
+   * Preloads prices and sets up encryption keys
+   */
+  async initializeMarketData(
+    roomId: string,
+    selectedAssets: any,
+    startYear: number
+  ): Promise<boolean> {
+    if (!isPostgresPoolInitialized()) {
+      console.warn(`⚠️ PostgreSQL not initialized, skipping market data setup for room ${roomId}`);
+      return false;
+    }
+
+    try {
+      const symbols = getGameSymbols(selectedAssets);
+      console.log(`📊 Room ${roomId}: Initializing market data for ${symbols.length} symbols`);
+
+      // Preload prices for the entire game duration
+      await preloadPricesForGame(symbols, startYear, 20);
+
+      // Initialize encryption keys
+      initializeRoomKeys(roomId, symbols);
+
+      return true;
+    } catch (error) {
+      console.error(`❌ Room ${roomId}: Failed to initialize market data:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Broadcast encrypted prices for current tick
+   * Called during time progression
+   */
+  async broadcastPriceTick(
+    roomId: string,
+    gameYear: number,
+    gameMonth: number,
+    calendarYear: number
+  ): Promise<void> {
+    if (!isPostgresPoolInitialized() || !hasRoomKeys(roomId)) {
+      console.warn(`⚠️ Room ${roomId}: Cannot broadcast prices - PostgreSQL: ${isPostgresPoolInitialized()}, Keys: ${hasRoomKeys(roomId)}`);
+      return; // Skip if not set up
+    }
+
+    const room = this.roomManager.getRoom(roomId);
+    if (!room) return;
+
+    try {
+      const symbols = getGameSymbols(room.gameState.selectedAssets);
+      console.log(`📊 Room ${roomId}: Fetching prices for ${symbols.length} symbols (Year: ${calendarYear}, Month: ${gameMonth})`);
+
+      const prices = await getPricesForDate(symbols, calendarYear, gameMonth);
+
+      // Validate prices before broadcasting
+      const validPrices: { [symbol: string]: number } = {};
+      let invalidCount = 0;
+
+      for (const [symbol, price] of Object.entries(prices)) {
+        if (typeof price === 'number' && isFinite(price) && price > 0) {
+          validPrices[symbol] = price;
+        } else {
+          invalidCount++;
+          console.warn(`⚠️ Invalid price for ${symbol}: ${price}`);
+        }
+      }
+
+      if (invalidCount > 0) {
+        console.warn(`⚠️ Room ${roomId}: ${invalidCount} invalid prices filtered out`);
+      }
+
+      console.log(`✅ Room ${roomId}: Broadcasting ${Object.keys(validPrices).length} valid prices`);
+
+      // Store prices for validation
+      this.roomPrices.set(roomId, validPrices);
+
+      // Encrypt and broadcast
+      const encrypted = encryptPriceData(roomId, validPrices);
+      if (encrypted) {
+        this.io.to(roomId).emit('priceTick', {
+          year: gameYear,
+          month: gameMonth,
+          encrypted,
+        });
+      } else {
+        console.error(`❌ Room ${roomId}: Failed to encrypt price data`);
+      }
+    } catch (error) {
+      console.error(`❌ Room ${roomId}: Failed to broadcast price tick:`, error);
+    }
+  }
+
+  /**
+   * Handle key exchange request from client
+   */
+  handleKeyExchangeRequest(
+    socket: Socket,
+    callback: (response: { success: boolean; data?: any; error?: string }) => void
+  ): void {
+    const roomId = socket.data.roomId;
+    if (!roomId) {
+      callback({ success: false, error: 'Not in a room' });
+      return;
+    }
+
+    const sessionKey = getSessionKeyForExchange(roomId);
+    const assetMapping = getAssetIndexMapping(roomId);
+
+    if (sessionKey && assetMapping) {
+      const keyData = {
+        sessionKey,
+        assetIndexMap: assetMapping,
+      };
+
+      // Send callback acknowledgment
+      callback({
+        success: true,
+        data: keyData,
+      });
+
+      // Emit the keyExchangeResponse event that the client is waiting for
+      socket.emit('keyExchangeResponse', keyData);
+      console.log(`🔑 Room ${roomId}: Key exchange completed for ${socket.id}`);
+
+      // Send initial price tick immediately so client has data
+      const room = this.roomManager.getRoom(roomId);
+      if (room) {
+        console.log(`📊 Room ${roomId} state: Year ${room.gameState.currentYear}, Month ${room.gameState.currentMonth}, Started: ${room.gameState.isStarted}`);
+
+        if (room.gameState.isStarted) {
+          const calendarYear = room.adminSettings
+            ? room.adminSettings.gameStartYear + room.gameState.currentYear - 1
+            : 2000 + room.gameState.currentYear - 1;
+
+          console.log(`📅 Sending initial price tick: Game Year ${room.gameState.currentYear}, Calendar Year ${calendarYear}, Month ${room.gameState.currentMonth}`);
+
+          // Broadcast current prices immediately
+          this.broadcastPriceTick(
+            roomId,
+            room.gameState.currentYear,
+            room.gameState.currentMonth,
+            calendarYear
+          ).catch((err) => {
+            console.error(`❌ Error sending initial price tick:`, err);
+          });
+        } else {
+          console.warn(`⚠️ Room ${roomId}: Game not started yet, skipping initial price tick`);
+        }
+      } else {
+        console.error(`❌ Room ${roomId} not found after key exchange`);
+      }
+    } else {
+      callback({ success: false, error: 'Room encryption not initialized' });
+    }
+  }
+
+  /**
+   * Get current prices for a room (for server-side validation)
+   */
+  getRoomPrices(roomId: string): PriceSnapshot | undefined {
+    return this.roomPrices.get(roomId);
+  }
+
+  /**
+   * Cleanup room data when game ends
+   */
+  cleanupRoom(roomId: string): void {
+    this.roomPrices.delete(roomId);
+    cleanupRoomKeys(roomId);
+  }
 
   // Broadcast game state update to all players in room
   broadcastGameState(roomId: string): void {
@@ -179,6 +369,9 @@ export class GameSyncManager {
         // Mark game as ended (stops all further updates)
         room.gameState.isStarted = false;
 
+        // Cleanup room encryption and price data
+        this.cleanupRoom(roomId);
+
         console.log(`🏁 Game ended in room ${roomId}. Waiting for players to log to DB...`);
 
         // Emit game ended event FIRST so players can log to database
@@ -227,6 +420,17 @@ export class GameSyncManager {
       // Update room state
       room.gameState.currentYear = newYear;
       room.gameState.currentMonth = newMonth;
+
+      // Calculate calendar year for price lookup
+      const calendarYear = room.adminSettings
+        ? room.adminSettings.gameStartYear + newYear - 1
+        : 2000 + newYear - 1;
+
+      // Broadcast encrypted prices BEFORE time progression
+      // This ensures clients have prices ready when they receive the time update
+      this.broadcastPriceTick(roomId, newYear, newMonth, calendarYear).catch((err) => {
+        console.error(`Error broadcasting price tick for room ${roomId}:`, err);
+      });
 
       // Broadcast time update to all players
       this.io.to(roomId).emit('timeProgression', {

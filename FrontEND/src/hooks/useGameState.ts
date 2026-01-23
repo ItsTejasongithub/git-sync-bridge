@@ -686,6 +686,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       };
 
       // Log trade for AI analysis
+      const holdingQuantityAfter = holdingQuantityBefore + quantity;
       tradeTracker.logTrade({
         transactionType: 'buy',
         assetType,
@@ -693,13 +694,14 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         quantity,
         price: currentPrice,
         totalValue: totalCost,
+        positionSize: holdingQuantityAfter * currentPrice,
         gameYear: prev.currentYear,
         gameMonth: prev.currentMonth,
         timestamp: Date.now(),
         pocketCashBefore: prev.pocketCash,
         pocketCashAfter: updatedState.pocketCash,
         holdingQuantityBefore,
-        holdingQuantityAfter: holdingQuantityBefore + quantity,
+        holdingQuantityAfter,
       });
 
       // Release the reserved funds for this transaction after the state update settles
@@ -813,6 +815,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         quantity,
         price: currentPrice,
         totalValue: saleAmount,
+        positionSize: newQuantity * currentPrice,
         gameYear: prev.currentYear,
         gameMonth: prev.currentMonth,
         timestamp: Date.now(),

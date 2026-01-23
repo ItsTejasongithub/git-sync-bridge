@@ -197,7 +197,7 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
     };
 
     const handleTimeProgression = (data: { year: number; month: number }) => {
-      console.log('⏰ Time progression received:', data);
+      // console.log('⏰ Time progression received:', data);
       setGameState(prev => {
         if (!prev) return prev;
         // Prevent time updates if the game is already marked ended

@@ -44,7 +44,7 @@ export const ASSET_UNLOCK_TIMELINE: { [key: number]: string[] } = {
   8: ['EMBASSY', 'MINDSPACE'] // Both REITs
 };
 
-// Available stocks for selection - ALL 90 stocks from Asset_Timeline.csv
+// Available stocks for selection - ALL 90 stocks (data served from PostgreSQL)
 export const AVAILABLE_STOCKS = [
   // 1996 batch (earliest)
   'INFY', 'WIPRO', 'HDFCBANK', 'SBIN', 'RELIANCE', 'ONGC', 'M&M', 'HINDUNILVR',
@@ -93,6 +93,9 @@ export const AVAILABLE_COMMODITIES = [
   'COPPER', 'BRENT'
 ];
 
+// DEPRECATED: CSV-based asset loading is no longer used
+// All price data is now served from PostgreSQL via encrypted socket connection
+// This function is kept for backward compatibility but should not be used
 export const getAssetPath = (category: string, assetName: string): string => {
   const categoryMap: { [key: string]: string } = {
     'stocks': 'Indian_Stocks',

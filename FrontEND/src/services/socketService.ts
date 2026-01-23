@@ -2,6 +2,14 @@ import { io, Socket } from 'socket.io-client';
 import { PlayerInfo, MultiplayerGameState, PortfolioBreakdown } from '../types/multiplayer';
 import { AdminSettings } from '../types';
 import { getServerUrl } from '../utils/getServerUrl';
+import {
+  initializeDecryption,
+  decryptPriceData,
+  clearDecryptionState,
+  isDecryptionInitialized,
+  EncryptedPayload,
+} from './cryptoService';
+import { priceStore } from '../stores/priceStore';
 
 const SERVER_URL = getServerUrl();
 console.log('\n🔧 ===== SOCKET SERVICE INITIALIZATION =====');
@@ -10,6 +18,12 @@ console.log('🔧 Environment Mode:', import.meta.env.MODE);
 console.log('🔧 VITE_SERVER_URL:', import.meta.env.VITE_SERVER_URL || 'NOT SET (using runtime or inferred)');
 console.log('🔧 Window __SERVER_URL:', (window as any).__SERVER_URL || 'NOT SET');
 console.log('🔧 ==========================================\n');
+
+// Key exchange data structure
+interface KeyExchangeData {
+  sessionKey: string;
+  assetIndexMap: { [symbol: string]: number };
+}
 
 interface ServerToClientEvents {
   roomCreated: (data: { roomId: string; hostId: string }) => void;
@@ -30,6 +44,11 @@ interface ServerToClientEvents {
   lifeEventTriggered: (data: { event: any; postPocketCash?: number }) => void;
   adminSettingsUpdated: (data: { adminSettings: AdminSettings }) => void;
   error: (data: { message: string }) => void;
+  // Secure price broadcast events
+  priceTick: (data: { year: number; month: number; encrypted: EncryptedPayload }) => void;
+  keyExchangeResponse: (data: KeyExchangeData) => void;
+  networthValidation: (data: { valid: boolean; serverNetworth: number; clientNetworth: number; deviation: number }) => void;
+  fetchFinalLeaderboardFromDB: (data: { roomId: string }) => void;
 }
 
 interface ClientToServerEvents {
@@ -41,6 +60,9 @@ interface ClientToServerEvents {
   updatePlayerState: (data: { networth: number; portfolioBreakdown: PortfolioBreakdown }) => void;
   quizStarted: (data: { quizCategory: string }) => void;
   quizFinished: (data: { quizCategory: string }) => void;
+  // Secure price broadcast events
+  requestKeyExchange: (callback: (response: { success: boolean; data?: KeyExchangeData; error?: string }) => void) => void;
+  submitNetworth: (data: { networth: number; portfolioBreakdown: PortfolioBreakdown; holdings: any }, callback: (response: { valid: boolean; serverNetworth?: number; error?: string }) => void) => void;
 }
 
 class SocketService {
@@ -139,6 +161,60 @@ class SocketService {
       this.emit('lifeEventTriggered', data);
     });
     this.socket.on('adminSettingsUpdated', (data) => this.emit('adminSettingsUpdated', data));
+
+    // === Secure Price Broadcast Event Handlers ===
+
+    // Handle encrypted price ticks from server
+    this.socket.on('priceTick', async (data) => {
+      if (!isDecryptionInitialized()) {
+        console.warn('⚠️ Received priceTick but decryption not initialized yet');
+        return;
+      }
+
+      try {
+        console.log(`📦 Received encrypted price tick for Year ${data.year}, Month ${data.month}`);
+        const prices = await decryptPriceData(data.encrypted);
+        if (prices) {
+          const priceCount = Object.keys(prices).length;
+          console.log(`🔓 Decrypted ${priceCount} prices successfully`);
+          priceStore.updatePrices(prices);
+          this.emit('pricesUpdated', { year: data.year, month: data.month, prices });
+        } else {
+          console.error('❌ Decryption returned null prices');
+        }
+      } catch (error) {
+        console.error('❌ Failed to decrypt price tick:', error);
+      }
+    });
+
+    // Handle key exchange response
+    this.socket.on('keyExchangeResponse', async (data) => {
+      console.log('📨 Received keyExchangeResponse event:', {
+        hasSessionKey: !!data.sessionKey,
+        hasAssetIndexMap: !!data.assetIndexMap,
+        assetCount: data.assetIndexMap ? Object.keys(data.assetIndexMap).length : 0
+      });
+
+      try {
+        await initializeDecryption(data.sessionKey, data.assetIndexMap);
+        priceStore.enable();
+        this.emit('keyExchangeComplete', data);
+        console.log('🔐 Key exchange complete - using server prices');
+      } catch (error) {
+        console.error('Failed to initialize decryption:', error);
+        this.emit('keyExchangeError', error);
+      }
+    });
+
+    // Handle networth validation results
+    this.socket.on('networthValidation', (data) => {
+      if (!data.valid) {
+        console.warn(
+          `⚠️ Networth mismatch: client=${data.clientNetworth}, server=${data.serverNetworth}, deviation=${data.deviation.toFixed(2)}%`
+        );
+      }
+      this.emit('networthValidation', data);
+    });
   }
 
   disconnect(): void {
@@ -201,6 +277,8 @@ class SocketService {
     if (this.socket) {
       this.socket.emit('leaveRoom');
     }
+    // Clear encryption state when leaving
+    this.clearEncryptionState();
   }
 
   async startGame(adminSettings: AdminSettings, initialGameState?: any): Promise<{ success: boolean; error?: string }> {
@@ -238,6 +316,99 @@ class SocketService {
     if (this.socket) {
       this.socket.emit('quizFinished', { quizCategory });
     }
+  }
+
+  // === Secure Price Broadcast Methods ===
+
+  /**
+   * Request key exchange from server
+   * Call this after joining a game to enable encrypted price broadcasts
+   */
+  async requestKeyExchange(): Promise<{ success: boolean; error?: string }> {
+    return new Promise((resolve) => {
+      if (!this.socket) {
+        console.error('❌ Key exchange failed: No socket connection');
+        resolve({ success: false, error: 'Not connected to server' });
+        return;
+      }
+
+      console.log('📤 Sending requestKeyExchange to server...');
+
+      // Set up one-time listeners for the result
+      const onComplete = () => {
+        console.log('✅ keyExchangeComplete event received');
+        cleanup();
+        resolve({ success: true });
+      };
+
+      const onError = (error: any) => {
+        console.error('❌ keyExchangeError event received:', error);
+        cleanup();
+        resolve({ success: false, error: error?.message || 'Key exchange failed' });
+      };
+
+      const cleanup = () => {
+        this.off('keyExchangeComplete', onComplete);
+        this.off('keyExchangeError', onError);
+      };
+
+      // Listen for the actual completion events
+      this.on('keyExchangeComplete', onComplete);
+      this.on('keyExchangeError', onError);
+
+      // Request the key exchange
+      this.socket.emit('requestKeyExchange', (response) => {
+        console.log('📥 Received requestKeyExchange callback:', response);
+
+        if (!response.success) {
+          console.error('❌ Server returned error:', response.error);
+          cleanup();
+          resolve({ success: false, error: response.error || 'Key exchange failed' });
+        } else {
+          console.log('✅ Server callback success, waiting for keyExchangeComplete event...');
+        }
+        // If success, wait for keyExchangeComplete event
+      });
+    });
+  }
+
+  /**
+   * Submit networth for server validation
+   */
+  async submitNetworth(
+    networth: number,
+    portfolioBreakdown: PortfolioBreakdown,
+    holdings: any
+  ): Promise<{ valid: boolean; serverNetworth?: number; error?: string }> {
+    return new Promise((resolve) => {
+      if (!this.socket) {
+        resolve({ valid: false, error: 'Not connected to server' });
+        return;
+      }
+
+      this.socket.emit(
+        'submitNetworth',
+        { networth, portfolioBreakdown, holdings },
+        (response) => {
+          resolve(response);
+        }
+      );
+    });
+  }
+
+  /**
+   * Check if server prices are being used
+   */
+  isUsingServerPrices(): boolean {
+    return isDecryptionInitialized() && priceStore.isEnabled();
+  }
+
+  /**
+   * Clear encryption state (call when leaving a game)
+   */
+  clearEncryptionState(): void {
+    clearDecryptionState();
+    priceStore.clear();
   }
 
   isConnected(): boolean {

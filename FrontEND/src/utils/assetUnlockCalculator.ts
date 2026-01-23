@@ -1,148 +1,141 @@
 import { AssetCategory, AssetUnlockSchedule, UnlockEntry } from '../types';
 
-// Asset timeline data from CSV (with month precision) - Generated from Asset_Timeline.csv
+// Asset timeline data from PostgreSQL - Last updated 2026-01-18
 export const ASSET_TIMELINE_DATA: { [key: string]: { category: AssetCategory; firstYear: number; firstMonth: number; lastYear: number } } = {
-  // Banking
-  'SAVINGS_AC': { category: 'BANKING', firstYear: 2000, firstMonth: 1, lastYear: 2025 },
-  'FD': { category: 'BANKING', firstYear: 2000, firstMonth: 1, lastYear: 2025 },
-
-  // Gold Investments
-  'Physical_Gold': { category: 'GOLD', firstYear: 1990, firstMonth: 1, lastYear: 2025 },
-  'Digital_Gold': { category: 'GOLD', firstYear: 2009, firstMonth: 1, lastYear: 2025 },
-
   // Commodities
-  'COTTON': { category: 'COMMODITIES', firstYear: 2000, firstMonth: 1, lastYear: 2025 },
-  'WHEAT': { category: 'COMMODITIES', firstYear: 2000, firstMonth: 7, lastYear: 2025 },
-  'CRUDEOIL_WTI': { category: 'COMMODITIES', firstYear: 2000, firstMonth: 8, lastYear: 2025 },
-  'SILVER': { category: 'COMMODITIES', firstYear: 2000, firstMonth: 8, lastYear: 2025 },
-  'NATURALGAS': { category: 'COMMODITIES', firstYear: 2000, firstMonth: 8, lastYear: 2025 },
-  'COPPER': { category: 'COMMODITIES', firstYear: 2000, firstMonth: 8, lastYear: 2025 },
-  'BRENT': { category: 'COMMODITIES', firstYear: 2007, firstMonth: 7, lastYear: 2025 },
-  'ALUMINIUM': { category: 'COMMODITIES', firstYear: 2014, firstMonth: 5, lastYear: 2025 },
+  'ALUMINIUM': { category: 'COMMODITIES', firstYear: 2014, firstMonth: 5, lastYear: 2026 },
+  'BRENT': { category: 'COMMODITIES', firstYear: 2007, firstMonth: 7, lastYear: 2026 },
+  'COPPER': { category: 'COMMODITIES', firstYear: 2000, firstMonth: 8, lastYear: 2026 },
+  'COTTON': { category: 'COMMODITIES', firstYear: 2000, firstMonth: 1, lastYear: 2026 },
+  'CRUDEOIL_WTI': { category: 'COMMODITIES', firstYear: 2000, firstMonth: 8, lastYear: 2026 },
+  'NATURALGAS': { category: 'COMMODITIES', firstYear: 2000, firstMonth: 8, lastYear: 2026 },
+  'SILVER': { category: 'COMMODITIES', firstYear: 2000, firstMonth: 8, lastYear: 2026 },
+  'WHEAT': { category: 'COMMODITIES', firstYear: 2000, firstMonth: 7, lastYear: 2026 },
 
   // Crypto Assets
-  'BTC': { category: 'CRYPTO', firstYear: 2014, firstMonth: 9, lastYear: 2025 },
-  'ETH': { category: 'CRYPTO', firstYear: 2017, firstMonth: 11, lastYear: 2025 },
+  'BTC': { category: 'CRYPTO', firstYear: 2014, firstMonth: 9, lastYear: 2026 },
+  'ETH': { category: 'CRYPTO', firstYear: 2017, firstMonth: 11, lastYear: 2026 },
+
+  // Forex (not previously included)
+  'EURINR': { category: 'FOREX', firstYear: 2003, firstMonth: 11, lastYear: 2026 },
+  'GBPINR': { category: 'FOREX', firstYear: 2006, firstMonth: 5, lastYear: 2026 },
+  'USDINR': { category: 'FOREX', firstYear: 2003, firstMonth: 11, lastYear: 2026 },
+
+  // Gold Investments
+  'Digital_Gold': { category: 'GOLD', firstYear: 2009, firstMonth: 1, lastYear: 2026 },
+  'Physical_Gold': { category: 'GOLD', firstYear: 2000, firstMonth: 8, lastYear: 2026 },
 
   // Index Funds
-  'NIFTYBEES': { category: 'FUNDS', firstYear: 2009, firstMonth: 1, lastYear: 2025 },
-  'SETFNIF50': { category: 'FUNDS', firstYear: 2015, firstMonth: 7, lastYear: 2025 },
-  'UTINIFTETF': { category: 'FUNDS', firstYear: 2015, firstMonth: 9, lastYear: 2025 },
-  'HDFCNIFETF': { category: 'FUNDS', firstYear: 2015, firstMonth: 12, lastYear: 2025 },
-  'ICICIB22': { category: 'FUNDS', firstYear: 2019, firstMonth: 12, lastYear: 2025 },
+  'HDFCNIFETF': { category: 'FUNDS', firstYear: 2015, firstMonth: 12, lastYear: 2026 },
+  'ICICIB22': { category: 'FUNDS', firstYear: 2019, firstMonth: 12, lastYear: 2026 },
+  'NIFTYBEES': { category: 'FUNDS', firstYear: 2009, firstMonth: 1, lastYear: 2026 },
+  'SETFNIF50': { category: 'FUNDS', firstYear: 2015, firstMonth: 7, lastYear: 2026 },
+  'UTINIFTETF': { category: 'FUNDS', firstYear: 2015, firstMonth: 9, lastYear: 2026 },
+
+  // Indian Stocks
+  '5PAISA': { category: 'STOCKS', firstYear: 2017, firstMonth: 11, lastYear: 2026 },
+  'ADANIENT': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'ADANIPORTS': { category: 'STOCKS', firstYear: 2007, firstMonth: 11, lastYear: 2026 },
+  'ADANIPOWER': { category: 'STOCKS', firstYear: 2009, firstMonth: 8, lastYear: 2026 },
+  'APOLLOHOSP': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'ASHOKLEY': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'ASIANPAINT': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'AXISBANK': { category: 'STOCKS', firstYear: 1998, firstMonth: 11, lastYear: 2026 },
+  'BAJAJ-AUTO': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'BAJAJFINSV': { category: 'STOCKS', firstYear: 2002, firstMonth: 8, lastYear: 2026 },
+  'BAJFINANCE': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'BCG': { category: 'STOCKS', firstYear: 2015, firstMonth: 5, lastYear: 2026 },
+  'BEL': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'BHARTIARTL': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'CESC': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'DISHTV': { category: 'STOCKS', firstYear: 2007, firstMonth: 4, lastYear: 2026 },
+  'EASEMYTRIP': { category: 'STOCKS', firstYear: 2021, firstMonth: 3, lastYear: 2026 },
+  'GAIL': { category: 'STOCKS', firstYear: 1997, firstMonth: 4, lastYear: 2026 },
+  'GRASIM': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'GVKPIL': { category: 'STOCKS', firstYear: 2006, firstMonth: 2, lastYear: 2026 },
+  'HCC': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'HCLTECH': { category: 'STOCKS', firstYear: 2002, firstMonth: 8, lastYear: 2026 },
+  'HDFCBANK': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'HEROMOTOCO': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'HFCL': { category: 'STOCKS', firstYear: 2002, firstMonth: 8, lastYear: 2026 },
+  'HINDALCO': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'HINDCOPPER': { category: 'STOCKS', firstYear: 2010, firstMonth: 1, lastYear: 2026 },
+  'HINDUNILVR': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'HONASA': { category: 'STOCKS', firstYear: 2023, firstMonth: 11, lastYear: 2026 },
+  'IBREALEST': { category: 'STOCKS', firstYear: 2004, firstMonth: 9, lastYear: 2026 },
+  'ICICIBANK': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'IDEA': { category: 'STOCKS', firstYear: 2007, firstMonth: 3, lastYear: 2026 },
+  'INDIGO': { category: 'STOCKS', firstYear: 2015, firstMonth: 11, lastYear: 2026 },
+  'INDOSTAR': { category: 'STOCKS', firstYear: 2018, firstMonth: 5, lastYear: 2026 },
+  'INDUSINDBK': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'INFY': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'IRB': { category: 'STOCKS', firstYear: 2008, firstMonth: 2, lastYear: 2026 },
+  'ITC': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'ITI': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'JPPOWER': { category: 'STOCKS', firstYear: 2005, firstMonth: 4, lastYear: 2026 },
+  'JSL': { category: 'STOCKS', firstYear: 2003, firstMonth: 11, lastYear: 2026 },
+  'JSWSTEEL': { category: 'STOCKS', firstYear: 2003, firstMonth: 5, lastYear: 2026 },
+  'KOTAKBANK': { category: 'STOCKS', firstYear: 2001, firstMonth: 7, lastYear: 2026 },
+  'KSOLVES': { category: 'STOCKS', firstYear: 2020, firstMonth: 8, lastYear: 2026 },
+  'LT': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'MANAPPURAM': { category: 'STOCKS', firstYear: 2010, firstMonth: 6, lastYear: 2026 },
+  'MARUTI': { category: 'STOCKS', firstYear: 2003, firstMonth: 7, lastYear: 2026 },
+  'M&M': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'MTARTECH': { category: 'STOCKS', firstYear: 2021, firstMonth: 3, lastYear: 2026 },
+  'NACLIND': { category: 'STOCKS', firstYear: 2017, firstMonth: 4, lastYear: 2026 },
+  'NESTLEIND': { category: 'STOCKS', firstYear: 2002, firstMonth: 8, lastYear: 2026 },
+  'NIPPOBATRY': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'NTPC': { category: 'STOCKS', firstYear: 2004, firstMonth: 11, lastYear: 2026 },
+  'ONGC': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'PAYTM': { category: 'STOCKS', firstYear: 2021, firstMonth: 11, lastYear: 2026 },
+  'PNBHOUSING': { category: 'STOCKS', firstYear: 2016, firstMonth: 11, lastYear: 2026 },
+  'POWERGRID': { category: 'STOCKS', firstYear: 2007, firstMonth: 10, lastYear: 2026 },
+  'QUICKHEAL': { category: 'STOCKS', firstYear: 2016, firstMonth: 2, lastYear: 2026 },
+  'RAILTEL': { category: 'STOCKS', firstYear: 2021, firstMonth: 2, lastYear: 2026 },
+  'RELIANCE': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'RPOWER': { category: 'STOCKS', firstYear: 2008, firstMonth: 2, lastYear: 2026 },
+  'RTNINDIA': { category: 'STOCKS', firstYear: 2012, firstMonth: 7, lastYear: 2026 },
+  'RTNPOWER': { category: 'STOCKS', firstYear: 2009, firstMonth: 10, lastYear: 2026 },
+  'SAKSOFT': { category: 'STOCKS', firstYear: 2005, firstMonth: 5, lastYear: 2026 },
+  'SANGINITA': { category: 'STOCKS', firstYear: 2017, firstMonth: 3, lastYear: 2026 },
+  'SBILIFE': { category: 'STOCKS', firstYear: 2017, firstMonth: 10, lastYear: 2026 },
+  'SBIN': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'SHRIRAMFIN': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'SPCENET': { category: 'STOCKS', firstYear: 2013, firstMonth: 11, lastYear: 2026 },
+  'SUBEXLTD': { category: 'STOCKS', firstYear: 2003, firstMonth: 9, lastYear: 2026 },
+  'SUNPHARMA': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'SUZLON': { category: 'STOCKS', firstYear: 2005, firstMonth: 10, lastYear: 2026 },
+  'TATACONSUM': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'TATASTEEL': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'TCS': { category: 'STOCKS', firstYear: 2002, firstMonth: 8, lastYear: 2026 },
+  'TECHM': { category: 'STOCKS', firstYear: 2006, firstMonth: 8, lastYear: 2026 },
+  'TITAN': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'TRENT': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'TRIDENT': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
+  'UCOBANK': { category: 'STOCKS', firstYear: 2003, firstMonth: 10, lastYear: 2026 },
+  'UJJIVANSFB': { category: 'STOCKS', firstYear: 2019, firstMonth: 12, lastYear: 2026 },
+  'ULTRACEMCO': { category: 'STOCKS', firstYear: 2002, firstMonth: 8, lastYear: 2026 },
+  'VAKRANGEE': { category: 'STOCKS', firstYear: 2006, firstMonth: 4, lastYear: 2026 },
+  'VERTOZ': { category: 'STOCKS', firstYear: 2017, firstMonth: 11, lastYear: 2026 },
+  'VINNY': { category: 'STOCKS', firstYear: 2018, firstMonth: 10, lastYear: 2026 },
+  'WEBELSOLAR': { category: 'STOCKS', firstYear: 2007, firstMonth: 5, lastYear: 2026 },
+  'WEIZMANIND': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2026 },
+  'WIPRO': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
+  'YESBANK': { category: 'STOCKS', firstYear: 2005, firstMonth: 7, lastYear: 2026 },
+  'ZEEL': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
 
   // Mutual Funds
-  'SBI_Bluechip': { category: 'FUNDS', firstYear: 2018, firstMonth: 1, lastYear: 2025 },
-  'ICICI_Bluechip': { category: 'FUNDS', firstYear: 2018, firstMonth: 1, lastYear: 2025 },
-  'Axis_Midcap': { category: 'FUNDS', firstYear: 2018, firstMonth: 1, lastYear: 2025 },
-  'Kotak_Emerging': { category: 'FUNDS', firstYear: 2018, firstMonth: 1, lastYear: 2025 },
-  'PGIM_Midcap': { category: 'FUNDS', firstYear: 2018, firstMonth: 1, lastYear: 2025 },
-  'Nippon_SmallCap': { category: 'FUNDS', firstYear: 2018, firstMonth: 1, lastYear: 2025 },
-  'HDFC_SmallCap': { category: 'FUNDS', firstYear: 2018, firstMonth: 1, lastYear: 2025 },
-
-  // Indian Stocks - 1996 batch (earliest)
-  'INFY': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'WIPRO': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'HDFCBANK': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'SBIN': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'RELIANCE': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'ONGC': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'M&M': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'HINDUNILVR': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'ITC': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'TATACONSUM': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'TITAN': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'TATASTEEL': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'HINDALCO': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'SUNPHARMA': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-  'Hindustan Construction': { category: 'STOCKS', firstYear: 1996, firstMonth: 1, lastYear: 2025 },
-
-  // Indian Stocks - 1997-1998
-  'GAIL': { category: 'STOCKS', firstYear: 1997, firstMonth: 4, lastYear: 2025 },
-  'AXISBANK': { category: 'STOCKS', firstYear: 1998, firstMonth: 11, lastYear: 2025 },
-
-  // Indian Stocks - 2001-2002
-  'KOTAKBANK': { category: 'STOCKS', firstYear: 2001, firstMonth: 7, lastYear: 2025 },
-  'ICICIBANK': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'INDUSINDBK': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'BAJFINANCE': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'SHRIRAMFIN': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'BAJAJ-AUTO': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'HEROMOTOCO': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'ASIANPAINT': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'APOLLOHOSP': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'LT': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'GRASIM': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'BHARTIARTL': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'ADANIENT': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'BEL': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'TRENT': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'Indo National': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'Zee Entertainment': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'Ashok Leyland': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'ITI Limited': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'CESC Limited': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'Trident': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'Weizmann': { category: 'STOCKS', firstYear: 2002, firstMonth: 7, lastYear: 2025 },
-  'TCS': { category: 'STOCKS', firstYear: 2002, firstMonth: 8, lastYear: 2025 },
-  'HCLTECH': { category: 'STOCKS', firstYear: 2002, firstMonth: 8, lastYear: 2025 },
-  'BAJAJFINSV': { category: 'STOCKS', firstYear: 2002, firstMonth: 8, lastYear: 2025 },
-  'NESTLEIND': { category: 'STOCKS', firstYear: 2002, firstMonth: 8, lastYear: 2025 },
-  'ULTRACEMCO': { category: 'STOCKS', firstYear: 2002, firstMonth: 8, lastYear: 2025 },
-  'HFCL': { category: 'STOCKS', firstYear: 2002, firstMonth: 8, lastYear: 2025 },
-
-  // Indian Stocks - 2003-2010
-  'JSWSTEEL': { category: 'STOCKS', firstYear: 2003, firstMonth: 5, lastYear: 2025 },
-  'MARUTI': { category: 'STOCKS', firstYear: 2003, firstMonth: 7, lastYear: 2025 },
-  'Subex': { category: 'STOCKS', firstYear: 2003, firstMonth: 9, lastYear: 2025 },
-  'UCO Bank': { category: 'STOCKS', firstYear: 2003, firstMonth: 10, lastYear: 2025 },
-  'Jindal Stainless': { category: 'STOCKS', firstYear: 2003, firstMonth: 11, lastYear: 2025 },
-  'Indiabulls Real Estate': { category: 'STOCKS', firstYear: 2004, firstMonth: 9, lastYear: 2025 },
-  'NTPC': { category: 'STOCKS', firstYear: 2004, firstMonth: 11, lastYear: 2025 },
-  'JP Power Ventures': { category: 'STOCKS', firstYear: 2005, firstMonth: 4, lastYear: 2025 },
-  'Saksoft': { category: 'STOCKS', firstYear: 2005, firstMonth: 5, lastYear: 2025 },
-  'Yes Bank': { category: 'STOCKS', firstYear: 2005, firstMonth: 7, lastYear: 2025 },
-  'Suzlon Energy': { category: 'STOCKS', firstYear: 2005, firstMonth: 10, lastYear: 2025 },
-  'GVK Power & Infra': { category: 'STOCKS', firstYear: 2006, firstMonth: 2, lastYear: 2025 },
-  'Vakrangee': { category: 'STOCKS', firstYear: 2006, firstMonth: 4, lastYear: 2025 },
-  'TECHM': { category: 'STOCKS', firstYear: 2006, firstMonth: 8, lastYear: 2025 },
-  'Vodafone Idea': { category: 'STOCKS', firstYear: 2007, firstMonth: 3, lastYear: 2025 },
-  'Dish TV India': { category: 'STOCKS', firstYear: 2007, firstMonth: 4, lastYear: 2025 },
-  'Websol Energy Systems': { category: 'STOCKS', firstYear: 2007, firstMonth: 5, lastYear: 2025 },
-  'POWERGRID': { category: 'STOCKS', firstYear: 2007, firstMonth: 10, lastYear: 2025 },
-  'ADANIPORTS': { category: 'STOCKS', firstYear: 2007, firstMonth: 11, lastYear: 2025 },
-  'Reliance Power': { category: 'STOCKS', firstYear: 2008, firstMonth: 2, lastYear: 2025 },
-  'IRB Infrastructure': { category: 'STOCKS', firstYear: 2008, firstMonth: 2, lastYear: 2025 },
-  'Adani Power': { category: 'STOCKS', firstYear: 2009, firstMonth: 8, lastYear: 2025 },
-  'RattanIndia Power': { category: 'STOCKS', firstYear: 2009, firstMonth: 10, lastYear: 2025 },
-  'Hindustan Copper': { category: 'STOCKS', firstYear: 2010, firstMonth: 1, lastYear: 2025 },
-  'Manappuram Finance': { category: 'STOCKS', firstYear: 2010, firstMonth: 6, lastYear: 2025 },
-
-  // Indian Stocks - 2012-2021
-  'RattanIndia Enterprises': { category: 'STOCKS', firstYear: 2012, firstMonth: 7, lastYear: 2025 },
-  'Spacenet Enterprises': { category: 'STOCKS', firstYear: 2013, firstMonth: 11, lastYear: 2025 },
-  'Brightcom Group': { category: 'STOCKS', firstYear: 2015, firstMonth: 5, lastYear: 2025 },
-  'INDIGO': { category: 'STOCKS', firstYear: 2015, firstMonth: 11, lastYear: 2025 },
-  'Quick Heal Technologies': { category: 'STOCKS', firstYear: 2016, firstMonth: 2, lastYear: 2025 },
-  'PNB Housing Finance': { category: 'STOCKS', firstYear: 2016, firstMonth: 11, lastYear: 2025 },
-  'Sanginita Chemicals': { category: 'STOCKS', firstYear: 2017, firstMonth: 3, lastYear: 2025 },
-  'NACL Industries': { category: 'STOCKS', firstYear: 2017, firstMonth: 4, lastYear: 2025 },
-  'SBILIFE': { category: 'STOCKS', firstYear: 2017, firstMonth: 10, lastYear: 2025 },
-  '5Paisa Capital': { category: 'STOCKS', firstYear: 2017, firstMonth: 11, lastYear: 2025 },
-  'Vertoz': { category: 'STOCKS', firstYear: 2017, firstMonth: 11, lastYear: 2025 },
-  'Indostar Capital Finance': { category: 'STOCKS', firstYear: 2018, firstMonth: 5, lastYear: 2025 },
-  'Vinny Overseas': { category: 'STOCKS', firstYear: 2018, firstMonth: 10, lastYear: 2025 },
-  'Ujjivan Small Finance Bank': { category: 'STOCKS', firstYear: 2019, firstMonth: 12, lastYear: 2025 },
-  'Ksolves India': { category: 'STOCKS', firstYear: 2020, firstMonth: 8, lastYear: 2025 },
-  'Railtel Corporation': { category: 'STOCKS', firstYear: 2021, firstMonth: 2, lastYear: 2025 },
-  'MTAR Technologies': { category: 'STOCKS', firstYear: 2021, firstMonth: 3, lastYear: 2025 },
-  'Easy Trip Planners': { category: 'STOCKS', firstYear: 2021, firstMonth: 3, lastYear: 2025 },
-  'One97 Communications (Paytm)': { category: 'STOCKS', firstYear: 2021, firstMonth: 11, lastYear: 2025 },
-  'Honasa Consumer': { category: 'STOCKS', firstYear: 2023, firstMonth: 11, lastYear: 2025 },
+  'Axis_Midcap': { category: 'FUNDS', firstYear: 2017, firstMonth: 12, lastYear: 2026 },
+  'HDFC_SmallCap': { category: 'FUNDS', firstYear: 2018, firstMonth: 1, lastYear: 2026 },
+  'ICICI_Bluechip': { category: 'FUNDS', firstYear: 2017, firstMonth: 12, lastYear: 2026 },
+  'Kotak_Emerging': { category: 'FUNDS', firstYear: 2017, firstMonth: 12, lastYear: 2026 },
+  'Nippon_SmallCap': { category: 'FUNDS', firstYear: 2017, firstMonth: 12, lastYear: 2026 },
+  'PGIM_Midcap': { category: 'FUNDS', firstYear: 2017, firstMonth: 12, lastYear: 2026 },
+  'SBI_Bluechip': { category: 'FUNDS', firstYear: 2017, firstMonth: 12, lastYear: 2026 },
 
   // REITs
-  'EMBASSY': { category: 'REIT', firstYear: 2019, firstMonth: 4, lastYear: 2025 },
-  'MINDSPACE': { category: 'REIT', firstYear: 2020, firstMonth: 8, lastYear: 2025 },
+  'EMBASSY': { category: 'REIT', firstYear: 2019, firstMonth: 3, lastYear: 2026 },
+  'MINDSPACE': { category: 'REIT', firstYear: 2020, firstMonth: 8, lastYear: 2026 },
 };
 
 /**
@@ -165,7 +158,7 @@ export const getLatestAssetYear = (categories: AssetCategory[]): number => {
  * Ensures game ends by 2025 (max data year)
  */
 export const calculateGameStartYear = (categories: AssetCategory[]): number => {
-  const MAX_DATA_YEAR = 2025; // CSV data only goes up to 2025
+  const MAX_DATA_YEAR = 2025; // PostgreSQL data currently goes up to 2025
   const GAME_DURATION = 20;
 
   // Game must end by 2025, so start year = 2025 - 20 + 1 = 2006
@@ -238,82 +231,94 @@ export const generateAssetUnlockSchedule = (
     currentGameYear++;
   }
 
-  // Year 4: Stocks (FIXED 2 stocks initially, then 0-3 unlock progressively)
-  // This creates better "look and feel" with gradual unlocks
-  let additionalStocksToUnlock: string[] = [];
+  // Track remaining unlocks for progressive scheduling (must be declared before use)
+  const remainingUnlocks: { category: AssetCategory; assetType: string; minYear: number; minMonth: number }[] = [];
+
+  // Year 4: Stocks - NEW SELECTION RULES
+  // Fixed Stocks: 2 stocks with data available (unlock immediately)
+  // Random Stocks: 1-3 stocks from entire pool (unlock when data available)
+  // Constraint: Total unlocked stocks must be 3-5
+  // All stocks must be unique
+  const selectedStocks: {
+    fixed: string[];
+    random: string[];
+    allSelected: string[];
+  } = { fixed: [], random: [], allSelected: [] };
 
   if (categories.includes('STOCKS')) {
     const calendarYear = gameStartYear + currentGameYear - 1;
-    const calendarMonth = 1; // Assume month 1 for unlock year
+    const calendarMonth = 1;
 
-    // Filter stocks that have data available at this calendar year/month
-    const availableStocks = (assetsByCategory['STOCKS'] || []).filter(stockName => {
+    // Get ALL stocks in the universe
+    const allStocks = assetsByCategory['STOCKS'] || [];
+
+    // Filter stocks with data available NOW (data-available pool)
+    const dataAvailableStocks = allStocks.filter(stockName => {
       const stockData = ASSET_TIMELINE_DATA[stockName];
       if (!stockData) return false;
-
-      // Stock data must be available: year > firstYear OR (year == firstYear AND month >= firstMonth)
       return calendarYear > stockData.firstYear ||
-             (calendarYear === stockData.firstYear && calendarMonth >= stockData.firstMonth);
+        (calendarYear === stockData.firstYear && calendarMonth >= stockData.firstMonth);
     });
 
-    // ALWAYS unlock exactly 2 random stocks initially
-    const initialStockCount = 2;
-    const initialStocks = getRandomItems(availableStocks, initialStockCount);
+    // FIXED STOCKS: Select exactly 2 from data-available pool
+    selectedStocks.fixed = getRandomItems(dataAvailableStocks, 2);
 
-    if (initialStocks.length >= 2) {
-      // Select 1-3 additional stocks randomly (minimum 1, maximum 3)
-      const additionalCount = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3
+    // RANDOM STOCKS: Select 1-3 from remaining stocks (entire universe minus fixed)
+    const stocksExcludingFixed = allStocks.filter(s => !selectedStocks.fixed.includes(s));
+    const randomCount = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3
+    selectedStocks.random = getRandomItems(stocksExcludingFixed, Math.min(randomCount, stocksExcludingFixed.length));
 
-      let stocksToUnlockNow = [...initialStocks];
-      let stocksToUnlockLater: string[] = [];
+    // All selected stocks (unique)
+    selectedStocks.allSelected = [...selectedStocks.fixed, ...selectedStocks.random];
 
-      if (additionalCount > 0) {
-        // Get remaining stocks (not already in initial 2)
-        const remainingStocks = (assetsByCategory['STOCKS'] || []).filter(
-          stock => !initialStocks.includes(stock)
-        );
+    // Determine which stocks unlock NOW vs LATER
+    const stocksToUnlockNow: string[] = [];
+    const stocksToUnlockLater: { name: string; minYear: number; minMonth: number }[] = [];
 
-        // Randomly select additional stocks
-        const selectedAdditionalStocks = getRandomItems(remainingStocks, Math.min(additionalCount, remainingStocks.length));
+    selectedStocks.allSelected.forEach(stockName => {
+      const stockData = ASSET_TIMELINE_DATA[stockName];
+      if (!stockData) return;
 
-        // Split into "available now" vs "available later"
-        selectedAdditionalStocks.forEach(stockName => {
-          const stockData = ASSET_TIMELINE_DATA[stockName];
-          if (!stockData) return;
+      const isAvailableNow = calendarYear > stockData.firstYear ||
+        (calendarYear === stockData.firstYear && calendarMonth >= stockData.firstMonth);
 
-          // Check if stock data is available NOW (at Year 4)
-          const isAvailableNow = calendarYear > stockData.firstYear ||
-                                (calendarYear === stockData.firstYear && calendarMonth >= stockData.firstMonth);
-
-          if (isAvailableNow) {
-            // Unlock immediately with fixed 2 stocks
-            stocksToUnlockNow.push(stockName);
-          } else {
-            // Save for progressive unlock later
-            stocksToUnlockLater.push(stockName);
-            additionalStocksToUnlock.push(stockName);
-          }
+      if (isAvailableNow) {
+        stocksToUnlockNow.push(stockName);
+      } else {
+        stocksToUnlockLater.push({
+          name: stockName,
+          minYear: stockData.firstYear,
+          minMonth: stockData.firstMonth
         });
       }
+    });
 
-      // Unlock stocks that are available NOW (2 fixed + any additional with data)
+    // Unlock stocks that are available NOW
+    if (stocksToUnlockNow.length > 0) {
       schedule[currentGameYear] = [{
         category: 'STOCKS',
         assetType: 'STOCKS',
         assetNames: stocksToUnlockNow,
         calendarYear
       }];
-    } else {
-      // Fallback: if less than 2 stocks available, select any 2
-      schedule[currentGameYear] = [{
-        category: 'STOCKS',
-        assetType: 'STOCKS',
-        assetNames: getRandomItems(assetsByCategory['STOCKS'] || [], 2),
-        calendarYear
-      }];
     }
 
     currentGameYear++;
+
+    // Schedule progressive unlocks for random stocks without data yet
+    stocksToUnlockLater.sort((a, b) => {
+      if (a.minYear !== b.minYear) return a.minYear - b.minYear;
+      return a.minMonth - b.minMonth;
+    });
+
+    stocksToUnlockLater.forEach(stock => {
+      remainingUnlocks.push({
+        category: 'STOCKS',
+        assetType: stock.name,
+        minYear: stock.minYear,
+        minMonth: stock.minMonth
+      });
+    });
   }
 
   // Year 5: Digital Gold (if GOLD is selected and data available)
@@ -328,22 +333,6 @@ export const generateAssetUnlockSchedule = (
       currentGameYear++;
     }
   }
-
-  // Now progressively unlock remaining assets (one per year)
-  const remainingUnlocks: { category: AssetCategory; assetType: string; minYear: number; minMonth: number }[] = [];
-
-  // Add stocks that will unlock later (when their data becomes available)
-  additionalStocksToUnlock.forEach(stockName => {
-    const stockData = ASSET_TIMELINE_DATA[stockName];
-    if (stockData) {
-      remainingUnlocks.push({
-        category: 'STOCKS',
-        assetType: stockName,
-        minYear: stockData.firstYear,
-        minMonth: stockData.firstMonth
-      });
-    }
-  });
 
   // Crypto assets (BTC data available from 2014 Sep, ETH from 2017 Nov)
   if (categories.includes('CRYPTO')) {
@@ -402,7 +391,7 @@ export const generateAssetUnlockSchedule = (
       // Check if this asset's data is available in this calendar year AND month
       // Data available if: year > minYear OR (year == minYear AND month >= minMonth)
       const isDataAvailable = calendarYear > unlock.minYear ||
-                              (calendarYear === unlock.minYear && calendarMonth >= unlock.minMonth);
+        (calendarYear === unlock.minYear && calendarMonth >= unlock.minMonth);
 
       if (isDataAvailable) {
         // Only unlock if this slot is not already taken

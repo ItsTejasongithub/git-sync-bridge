@@ -1,5 +1,27 @@
 // Shared types between server and client
 
+// Encrypted payload structure for secure price broadcasts
+export interface EncryptedPayload {
+  iv: string; // base64 encoded initialization vector
+  data: string; // base64 encoded ciphertext
+  tag: string; // base64 encoded authentication tag
+  ts: number; // timestamp for replay protection
+}
+
+// Key exchange response for client decryption setup
+export interface KeyExchangeData {
+  sessionKey: string; // base64 encoded AES-256 key
+  assetIndexMap: { [symbol: string]: number }; // symbol to array index mapping
+}
+
+// Networth validation result from server
+export interface NetworthValidationResult {
+  valid: boolean;
+  serverNetworth: number;
+  clientNetworth: number;
+  deviation: number; // percentage difference
+}
+
 export interface AdminSettings {
   selectedCategories: string[];
   gameStartYear: number;
@@ -112,6 +134,21 @@ export interface ServerToClientEvents {
 
   // Errors
   error: (data: { message: string }) => void;
+
+  // === Secure Price Broadcast Events ===
+
+  // Encrypted price tick broadcast (sent every game month)
+  priceTick: (data: {
+    year: number;
+    month: number;
+    encrypted: EncryptedPayload;
+  }) => void;
+
+  // Key exchange response (sent once when client requests)
+  keyExchangeResponse: (data: KeyExchangeData) => void;
+
+  // Networth validation result (sent when server detects mismatch)
+  networthValidation: (data: NetworthValidationResult) => void;
 }
 
 export interface ClientToServerEvents {
@@ -130,6 +167,23 @@ export interface ClientToServerEvents {
   // Quiz events
   quizStarted: (data: { quizCategory: string }) => void;
   quizFinished: (data: { quizCategory: string }) => void;
+
+  // === Secure Price Broadcast Events ===
+
+  // Request key exchange (client asks for session key on game start)
+  requestKeyExchange: (
+    callback: (response: { success: boolean; data?: KeyExchangeData; error?: string }) => void
+  ) => void;
+
+  // Submit networth for server validation
+  submitNetworth: (
+    data: {
+      networth: number;
+      portfolioBreakdown: PortfolioBreakdown;
+      holdings: any; // Serialized holdings for validation
+    },
+    callback: (response: { valid: boolean; serverNetworth?: number; error?: string }) => void
+  ) => void;
 }
 
 export interface InterServerEvents {
