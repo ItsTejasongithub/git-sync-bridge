@@ -40,13 +40,11 @@ export class GameSyncManager {
     startYear: number
   ): Promise<boolean> {
     if (!isPostgresPoolInitialized()) {
-      console.warn(`⚠️ PostgreSQL not initialized, skipping market data setup for room ${roomId}`);
       return false;
     }
 
     try {
       const symbols = getGameSymbols(selectedAssets);
-      console.log(`📊 Room ${roomId}: Initializing market data for ${symbols.length} symbols`);
 
       // Preload prices for the entire game duration
       await preloadPricesForGame(symbols, startYear, 20);
@@ -72,7 +70,6 @@ export class GameSyncManager {
     calendarYear: number
   ): Promise<void> {
     if (!isPostgresPoolInitialized() || !hasRoomKeys(roomId)) {
-      console.warn(`⚠️ Room ${roomId}: Cannot broadcast prices - PostgreSQL: ${isPostgresPoolInitialized()}, Keys: ${hasRoomKeys(roomId)}`);
       return; // Skip if not set up
     }
 
@@ -81,7 +78,6 @@ export class GameSyncManager {
 
     try {
       const symbols = getGameSymbols(room.gameState.selectedAssets);
-      console.log(`📊 Room ${roomId}: Fetching prices for ${symbols.length} symbols (Year: ${calendarYear}, Month: ${gameMonth})`);
 
       const prices = await getPricesForDate(symbols, calendarYear, gameMonth);
 
@@ -94,15 +90,8 @@ export class GameSyncManager {
           validPrices[symbol] = price;
         } else {
           invalidCount++;
-          console.warn(`⚠️ Invalid price for ${symbol}: ${price}`);
         }
       }
-
-      if (invalidCount > 0) {
-        console.warn(`⚠️ Room ${roomId}: ${invalidCount} invalid prices filtered out`);
-      }
-
-      console.log(`✅ Room ${roomId}: Broadcasting ${Object.keys(validPrices).length} valid prices`);
 
       // Store prices for validation
       this.roomPrices.set(roomId, validPrices);
@@ -153,19 +142,14 @@ export class GameSyncManager {
 
       // Emit the keyExchangeResponse event that the client is waiting for
       socket.emit('keyExchangeResponse', keyData);
-      console.log(`🔑 Room ${roomId}: Key exchange completed for ${socket.id}`);
 
       // Send initial price tick immediately so client has data
       const room = this.roomManager.getRoom(roomId);
       if (room) {
-        console.log(`📊 Room ${roomId} state: Year ${room.gameState.currentYear}, Month ${room.gameState.currentMonth}, Started: ${room.gameState.isStarted}`);
-
         if (room.gameState.isStarted) {
           const calendarYear = room.adminSettings
             ? room.adminSettings.gameStartYear + room.gameState.currentYear - 1
             : 2000 + room.gameState.currentYear - 1;
-
-          console.log(`📅 Sending initial price tick: Game Year ${room.gameState.currentYear}, Calendar Year ${calendarYear}, Month ${room.gameState.currentMonth}`);
 
           // Broadcast current prices immediately
           this.broadcastPriceTick(
@@ -176,11 +160,7 @@ export class GameSyncManager {
           ).catch((err) => {
             console.error(`❌ Error sending initial price tick:`, err);
           });
-        } else {
-          console.warn(`⚠️ Room ${roomId}: Game not started yet, skipping initial price tick`);
         }
-      } else {
-        console.error(`❌ Room ${roomId} not found after key exchange`);
       }
     } else {
       callback({ success: false, error: 'Room encryption not initialized' });
@@ -278,7 +258,6 @@ export class GameSyncManager {
       playersWaitingForQuiz: room.gameState.playersWaitingForQuiz,
     });
 
-    // Disabled for performance: console.log(`⏸️ Game paused in room ${room.id} - ${playerId} started quiz: ${quizCategory}`);
   }
 
   // Handle quiz completed by a player
@@ -298,7 +277,6 @@ export class GameSyncManager {
     // If all quizzes done, resume game
     if (shouldResume) {
       this.io.to(room.id).emit('gameResumed');
-      // Disabled for performance: console.log(`▶️ Game resumed in room ${room.id}`);
     } else {
       // Still waiting for others
       this.io.to(room.id).emit('gamePaused', {
@@ -372,8 +350,6 @@ export class GameSyncManager {
         // Cleanup room encryption and price data
         this.cleanupRoom(roomId);
 
-        console.log(`🏁 Game ended in room ${roomId}. Waiting for players to log to DB...`);
-
         // Emit game ended event FIRST so players can log to database
         this.io.to(roomId).emit('gameEnded', {
           finalYear: newYear - 1,
@@ -382,7 +358,6 @@ export class GameSyncManager {
 
         // Wait 3 seconds for all players to log their final networth to database
         setTimeout(() => {
-          console.log(`📊 Emitting signal for host to fetch final leaderboard from DB for room ${roomId}`);
           // Emit special event telling host to fetch final leaderboard from DB
           this.io.to(roomId).emit('fetchFinalLeaderboardFromDB', {
             roomId: roomId,
@@ -407,7 +382,6 @@ export class GameSyncManager {
               portfolioBreakdown: l.portfolioBreakdown,
             })).sort((a, b) => b.networth - a.networth);
 
-            console.log(`📢 Broadcasting final leaderboard from DB (${leaderboard.length} players) for room ${roomId}`);
             this.io.to(roomId).emit('finalLeaderboard', { leaderboard });
           } catch (err) {
             console.error('Error fetching/broadcasting final leaderboard from DB:', err);
@@ -456,8 +430,6 @@ export class GameSyncManager {
                   const required = ev.amount < 0 ? Math.abs(ev.amount) : 0;
                   const status = available >= required ? 'ENOUGH' : 'INSUFFICIENT';
 
-                  // Log concise life event check (keeps server logs focused)
-                  console.log(`🧮 Life Event Check for ${playerId}: required=₹${required}, available=₹${available}, status=${status}`);
 
                   // Apply amount
                   player.portfolioBreakdown.cash = (player.portfolioBreakdown.cash || 0) + ev.amount;
@@ -471,9 +443,7 @@ export class GameSyncManager {
               try {
                 const postPocketCash = room.players.get(playerId)?.portfolioBreakdown?.cash ?? undefined;
                 this.io.to(playerId).emit('lifeEventTriggered', { event: ev, postPocketCash });
-                console.log(`🔔 Life event emitted for player ${playerId} in room ${roomId}: ${ev.message} (${ev.amount})`);
               } catch (err) {
-                console.warn('Failed to emit lifeEventTriggered to', playerId, err);
               }
             }
           });
@@ -485,7 +455,6 @@ export class GameSyncManager {
       // Also broadcast full game state so clients can react to any state changes (asset unlocks, quotes, etc.)
       this.broadcastGameState(roomId);
 
-      // Disabled for performance (spams terminal): console.log(`⏰ Room ${roomId} - Year ${newYear}, Month ${newMonth}`);
     }, monthDurationMs);
 
     return interval;

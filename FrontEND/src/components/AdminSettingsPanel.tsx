@@ -45,7 +45,6 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
 
   // Diagnostic log to help confirm running build has eventsCount control
   useEffect(() => {
-    console.log('⚙️ AdminSettingsPanel mounted - eventsCount (UI):', eventsCount, 'initialSettings.eventsCount:', initialSettings?.eventsCount);
   }, []);
 
   const isMultiplayerMode = !!onApply;

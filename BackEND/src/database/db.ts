@@ -24,20 +24,17 @@ export async function initializeDatabase(): Promise<void> {
     if (fs.existsSync(DB_PATH)) {
       const buffer = fs.readFileSync(DB_PATH);
       db = new SQL.Database(buffer);
-      console.log('Database loaded from file');
     } else {
       db = new SQL.Database();
       await createTables();
       await seedDefaultAdmin();
       saveDatabase();
-      console.log('New database created and initialized');
     }
 
     // Run lightweight migrations on existing DB files to ensure schema compatibility
     try {
       runMigrations();
     } catch (migErr) {
-      console.warn('Warning: migrations failed', migErr);
     }
   } catch (error) {
     console.error('Failed to initialize database:', error);
@@ -57,7 +54,6 @@ function runMigrations(): void {
     infoSettings && infoSettings.length > 0 && infoSettings[0].values && infoSettings[0].values.some((row: any) => row[1] === 'events_count');
 
   if (!hasEventsCount) {
-    console.log('Migration: adding missing column events_count to admin_settings');
     db.run('ALTER TABLE admin_settings ADD COLUMN events_count INTEGER NOT NULL DEFAULT 3');
     saveDatabase();
   }
@@ -68,7 +64,6 @@ function runMigrations(): void {
     infoLogs && infoLogs.length > 0 && infoLogs[0].values && infoLogs[0].values.some((row: any) => row[1] === 'player_age');
 
   if (!hasPlayerAge) {
-    console.log('Migration: adding missing column player_age to player_logs');
     db.run('ALTER TABLE player_logs ADD COLUMN player_age INTEGER');
     saveDatabase();
   }
@@ -78,7 +73,6 @@ function runMigrations(): void {
     infoLogs && infoLogs.length > 0 && infoLogs[0].values && infoLogs[0].values.some((row: any) => row[1] === 'unique_id');
 
   if (!hasUniqueId) {
-    console.log('Migration: adding missing column unique_id to player_logs');
     // Add column WITHOUT UNIQUE (sql.js doesn't support UNIQUE in ALTER TABLE)
     // The index below provides uniqueness constraint enforcement
     db.run('ALTER TABLE player_logs ADD COLUMN unique_id TEXT');
@@ -91,7 +85,6 @@ function runMigrations(): void {
   const hasTradesTable = tablesList && tablesList.length > 0 && tablesList[0].values && tablesList[0].values.length > 0;
 
   if (!hasTradesTable) {
-    console.log('Migration: creating trading_transactions table');
     db.run(`
       CREATE TABLE IF NOT EXISTS trading_transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -121,7 +114,6 @@ function runMigrations(): void {
   const hasAiReportsTable = aiReportsList && aiReportsList.length > 0 && aiReportsList[0].values && aiReportsList[0].values.length > 0;
 
   if (!hasAiReportsTable) {
-    console.log('Migration: creating ai_reports table');
     db.run(`
       CREATE TABLE IF NOT EXISTS ai_reports (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -144,16 +136,13 @@ function runMigrations(): void {
       const cols = db.exec("PRAGMA table_info(ai_reports)");
       const columns = (cols && cols[0] && cols[0].values) ? cols[0].values.map((r:any) => r[1]) : [];
       if (!columns.includes('cash_json')) {
-        console.log('Migration: adding cash_json column to ai_reports');
         db.run(`ALTER TABLE ai_reports ADD COLUMN cash_json TEXT`);
       }
       if (!columns.includes('banking_summary_json')) {
-        console.log('Migration: adding banking_summary_json column to ai_reports');
         db.run(`ALTER TABLE ai_reports ADD COLUMN banking_summary_json TEXT`);
       }
       saveDatabase();
     } catch (err) {
-      console.warn('Migration: failed to ensure ai_reports columns, continuing:', err);
     }
   }
 
@@ -162,7 +151,6 @@ function runMigrations(): void {
   const hasBankingTable = bankingTransList && bankingTransList.length > 0 && bankingTransList[0].values && bankingTransList[0].values.length > 0;
 
   if (!hasBankingTable) {
-    console.log('Migration: creating banking_transactions table');
     db.run(`
       CREATE TABLE IF NOT EXISTS banking_transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -195,7 +183,6 @@ function runMigrations(): void {
   const hasCashTable = cashTransList && cashTransList.length > 0 && cashTransList[0].values && cashTransList[0].values.length > 0;
 
   if (!hasCashTable) {
-    console.log('Migration: creating cash_transactions table');
     db.run(`
       CREATE TABLE IF NOT EXISTS cash_transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -221,7 +208,6 @@ function runMigrations(): void {
   const hasHoldingsTable = holdingsList && holdingsList.length > 0 && holdingsList[0].values && holdingsList[0].values.length > 0;
 
   if (!hasHoldingsTable) {
-    console.log('Migration: creating player_holdings table');
     db.run(`
       CREATE TABLE IF NOT EXISTS player_holdings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -328,8 +314,6 @@ async function createTables(): Promise<void> {
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_trades_log_id ON trading_transactions(log_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_trades_player ON trading_transactions(player_name)`);
-
-  console.log('Database tables created successfully');
 }
 
 /**
@@ -350,8 +334,6 @@ async function seedDefaultAdmin(): Promise<void> {
     'INSERT INTO admin_accounts (username, password_hash) VALUES (?, ?)',
     [DEFAULT_ADMIN_USERNAME, passwordHash]
   );
-
-  console.log('Default admin account created');
 }
 
 /**
@@ -380,6 +362,5 @@ export function closeDatabase(): void {
     saveDatabase();
     db.close();
     db = null;
-    console.log('Database closed');
   }
 }

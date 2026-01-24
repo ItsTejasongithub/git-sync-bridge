@@ -44,7 +44,6 @@ function AppContent() {
     // Listen for settings changes made via AdminPanelModal and update local state
     const handler = (e: any) => {
       if (e && e.detail) {
-        console.log('🔔 Received adminSettingsUpdated event', e.detail);
         setAdminSettings(e.detail);
         try {
           // Apply into running game state (solo) so timers and recurring income adjust
@@ -63,11 +62,8 @@ function AppContent() {
     setLoadingSettings(true);
     const response = await adminSettingsApi.getSettings();
     if (response.success && response.settings) {
-      console.log('✅ Admin settings loaded from API:', response.settings);
-      console.log('   eventsCount:', response.settings.eventsCount);
       setAdminSettings(response.settings);
     } else {
-      console.log('⚠️ Failed to load admin settings from API, using defaults');
       // Use default settings if server is unavailable
       setAdminSettings({
         selectedCategories: ['BANKING', 'GOLD', 'STOCKS', 'FUNDS', 'CRYPTO', 'REIT', 'COMMODITIES'],

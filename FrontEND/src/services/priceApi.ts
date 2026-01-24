@@ -100,7 +100,6 @@ export async function fetchFDRates(): Promise<{ [year: number]: { 3: number; 12:
   try {
     const response = await fetchWithTimeout(`${SERVER_URL}/api/prices/fd-rates`);
     if (!response.ok) {
-      console.warn(`FD rates API returned ${response.status}`);
       return {};
     }
     const data: FDRatesResponse = await response.json();
@@ -109,11 +108,9 @@ export async function fetchFDRates(): Promise<{ [year: number]: { 3: number; 12:
       return data.data;
     }
 
-    console.warn('Failed to fetch FD rates:', data.error);
     return {};
   } catch (error) {
     if (error instanceof Error && !error.message.includes('timeout')) {
-      console.warn('Error fetching FD rates:', error.message);
     }
     return {};
   }
@@ -170,7 +167,6 @@ export async function fetchPrices(
       });
 
       if (!response.ok) {
-        console.warn(`Price API returned ${response.status}: ${response.statusText}`);
         return {};
       }
 
@@ -187,16 +183,13 @@ export async function fetchPrices(
 
       if (data.error === 'Database not available') {
         // PostgreSQL not connected - this is expected in some scenarios
-        console.debug('Price database not available, using fallback');
       } else {
-        console.warn('Failed to fetch prices:', data.error);
       }
       return {};
     } catch (error) {
       if (error instanceof Error) {
         // Don't spam console with repeated timeout errors
         if (!error.message.includes('timeout')) {
-          console.warn('Error fetching prices:', error.message);
         }
       }
       return {};
@@ -254,7 +247,6 @@ export async function fetchPriceHistory(
       });
 
       if (!response.ok) {
-        console.warn(`Price history API returned ${response.status}: ${response.statusText}`);
         return {};
       }
 
@@ -271,16 +263,13 @@ export async function fetchPriceHistory(
 
       if (data.error === 'Database not available') {
         // PostgreSQL not connected - this is expected in some scenarios
-        console.debug('Price database not available for history, using fallback');
       } else {
-        console.warn('Failed to fetch price history:', data.error);
       }
       return {};
     } catch (error) {
       if (error instanceof Error) {
         // Don't spam console with repeated timeout errors
         if (!error.message.includes('timeout')) {
-          console.warn('Error fetching price history:', error.message);
         }
       }
       return {};
@@ -314,7 +303,6 @@ export async function preloadGamePrices(
     });
 
     if (!response.ok) {
-      console.warn(`Preload API returned ${response.status}`);
       return false;
     }
 
@@ -322,7 +310,6 @@ export async function preloadGamePrices(
     return data.success === true;
   } catch (error) {
     if (error instanceof Error && !error.message.includes('timeout')) {
-      console.warn('Error preloading prices:', error.message);
     }
     return false;
   }

@@ -101,11 +101,9 @@ export function updateAdminSettings(settings: AdminSettings): { success: boolean
       // If the column doesn't exist (older DB), add it and retry once
       if (err && typeof err.message === 'string') {
         if (err.message.includes('no such column: events_count')) {
-          console.warn('Detected missing column events_count; attempting to migrate and retry update');
           db.run('ALTER TABLE admin_settings ADD COLUMN events_count INTEGER NOT NULL DEFAULT 3');
           performUpdate();
         } else if (err.message.includes('no such column: month_duration')) {
-          console.warn('Detected missing column month_duration; attempting to migrate and retry update');
           db.run('ALTER TABLE admin_settings ADD COLUMN month_duration INTEGER NOT NULL DEFAULT 5000');
           performUpdate();
         } else {

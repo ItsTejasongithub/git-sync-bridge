@@ -53,14 +53,6 @@ export function logBankingTransaction(params: BankingTransaction): { success: bo
 
     saveDatabase();
 
-    console.log(`✅ Banking transaction logged:`, {
-      type: params.transactionType,
-      amount: `₹${params.amount.toFixed(2)}`,
-      balanceAfter: `₹${params.balanceAfter.toFixed(2)}`,
-      gameYear: params.gameYear,
-      gameMonth: params.gameMonth,
-    });
-
     return { success: true };
   } catch (error: any) {
     console.error('Error logging banking transaction:', error);

@@ -17,7 +17,6 @@ class PriceStore {
    */
   enable(): void {
     this.enabled = true;
-    console.log('📊 Price store enabled (using server prices)');
   }
 
   /**
@@ -25,7 +24,6 @@ class PriceStore {
    */
   disable(): void {
     this.enabled = false;
-    console.log('📊 Price store disabled (using CSV prices)');
   }
 
   /**
@@ -39,8 +37,6 @@ class PriceStore {
    * Update prices from decrypted server data
    */
   updatePrices(newPrices: { [symbol: string]: number }): void {
-    const priceCount = Object.keys(newPrices).length;
-    console.log(`💰 Price store updated with ${priceCount} prices`);
     this.prices = { ...newPrices };
     this.lastUpdate = Date.now();
     this.notifyListeners();

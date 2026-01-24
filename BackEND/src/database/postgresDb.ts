@@ -25,7 +25,6 @@ let pool: Pool | null = null;
  */
 export async function initPostgresPool(): Promise<Pool> {
   if (pool) {
-    console.log('PostgreSQL pool already initialized');
     return pool;
   }
 
@@ -52,13 +51,11 @@ export async function initPostgresPool(): Promise<Pool> {
     const client = await pool.connect();
     const result = await client.query('SELECT NOW() as now');
     client.release();
-    console.log(`✅ PostgreSQL pool initialized - Connected at ${result.rows[0].now}`);
 
     // Log database info
     const tableCheck = await pool.query(`
       SELECT COUNT(*) as count FROM asset_prices
     `);
-    console.log(`   📊 Asset prices table has ${tableCheck.rows[0].count} records`);
 
     return pool;
   } catch (error) {
@@ -95,7 +92,6 @@ export async function closePostgresPool(): Promise<void> {
   if (pool) {
     await pool.end();
     pool = null;
-    console.log('PostgreSQL pool closed');
   }
 }
 

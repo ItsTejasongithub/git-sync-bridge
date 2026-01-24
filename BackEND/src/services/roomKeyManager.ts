@@ -51,10 +51,6 @@ export function initializeRoomKeys(roomId: string, symbols: string[]): RoomKeys 
 
   roomKeys.set(roomId, keys);
 
-  console.log(
-    `🔐 Room ${roomId}: Initialized encryption with ${sortedSymbols.length} symbols`
-  );
-
   return keys;
 }
 
@@ -75,7 +71,6 @@ export function encryptPriceData(
 ): EncryptedPayload | null {
   const keys = roomKeys.get(roomId);
   if (!keys) {
-    console.warn(`⚠️ No keys found for room ${roomId}`);
     return null;
   }
 
@@ -138,10 +133,6 @@ export function cleanupRoomKeys(roomId: string): boolean {
   const existed = roomKeys.has(roomId);
   roomKeys.delete(roomId);
 
-  if (existed) {
-    console.log(`🔓 Room ${roomId}: Encryption keys destroyed`);
-  }
-
   return existed;
 }
 
@@ -171,5 +162,4 @@ export function getRoomKeyStats(): {
 export function cleanupAllRoomKeys(): void {
   const count = roomKeys.size;
   roomKeys.clear();
-  console.log(`🔓 Cleaned up encryption keys for ${count} rooms`);
 }

@@ -52,7 +52,6 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
 
   const handleBuy = () => {
     if (isTransacting || localLock) {
-      console.warn('[TradeableAssetCard] Buy blocked - transaction pending or localLock active');
       return;
     }
 
@@ -96,7 +95,6 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
 
   const handleSell = () => {
     if (isTransacting || localLock) {
-      console.warn('[TradeableAssetCard] Sell blocked - transaction pending or localLock active');
       return;
     }
 

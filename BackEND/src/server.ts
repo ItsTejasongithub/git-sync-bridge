@@ -23,7 +23,7 @@ import priceRoutes from './routes/priceRoutes';
 
 // Performance: Reduce logging for better performance
 const VERBOSE_LOGGING = false; // Set to true only for debugging
-const log = VERBOSE_LOGGING ? console.log.bind(console) : () => { };
+const log = () => { };
 
 const app = express();
 const httpServer = createServer(app);
@@ -172,7 +172,6 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
 
       callback({ success: true, roomId });
 
-      console.log(`🎮 Room ${roomId} created by ${data.playerName}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create room';
       callback({ success: false, error: errorMessage });
@@ -220,7 +219,6 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         socket.emit('gameStateUpdate', { gameState: room.gameState });
       }
 
-      console.log(`👥 ${data.playerName} joined room ${data.roomId}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to join room';
       callback({ success: false, error: errorMessage });
@@ -279,7 +277,6 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
           const count = (data.adminSettings && typeof data.adminSettings.eventsCount === 'number') ? data.adminSettings.eventsCount : 3;
           roomManager.generateLifeEventsForRoom(roomId, count);
         } catch (err) {
-          console.warn('⚠️ Failed to generate life events for room', roomId, err);
         }
       }
 
@@ -301,7 +298,6 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
             return;
           }
 
-          console.log(`📈 Room ${roomId}: Market data initialized from PostgreSQL - encryption ready`);
         } catch (err) {
           console.error(`❌ Room ${roomId}: Market data init error:`, err);
           callback({
@@ -332,13 +328,11 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
 
       // Start server-side time progression - use admin setting or default 5000ms (5 seconds)
       const MONTH_DURATION_MS = data.adminSettings.monthDuration || 5000;
-      console.log(`⏱️  Month duration set to: ${MONTH_DURATION_MS}ms (${MONTH_DURATION_MS / 1000} seconds)`);
       const interval = gameSyncManager.startTimeProgression(roomId, MONTH_DURATION_MS);
       if (interval) {
         room.timeProgressionInterval = interval;
       }
 
-      console.log(`🚀 Game started in room ${roomId}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to start game';
       callback({ success: false, error: errorMessage });
@@ -425,7 +419,6 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
 
   // Handle disconnect
   socket.on('disconnect', () => {
-    console.log(`🔌 Client disconnected: ${socket.id}`);
     handlePlayerLeave(socket);
   });
 });
@@ -453,7 +446,6 @@ function handlePlayerLeave(socket: Socket) {
       });
     }
 
-    console.log(`👋 Player ${socket.data.playerName} left room ${result.roomId}`);
   }
 }
 
@@ -467,15 +459,11 @@ async function startServer() {
   try {
     // Initialize SQLite database (game data)
     await initializeDatabase();
-    console.log('✅ SQLite database initialized successfully');
 
     // Initialize PostgreSQL database (market data)
     try {
       await initPostgresPool();
-      console.log('✅ PostgreSQL pool initialized successfully');
     } catch (pgError) {
-      console.warn('⚠️ PostgreSQL initialization failed - market data will fall back to client CSV');
-      console.warn('   To use server-side prices, ensure Docker PostgreSQL is running');
       // Continue without PostgreSQL - game will work with client-side CSV
     }
 
@@ -483,15 +471,6 @@ async function startServer() {
     const localIP = getLocalNetworkIP();
 
     httpServer.listen(PORT as number, '0.0.0.0', () => {
-      console.log('\n🎮 ════════════════════════════════════════════════════════');
-      console.log('   BULLRUN - Multiplayer Server');
-      console.log('   ════════════════════════════════════════════════════════');
-      console.log(`   Status: ✅ Running`);
-      console.log(`   Local:  http://localhost:${PORT}`);
-      console.log(`   Network: http://${localIP}:${PORT}`);
-      console.log('   ════════════════════════════════════════════════════════');
-      console.log('   📱 Share the Network URL with players on your network!');
-      console.log('   ════════════════════════════════════════════════════════\n');
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
@@ -501,7 +480,7 @@ async function startServer() {
 
 // Handle graceful shutdown
 async function gracefulShutdown() {
-  console.log('\n\n🛑 Server shutting down...');
+
 
   // Cleanup room encryption keys
   cleanupAllRoomKeys();

@@ -58,31 +58,26 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
 
   useEffect(() => {
     // Connect to server on mount
-    console.log('🎮 MultiplayerContext: Initializing connection...');
 
     // Check if already connected before trying to connect
     if (socketService.isConnected()) {
-      console.log('🎮 Already connected, skipping connection attempt');
       setIsConnected(true);
     } else {
       socketService.connect();
       // Check initial connection state after a brief delay
       setTimeout(() => {
         const initiallyConnected = socketService.isConnected();
-        console.log('🎮 Initial connection state:', initiallyConnected);
         setIsConnected(initiallyConnected);
       }, 100);
     }
 
     // Event handlers
     const handleConnect = () => {
-      console.log('🎮 MultiplayerContext: Connected event received');
       setIsConnected(true);
       setPlayerId(socketService.getSocketId() ?? null);
     };
 
     const handleDisconnect = () => {
-      console.log('🎮 MultiplayerContext: Disconnected event received');
       setIsConnected(false);
       setPlayerId(null);
     }; 
@@ -139,15 +134,12 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
 
           if (typeof serverAny.pocketCash !== 'undefined' && serverAny.pocketCash !== prevAny.pocketCash) {
             // Make these warnings more visible during debugging so we can detect unexpected overwrites
-            console.warn('🔒 Multiplayer: Server pocketCash differs but will NOT overwrite local value', { serverPocketCash: serverAny.pocketCash, localPocketCash: prevAny.pocketCash });
           }
 
           if (serverAny.holdings && JSON.stringify(serverAny.holdings) !== JSON.stringify(prevAny.holdings)) {
-            console.debug('🔒 Multiplayer: Server holdings differ but will NOT overwrite local holdings');
           }
 
           if (serverAny.fixedDeposits && JSON.stringify(serverAny.fixedDeposits) !== JSON.stringify(prevAny.fixedDeposits)) {
-            console.debug('🔒 Multiplayer: Server fixedDeposits differ but will NOT overwrite local fixedDeposits');
           }
         } catch (err) {
           // Swallow any stringify errors in debug logging
@@ -197,7 +189,6 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
     };
 
     const handleTimeProgression = (data: { year: number; month: number }) => {
-      // console.log('⏰ Time progression received:', data);
       setGameState(prev => {
         if (!prev) return prev;
         // Prevent time updates if the game is already marked ended
@@ -211,7 +202,6 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
     };
 
     const handleGameEnded = (data: { finalYear: number; finalMonth: number }) => {
-      console.log(`🎮 Game ended - Year ${data.finalYear}, Month ${data.finalMonth}`);
       // Ensure clients set the final year/month and mark game as ended so UI can navigate to end screen
       setGameState(prev => {
         if (!prev) return prev;
@@ -232,7 +222,6 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
           return;
         }
 
-        console.log(`📡 Received fetchFinalLeaderboardFromDB for room ${data.roomId} - host fetching from DB...`);
         const res = await fetchFinalLeaderboard(data.roomId);
 
         if (res.success && res.leaderboard) {
@@ -244,7 +233,6 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
             const match = roomInfo?.players.find(p => (p.name || '').trim().toLowerCase() === normalizedName);
 
             if (!match) {
-              console.warn(`Host: No in-room player matched DB playerName='${pl.playerName}' — falling back to DB uniqueId as id`);
               // No in-room match: use DB unique id (pl.playerId) as identifier
               return {
                 id: pl.playerId ?? pl.playerName,
@@ -269,7 +257,6 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
             // If there are multiple players with the same normalized name, log a warning and pick the first match
             const duplicates = roomInfo?.players.filter(p => (p.name || '').trim().toLowerCase() === normalizedName) || [];
             if (duplicates.length > 1) {
-              console.warn(`Ambiguous player name '${pl.playerName}' matched ${duplicates.length} room players; using first match's socket id`);
             }
 
             // Use existing in-room id to ensure UI interactions (toggles, quiz flags) map correctly
@@ -293,7 +280,6 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
             };
           });
 
-          console.log(`✅ Host: final leaderboard fetched from DB (${mapped.length} players)`);
 
           // Update in-memory room players with final DB values where possible so host UI reflects DB
           setRoomInfo(prev => {
@@ -372,7 +358,6 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
           // If duplicate names exist, warn and pick the first match
           const duplicates = roomInfo?.players.filter(p => (p.name || '').trim().toLowerCase() === normalizedName) || [];
           if (duplicates.length > 1) {
-            console.warn(`Ambiguous player name '${pl.playerName}' matched ${duplicates.length} room players; using first match`);
           }
 
           return {

@@ -127,8 +127,6 @@ export function bulkLogHoldings(holdings: LogHoldingParams[]): { success: boolea
     db.run('COMMIT');
     saveDatabase();
 
-    console.log(`✅ Bulk logged ${insertCount} holdings to database`);
-
     return {
       success: true,
       message: `Successfully logged ${insertCount} holdings`,
@@ -142,7 +140,6 @@ export function bulkLogHoldings(holdings: LogHoldingParams[]): { success: boolea
       const db = getDatabase();
       db.run('ROLLBACK');
     } catch (rollbackError) {
-      console.error('Rollback failed:', rollbackError);
     }
 
     return {

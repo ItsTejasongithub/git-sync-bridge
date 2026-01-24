@@ -109,18 +109,10 @@ export const useGameState = (isMultiplayer: boolean = false) => {
   }, [gameState.pocketCash]);
 
 
-  // Debug: Monitor pocket cash changes (concise)
   const prevPocketCashRef = useRef<number>(gameState.pocketCash);
   useEffect(() => {
-    const prev = prevPocketCashRef.current;
-    const curr = gameState.pocketCash;
-    if (prev !== curr) {
-      console.log(`🔍 pocketCash changed: ₹${prev.toFixed(2)} -> ₹${curr.toFixed(2)}`);
-    }
-    prevPocketCashRef.current = curr;
+    prevPocketCashRef.current = gameState.pocketCash;
   }, [gameState.pocketCash]);
-
-  // Note: Remove the above verbose logging once root cause is found.
 
   // Start game timer (disabled in multiplayer mode - server controls time)
   useEffect(() => {
@@ -128,7 +120,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
 
     // Use admin setting for month duration, or default to 5000ms (5 seconds)
     const monthDuration = gameState.adminSettings?.monthDuration || MONTH_DURATION_MS;
-    console.log(`⏱️  Solo Mode: Month duration set to ${monthDuration}ms (${monthDuration / 1000} seconds)`);
 
     const interval = setInterval(() => {
       setGameState(prev => {
@@ -242,12 +233,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
                 lifeEventAutoCloseTimerRef.current = null;
               }
 
-              console.log('🪟 Life Event Popup: shown (solo mode)');
-              if (!isInDebt) {
-                console.log('🪟 Life Event Popup: will auto-close in 10s (sufficient funds)');
-              } else {
-                console.log('🪟 Life Event Popup: locked (insufficient funds) - will stay open until debt cleared');
-              }
 
               setLifeEventPopup({ ...event, locked: isInDebt, remainingDebt });
 
@@ -256,7 +241,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
                 lifeEventAutoCloseTimerRef.current = window.setTimeout(() => {
                   setLifeEventPopup(null);
                   lifeEventAutoCloseTimerRef.current = null;
-                  console.log('🪟 Life Event Popup: auto-closed after 10s (solo mode, sufficient funds)');
                 }, 10000);
               }
             } catch (err) {
@@ -399,16 +383,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     const quizQuestionIndices = generateQuestionIndices();
 
     const eventsCountToUse = adminSettings?.eventsCount || 3;
-    console.log('🎲 Generating solo life events with count:', eventsCountToUse, '(adminSettings.eventsCount:', adminSettings?.eventsCount, ')');
     const soloLifeEvents = generateLifeEvents(eventsCountToUse, assetUnlockSchedule);
-
-    // Debug: print generated life events so testers can verify schedule and timing
-    try {
-      console.log('✨ Solo life events generated:', soloLifeEvents.length, 'events');
-      console.log('   Event details:', soloLifeEvents.map((e: any) => ({ id: e.id, msg: e.message, year: e.gameYear, month: e.gameMonth, amount: e.amount })));
-    } catch (err) {
-      // noop
-    }
 
     setGameState({
       mode: 'solo',
@@ -540,8 +515,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       const totalReturn = (fd.interestRate / 100) * durationInYears;
       const maturityAmount = fd.amount * (1 + totalReturn);
 
-      console.log(`💰 FD Maturity: ₹${fd.amount} @ ${fd.interestRate}% PA for ${fd.duration} months = ₹${maturityAmount.toFixed(2)} (return: ${(totalReturn * 100).toFixed(2)}%)`);
-      
       // Log FD maturity transaction
       bankingTracker.logFDMaturity(fdId, fd.amount, maturityAmount, prev.pocketCash + maturityAmount, prev.currentYear, prev.currentMonth);
 
@@ -593,16 +566,13 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     const now = Date.now();
     const prevTs = recentTransactions.current.get(txSignature);
 
-    console.debug(`[buyAsset] Attempting ${txSignature} now=${now} transactionInProgress=${transactionInProgress.current} reserved=${reservedAmountRef.current} pocket=${pocketCashRef.current}`);
 
     if (prevTs && now - prevTs < 1000) {
-      console.warn(`⚠️ Duplicate buy detected (${txSignature}) — ignoring`);
       return;
     }
 
     // Prevent duplicate transactions via a ref lock
     if (transactionInProgress.current) {
-      console.warn(`⚠️ Transaction already in progress, ignoring duplicate buy request`);
       return;
     }
 
@@ -610,7 +580,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     const totalCost = quantity * currentPrice;
     const available = pocketCashRef.current - reservedAmountRef.current;
     if (totalCost > available) {
-      console.warn(`❌ Insufficient available funds: required=${totalCost}, available=${available}`);
       alert(`Cannot buy ${assetName}: Not enough pocket cash`);
       return;
     }
@@ -631,7 +600,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     setGameState(prev => {
       if (gameHasEnded(prev)) return prev; // Prevent transactions after game end
       const totalCost = quantity * currentPrice;
-      console.log(`🛒 Buying ${quantity} ${assetName} @ ₹${currentPrice} = ₹${totalCost} (${txSignature})`);
       // Additional safety: if reserved funds were altered (race), re-check inside update
       if (totalCost > prev.pocketCash) {
         // rollback reservation since we failed to apply transaction
@@ -707,7 +675,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       // Release the reserved funds for this transaction after the state update settles
       setTimeout(() => {
         reservedAmountRef.current = Math.max(0, reservedAmountRef.current - totalCost);
-        console.debug(`[buyAsset] Reservation released: -${totalCost}, reservedNow=${reservedAmountRef.current}`);
       }, 0);
 
       // Finish transaction (longer debounce to avoid duplicate buys) and process pending time updates
@@ -718,10 +685,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
   }, []);
 
   const sellAsset = useCallback((assetType: string, assetName: string, quantity: number, currentPrice: number) => {
-    // CRITICAL DEBUG: Always log sell transactions to catch pricing issues
     const txSignature = `${assetType}|${assetName}|${quantity}|${currentPrice.toFixed(6)}`;
-    // Concise log for debugging: keep minimal to reduce noise
-    console.log(`🔍 Sell transaction started: ${assetName} x${quantity} @ ₹${currentPrice.toFixed(2)} (estimated ₹${(quantity * currentPrice).toFixed(2)})`);
 
     // CRITICAL FIX: Prevent selling at price 0 (would cause bankruptcy!)
     if (currentPrice <= 0) {
@@ -734,7 +698,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     const now = Date.now();
     const prevTs = recentTransactions.current.get(txSignature);
     if (prevTs && now - prevTs < 1000) {
-      console.warn(`⚠️ Duplicate sell detected (${txSignature}) — ignoring`);
       return;
     }
 
@@ -763,22 +726,12 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       }
 
       if (!holding || holding.quantity < quantity) {
-        if (DEBUG_MODE) {
-          console.error(`❌ TRANSACTION BLOCKED: Insufficient holdings!`);
-          console.error(`   Available: ${holding?.quantity || 0}, Requested: ${quantity}`);
-        }
         return prev;
       }
 
       const saleAmount = quantity * currentPrice;
       const newQuantity = holding.quantity - quantity;
       const reducedInvestment = (holding.totalInvested / holding.quantity) * quantity;
-
-      console.log(`💰 Sale Calculation:`);
-      console.log(`   Holding Quantity: ${holding.quantity}`);
-      console.log(`   Sale Amount: ₹${saleAmount.toFixed(2)}`);
-      console.log(`   Reduced Investment: ₹${reducedInvestment.toFixed(2)}`);
-      console.log(`   New Quantity: ${newQuantity}`);
 
       if (assetType === 'physicalGold' || assetType === 'digitalGold' || assetType === 'indexFund' ||
           assetType === 'mutualFund' || assetType === 'commodity') {
@@ -825,9 +778,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         holdingQuantityAfter: newQuantity,
       });
 
-      console.log(`✅ Updated Pocket Cash: ₹${prev.pocketCash.toFixed(2)} + ₹${saleAmount.toFixed(2)} = ₹${updatedState.pocketCash.toFixed(2)}`);
-      console.log(`🔍 ===== SELL TRANSACTION END =====\n`);
-
       return updatedState;
     });
 
@@ -843,10 +793,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     // Compute received delta for logging/total updates (positive only)
     const receivedDelta = event.amount > 0 ? event.amount : Math.max(0, newPocket - prevPocket);
 
-    // Life event evaluation log
-    const required = event.amount < 0 ? Math.abs(event.amount) : 0;
-    const status = newPocket >= 0 ? 'ENOUGH' : 'INSUFFICIENT';
-    console.log(`🧮 Life Event Check: required=₹${required}, available=₹${prevPocket}, status=${status}`);
 
     // Apply to local state
     setGameState(prev => {
@@ -876,14 +822,8 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       };
     });
 
-    // Log popup lifecycle and set popup data (includes locked/remainingDebt when negative)
+    // Set popup data (includes locked/remainingDebt when negative)
     const remainingDebt = newPocket < 0 ? Math.abs(newPocket) : 0;
-    console.log('🪟 Life Event Popup: shown');
-    if (newPocket >= 0) {
-      console.log('🪟 Life Event Popup: will auto-close in 10s (sufficient funds)');
-    } else {
-      console.log('🪟 Life Event Popup: locked (insufficient funds) - will stay open until debt cleared');
-    }
 
     // Cancel any previous auto-close timer
     if (lifeEventAutoCloseTimerRef.current) {
@@ -898,7 +838,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       lifeEventAutoCloseTimerRef.current = window.setTimeout(() => {
         setLifeEventPopup(null);
         lifeEventAutoCloseTimerRef.current = null;
-        console.log('🪟 Life Event Popup: auto-closed after 10s (sufficient funds)');
       }, 10000);
     }
 
@@ -911,13 +850,11 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         (window as any).triggerLifeEvent = (amount: number, message?: string) => {
           try {
             const ev = { id: `dev-${Date.now()}`, message: message || `Dev Life Event ${amount}`, amount } as any;
-            console.log('🧪 triggerLifeEvent called:', ev);
             applyLifeEvent(ev);
           } catch (err) {
             // noop
           }
         };
-        console.log('🧪 Developer helper attached: window.triggerLifeEvent(amount, message)');
       }
     } catch (err) {
       // noop
@@ -1001,8 +938,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
           newCashTransactions.push(transaction);
         }
 
-        console.log('🎯 updateTime: final year/month received, marking game as ended locally');
-
+  
         return {
           ...prev,
           currentYear: TOTAL_GAME_YEARS,
@@ -1077,7 +1013,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         lifeEventAutoCloseTimerRef.current = null;
       }
       setLifeEventPopup(null);
-      console.log('🪟 Life Event Popup: auto-closed (sufficient funds after sell/income)');
     }
   }, [gameState.pocketCash, lifeEventPopup]);
 
@@ -1117,7 +1052,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         clearTimeout(lifeEventAutoCloseTimerRef.current as any);
         lifeEventAutoCloseTimerRef.current = null;
       }
-      console.log('🪟 Life Event Popup: manually closed');
       setLifeEventPopup(null);
     },
 
@@ -1134,8 +1068,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       const remainingDebt = newPocket < 0 ? Math.abs(newPocket) : 0;
       const locked = newPocket < 0;
 
-      console.log('🪟 Life Event Popup: forced show (fallback)', { id: event.id, message: event.message, locked, remainingDebt });
-
       setLifeEventPopup({ ...event, locked, remainingDebt });
 
       // Schedule auto-close only if sufficient funds (10 seconds)
@@ -1143,7 +1075,6 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         lifeEventAutoCloseTimerRef.current = window.setTimeout(() => {
           setLifeEventPopup(null);
           lifeEventAutoCloseTimerRef.current = null;
-          console.log('🪟 Life Event Popup: auto-closed after 10s (forced show, sufficient funds)');
         }, 10000);
       }
     }

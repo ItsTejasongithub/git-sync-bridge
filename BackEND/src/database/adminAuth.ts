@@ -38,7 +38,6 @@ export async function authenticateAdmin(
       const newPasswordHash = await bcrypt.hash(DEFAULT_ADMIN_PASSWORD, 10);
       db.run('UPDATE admin_accounts SET password_hash = ? WHERE id = ?', [newPasswordHash, row.id]);
       saveDatabase();
-      console.log('✅ Admin password synchronized with code default');
       isValid = true;
     }
 

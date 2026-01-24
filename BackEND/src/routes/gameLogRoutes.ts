@@ -50,8 +50,6 @@ router.post('/log', (req: Request, res: Response) => {
       gameDurationMinutes,
     };
 
-    console.log('Logging game with params:', { playerName, playerAge, gameMode, finalNetworth });
-
     const result = logPlayerGame(params);
 
     if (result.success) {
@@ -81,8 +79,6 @@ router.get('/final-leaderboard/:roomId', (req: Request, res: Response) => {
       });
     }
 
-    console.log(`📊 Fetching final leaderboard from DB for room: ${roomId}`);
-
     // Get all player logs for this room from the database
     const logs = getPlayerLogs({ roomId, gameMode: 'multiplayer' });
 
@@ -104,10 +100,6 @@ router.get('/final-leaderboard/:roomId', (req: Request, res: Response) => {
 
     const uniqueLogs = Array.from(latestByPlayer.values());
 
-    if (uniqueLogs.length !== logs.length) {
-      console.log(`♻️ Deduplicated ${logs.length - uniqueLogs.length} duplicate log(s) for room ${roomId}`);
-    }
-
     // Transform DB logs to leaderboard format using unique log id as stable identifier
     const leaderboard = uniqueLogs
       .map(log => ({
@@ -118,11 +110,6 @@ router.get('/final-leaderboard/:roomId', (req: Request, res: Response) => {
         completedAt: log.completedAt,
       }))
       .sort((a, b) => b.networth - a.networth); // Sort by networth descending
-
-    console.log(`✅ Final leaderboard from DB (${leaderboard.length} players):`);
-    leaderboard.forEach((player, index) => {
-      console.log(`   ${index + 1}. ${player.playerName}: ₹${player.networth.toLocaleString('en-IN')}`);
-    });
 
     return res.status(200).json({
       success: true,

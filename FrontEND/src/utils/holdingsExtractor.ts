@@ -247,19 +247,6 @@ export function extractHoldingsData(
     });
   }
 
-  // Log summary
-  const totalInvested = holdings.reduce((sum, h) => sum + h.totalInvested, 0);
-  const totalValue = holdings.reduce((sum, h) => sum + h.currentValue, 0);
-  const totalUnrealizedPL = holdings.reduce((sum, h) => sum + h.unrealizedPL, 0);
-
-  console.log('💼 Holdings extracted:', {
-    count: holdings.length,
-    totalInvested: `₹${totalInvested.toLocaleString('en-IN')}`,
-    totalValue: `₹${totalValue.toLocaleString('en-IN')}`,
-    unrealizedPL: `₹${totalUnrealizedPL.toLocaleString('en-IN')}`,
-    plPercentage: totalInvested > 0 ? `${((totalUnrealizedPL / totalInvested) * 100).toFixed(2)}%` : '0%',
-  });
-
   return holdings;
 }
 

@@ -66,7 +66,6 @@ export class RoomManager {
     this.rooms.set(roomId, room);
     this.playerToRoom.set(hostId, roomId);
 
-    console.log(`✅ Room created: ${roomId} by ${hostName}`);
     return roomId;
   }
 
@@ -110,7 +109,6 @@ export class RoomManager {
     room.players.set(playerId, newPlayer);
     this.playerToRoom.set(playerId, roomId);
 
-    console.log(`✅ Player ${playerName} joined room ${roomId}`);
     return { success: true, room };
   }
 
@@ -132,12 +130,9 @@ export class RoomManager {
     room.players.delete(playerId);
     this.playerToRoom.delete(playerId);
 
-    console.log(`👋 Player ${player?.name} left room ${roomId}`);
-
     // If host left or room is empty, delete room
     if (wasHost || room.players.size === 0) {
       this.deleteRoom(roomId);
-      console.log(`🗑️ Room ${roomId} deleted`);
     }
 
     return { roomId, wasHost };
@@ -177,7 +172,6 @@ export class RoomManager {
     if (!room) return false;
 
     room.adminSettings = settings;
-    console.log(`⚙️ Admin settings updated for room ${roomId}`);
     return true;
   }
 
@@ -201,7 +195,6 @@ export class RoomManager {
     room.gameState.currentYear = 1;
     room.gameState.currentMonth = 1;
 
-    console.log(`🎮 Game started in room ${roomId} with ${room.players.size} players`);
     return { success: true };
   }
 
@@ -218,7 +211,6 @@ export class RoomManager {
       try {
         const events = generateLifeEvents(eventsCount, gameState.assetUnlockSchedule);
         mapping[playerId] = events;
-        console.log(`✨ Generated ${events.length} life events for player ${playerId} in room ${roomId}`);
       } catch (err) {
         console.error('Failed to generate life events for player', playerId, err);
         mapping[playerId] = [];
@@ -256,14 +248,6 @@ export class RoomManager {
         return 0;
       });
 
-    // Debug logging
-    console.log(`📊 Leaderboard for room ${roomId}:`);
-    console.log(`   Total players: ${room.players.size}`);
-    console.log(`   Leaderboard entries: ${leaderboard.length}`);
-    room.players.forEach(p => {
-      console.log(`   - ${p.name} (${p.id.substring(0, 6)}...): isHost=${p.isHost}, networth=${p.networth}`);
-    });
-
     return leaderboard;
   }
 
@@ -287,7 +271,6 @@ export class RoomManager {
       room.gameState.playersWaitingForQuiz.push(playerId);
     }
 
-    console.log(`📝 Quiz started for player ${player.name}: ${quizCategory}`);
     return true;
   }
 
@@ -312,10 +295,8 @@ export class RoomManager {
     if (shouldResume) {
       room.gameState.isPaused = false;
       room.gameState.pauseReason = null;
-      console.log(`▶️ All quizzes completed. Game resumed in room ${room.id}`);
     }
 
-    console.log(`✅ Quiz completed for player ${player.name}: ${quizCategory}`);
     return shouldResume;
   }
 
@@ -331,7 +312,6 @@ export class RoomManager {
     room.gameState.isPaused = !room.gameState.isPaused;
     room.gameState.pauseReason = room.gameState.isPaused ? 'manual' : null;
 
-    console.log(`⏸️ Game ${room.gameState.isPaused ? 'paused' : 'resumed'} in room ${roomId}`);
     return true;
   }
 
@@ -348,7 +328,6 @@ export class RoomManager {
 
     roomsToDelete.forEach(roomId => {
       this.deleteRoom(roomId);
-      console.log(`🧹 Cleaned up old room: ${roomId}`);
     });
   }
 }

@@ -117,10 +117,6 @@ export async function preloadPricesForGame(
   startYear: number,
   totalYears: number = 20
 ): Promise<void> {
-  console.log(
-    `📈 Preloading prices for ${symbols.length} symbols, ${totalYears} years from ${startYear}`
-  );
-
   const startTime = Date.now();
 
   // Batch query for all prices in the date range
@@ -187,10 +183,6 @@ export async function preloadPricesForGame(
     priceCache.set(key, snapshot);
   });
 
-  const duration = Date.now() - startTime;
-  console.log(
-    `   ✅ Preloaded ${monthlyPrices.size} monthly snapshots in ${duration}ms`
-  );
 }
 
 /**
@@ -233,7 +225,6 @@ export function getGameSymbols(selectedAssets: any): string[] {
  */
 export function clearPriceCache(): void {
   priceCache.clear();
-  console.log('Price cache cleared');
 }
 
 /**

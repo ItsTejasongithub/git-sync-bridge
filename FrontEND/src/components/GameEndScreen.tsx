@@ -116,7 +116,6 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
     if (!isMultiplayer || !onFinalNetworthSync) return;
 
     hasSyncedRef.current = true;
-    console.log('🔄 Syncing final networth to server:', finalNetworth);
     onFinalNetworthSync(finalNetworth, breakdown);
   }, [isMultiplayer, finalNetworth, breakdown, onFinalNetworthSync]);
 
@@ -124,12 +123,10 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
   useEffect(() => {
     if (hasLoggedRef.current) return;
 
-    console.log('🎮 GameEndScreen mounted:', { playerName, playerAge, hasAdminSettings: !!gameState.adminSettings });
 
     // Only log if we have player name and admin settings
     if (playerName && gameState.adminSettings) {
       hasLoggedRef.current = true;
-      console.log('✅ Logging game to database...');
 
       // Calculate game duration in minutes
       const gameDuration = gameState.gameStartTime
@@ -149,17 +146,14 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
         gameDurationMinutes: gameDuration,
       }).then(async response => {
         if (response.success) {
-          console.log('✅ Game logged successfully! Log ID:', response.logId, 'Unique ID:', response.uniqueId);
           setLoggedGameId(response.logId !== undefined ? response.logId : null);
           setLoggedGameUniqueId(response.uniqueId || null);
 
           // Upload all trades, banking, cash transactions, and holdings to database
           if (response.uniqueId && playerName) {
-            console.log('📊 Uploading game data to database...');
 
             // Extract holdings data with current prices for accurate P&L tracking
             const holdingsData = extractHoldingsDataWithPrices(gameState, getPrice);
-            console.log(`💼 Extracted ${holdingsData.length} holdings positions`);
 
             await tradeTracker.uploadToDatabase(
               response.uniqueId,

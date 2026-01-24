@@ -79,8 +79,6 @@ export const PlayerGameWrapper: React.FC = () => {
     const handler = (data: any) => {
       try {
         if (data && data.event) {
-          // Log reception and apply event (server may include postPocketCash)
-          console.log(`🔔 Life event received from server: ${data.event.message} (${data.event.amount}), postPocketCash=${typeof data.postPocketCash === 'number' ? `₹${data.postPocketCash}` : 'n/a'}`);
           // Pass server-calculated postPocketCash (if provided) so client can sync deterministically
           applyLifeEvent({ ...data.event, postPocketCash: data.postPocketCash });
 
@@ -90,11 +88,11 @@ export const PlayerGameWrapper: React.FC = () => {
               forceShowLifeEventPopup(data.event);
             }
           } catch (err) {
-            // Non-critical; proceed
+            console.error('Failed to force show life event popup:', err);
           }
         }
       } catch (err) {
-        console.warn('Failed to apply life event from server', err);
+        console.error('Failed to apply life event from server:', err);
       }
     };
 
@@ -127,7 +125,6 @@ export const PlayerGameWrapper: React.FC = () => {
       return;
     }
 
-    console.log('🔄 PlayerGameWrapper: Sending final networth to server:', networth);
     updatePlayerState(networth, portfolioBreakdown);
   }, [roomInfo?.isHost, updatePlayerState]);
 

@@ -70,7 +70,6 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
     const response = await adminSettingsApi.getSettings();
     if (response.success && response.settings) {
       setSettings(response.settings);
-      console.log('⚙️ AdminPanelModal: loaded settings.eventsCount =', response.settings.eventsCount);
     }
     setLoading(false);
   };

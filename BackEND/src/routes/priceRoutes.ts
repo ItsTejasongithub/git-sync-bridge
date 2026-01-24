@@ -29,7 +29,6 @@ router.get('/current', async (req: Request, res: Response) => {
     const multiplayerMode = req.headers['x-multiplayer-mode'];
 
     if (multiplayerMode === 'true') {
-      console.warn(`⚠️ SECURITY: Blocked direct API access from multiplayer client`);
       return res.status(403).json({
         success: false,
         error: 'Direct API access forbidden in multiplayer mode. Use encrypted WebSocket.',
@@ -132,7 +131,6 @@ router.post('/batch', async (req: Request, res: Response) => {
           });
         });
       } catch (priceError: any) {
-        console.error(`⚠️ Error fetching prices for ${currentYear}-${currentMonth}:`, priceError.message);
         // Add zero prices for this month to avoid breaking the response
         symbols.forEach((symbol: string) => {
           results[symbol].push({

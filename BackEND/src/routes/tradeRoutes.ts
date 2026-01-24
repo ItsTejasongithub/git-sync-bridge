@@ -11,24 +11,12 @@ router.post('/bulk', async (req: Request, res: Response) => {
 
     const playerName = bodyPlayerName || (player && player.name) || null;
 
-    console.log('📊 Bulk upload request:', {
-      logId,
-      uniqueId,
-      playerName,
-      tradeCount: trades?.length,
-      bankingTransactionCount: bankingTransactions?.length,
-      cashTransactionCount: cashTransactions?.length,
-      holdingsCount: holdings?.length,
-      reportId,
-    });
-
     // Resolve numeric logId from uniqueId if provided
     let resolvedLogId: number | undefined = undefined;
     if (typeof uniqueId === 'string') {
       const { getPlayerLogByUniqueId } = await import('../database/playerLogs');
       const pl = getPlayerLogByUniqueId(uniqueId);
       if (!pl) {
-        console.error('❌ Unknown uniqueId for upload', uniqueId);
         return res.status(400).json({ success: false, message: 'Unknown uniqueId' });
       }
       resolvedLogId = pl.id;
@@ -38,7 +26,6 @@ router.post('/bulk', async (req: Request, res: Response) => {
 
     // Validate
     if (resolvedLogId === undefined || !playerName) {
-      console.error('❌ Validation failed:', { resolvedLogId, playerName });
       return res.status(400).json({
         success: false,
         message: 'uniqueId or logId and playerName are required',
@@ -72,9 +59,7 @@ router.post('/bulk', async (req: Request, res: Response) => {
         });
         results.trades.push(result);
       }
-      console.log(`✅ Trades uploaded: ${results.trades.filter(r => r.success).length}/${trades.length}`);
     } else {
-      console.log('⚠️ No trades to upload');
     }
 
     // Log banking transactions
@@ -98,9 +83,7 @@ router.post('/bulk', async (req: Request, res: Response) => {
         });
         results.bankingTransactions.push(result);
       }
-      console.log(`✅ Banking transactions uploaded: ${results.bankingTransactions.filter(r => r.success).length}/${bankingTransactions.length}`);
     } else {
-      console.log('⚠️ No banking transactions to upload');
     }
 
     // Log cash transactions (life events & recurring income)
@@ -121,12 +104,9 @@ router.post('/bulk', async (req: Request, res: Response) => {
           });
           results.cashTransactions.push(result);
         }
-        console.log(`✅ Cash transactions uploaded: ${results.cashTransactions.filter(r => r.success).length}/${cashTransactions.length}`);
       } catch (err) {
-        console.warn('⚠️ Failed to upload cash transactions:', err);
       }
     } else {
-      console.log('⚠️ No cash transactions to upload');
     }
 
     // Log holdings (end-of-game positions for unrealized P&L tracking)
@@ -150,12 +130,9 @@ router.post('/bulk', async (req: Request, res: Response) => {
           }))
         );
         results.holdings = holdingsResult;
-        console.log(`✅ Holdings uploaded: ${holdingsResult.count || 0} positions`);
       } catch (err) {
-        console.warn('⚠️ Failed to upload holdings:', err);
       }
     } else {
-      console.log('⚠️ No holdings to upload');
     }
 
     // Persist AI report summary (if provided) for later retrieval
@@ -185,10 +162,8 @@ router.post('/bulk', async (req: Request, res: Response) => {
           ]
         );
         saveDatabase();
-        console.log('💾 AI report summary saved:', reportId);
       }
     } catch (err) {
-      console.warn('⚠️ Failed to save AI report summary:', err);
     }
 
     const tradeSuccess = results.trades.filter(r => r.success).length;

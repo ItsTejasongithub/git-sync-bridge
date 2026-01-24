@@ -104,7 +104,6 @@ export function usePrices(options: UsePricesOptions): UsePricesReturn {
       // SECURITY: In multiplayer, ONLY use encrypted WebSocket prices
       // Do NOT fall back to API if encryption is not ready
       if (!priceStore.isEnabled()) {
-        console.log('⏳ Waiting for encrypted price broadcast (key exchange in progress)...');
         return;
       }
       // Encrypted prices are being received via WebSocket - no API fetch needed

@@ -86,7 +86,6 @@ function storeAIResponse(params: AIReportParams, report: string): void {
 
     // Write back to file
     fs.writeFileSync(AI_RESPONSES_FILE, JSON.stringify(responses, null, 2), 'utf-8');
-    console.log(`AI Response stored: ${responseEntry.reportId}`);
   } catch (error) {
     console.error('Failed to store AI response:', error);
     // Don't throw - storage failure shouldn't break report generation

@@ -45,9 +45,6 @@ export async function initializeDecryption(
     });
 
     initialized = true;
-    console.log(
-      `🔐 Decryption initialized with ${Object.keys(assetMapping).length} symbols`
-    );
   } catch (error) {
     console.error('Failed to initialize decryption:', error);
     throw error;
@@ -62,7 +59,6 @@ export async function decryptPriceData(
   payload: EncryptedPayload
 ): Promise<{ [symbol: string]: number } | null> {
   if (!sessionKey || !initialized) {
-    console.warn('Decryption not initialized');
     return null;
   }
 
@@ -119,7 +115,6 @@ export function clearDecryptionState(): void {
   assetIndexMap = {};
   indexAssetMap = {};
   initialized = false;
-  console.log('🔓 Decryption state cleared');
 }
 
 /**

@@ -9,4 +9,13 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
   },
+  build: {
+    minify: 'terser',
+    sourcemap: false,
+    terserOptions: {
+      compress: {
+        drop_console: false,
+      }
+    }
+  }
 })

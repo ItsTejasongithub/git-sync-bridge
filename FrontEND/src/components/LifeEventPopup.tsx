@@ -25,10 +25,7 @@ export const LifeEventPopup: React.FC<Props> = ({ event, onClose }) => {
     }, 300);
   };
 
-  // Diagnostic: log mount/unmount and visible props
   useEffect(() => {
-    console.log('🪟 LifeEventPopup mounted', { id: event.id, message: event.message, amount: event.amount, locked: event.locked, postPocketCash: event.postPocketCash });
-    return () => console.log('🪟 LifeEventPopup unmounted', { id: event.id });
   }, [event]);
 
   // Auto-dismiss timing based on scenario

@@ -27,15 +27,6 @@ class BankingTracker {
     };
 
     this.bankingLogs.push(logWithId);
-
-    console.log(`💳 Banking Transaction Logged:`, {
-      type: transaction.transactionType,
-      subType: transaction.subType || 'N/A',
-      amount: `₹${transaction.amount.toFixed(2)}`,
-      balanceAfter: `₹${transaction.balanceAfter.toFixed(2)}`,
-      time: `Y${transaction.gameYear}M${transaction.gameMonth}`,
-      fdId: transaction.fdId || 'N/A',
-    });
   }
 
   logDeposit(amount: number, balanceAfter: number, gameYear: number, gameMonth: number, remarks?: string) {
@@ -264,7 +255,6 @@ class BankingTracker {
 
   clearBankingLogs() {
     this.bankingLogs = [];
-    console.log('🗑️ Banking logs cleared');
   }
 }
 

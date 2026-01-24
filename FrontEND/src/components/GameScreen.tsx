@@ -115,14 +115,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
   // Request key exchange when joining a multiplayer game
   useEffect(() => {
-    console.log(`🔍 Key exchange check: showLeaderboard=${showLeaderboard}, isUsingServerPrices=${socketService.isUsingServerPrices()}`);
-
     if (showLeaderboard && !socketService.isUsingServerPrices()) {
-      console.log('🔑 Requesting key exchange...');
       // SECURITY: Key exchange is MANDATORY for multiplayer
       socketService.requestKeyExchange().then((result) => {
         if (result.success) {
-          console.log('🔐 Key exchange successful - server prices enabled');
         } else {
           // FAIL HARD - encryption is required for multiplayer
           console.error('❌ CRITICAL SECURITY ERROR: Key exchange failed');
@@ -152,10 +148,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           setTimeout(() => onReturnToMenu(), 1000);
         }
       });
-    } else {
-      if (showLeaderboard) {
-        console.log('✅ Already using server prices, skipping key exchange');
-      }
     }
   }, [showLeaderboard]);
 
@@ -554,19 +546,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   // Use TOTAL_GAME_YEARS so detection remains correct even if constants change
   const isGameEnded = !gameState.isStarted && gameState.currentYear >= TOTAL_GAME_YEARS;
 
-  // Debug: log end detection (dev-only)
-  if (isGameEnded) {
-    console.debug('GameScreen: detected game end', { isStarted: gameState.isStarted, currentYear: gameState.currentYear, currentMonth: gameState.currentMonth, mode: gameState.mode });
-  }
-
-  // Debug: log popup prop changes
   // IMPORTANT: This hook must be before the early return to avoid hooks order violation
   useEffect(() => {
-    if (lifeEventPopup) {
-      console.log('🪟 GameScreen: lifeEventPopup prop set', lifeEventPopup);
-    } else {
-      // console.log('🪟 GameScreen: lifeEventPopup cleared');
-    }
   }, [lifeEventPopup]);
 
   // If game ended, show end screen

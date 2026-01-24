@@ -194,8 +194,6 @@ export const AIReportModal: React.FC<AIReportModalProps> = ({
           day: 'numeric',
         }),
       });
-
-      console.log('✅ PDF generated with selectable text');
     } catch (error) {
       console.error('❌ PDF generation failed:', error);
       alert('Failed to generate PDF. Please try again.');

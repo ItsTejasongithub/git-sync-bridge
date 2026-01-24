@@ -62,7 +62,6 @@ export function logPlayerGame(params: LogPlayerGameParams): { success: boolean; 
 
     // Generate unique string ID for this log entry
     const uniqueLogId = generateUniqueLogId();
-    console.log(`🔑 Generated unique log ID: ${uniqueLogId}`);
 
     db.run(
       `INSERT INTO player_logs (
@@ -102,27 +101,6 @@ export function logPlayerGame(params: LogPlayerGameParams): { success: boolean; 
     lastIdStmt.free();
 
     const logId = result.id as number;
-
-    console.log(`\n🎮 ═══════════════════════════════════════════════════════════════`);
-    console.log(`   Player Game Logged: ${params.playerName} (${params.gameMode.toUpperCase()})`);
-    console.log(`   📋 Unique ID: ${uniqueLogId}`);
-    console.log(`   Log ID: ${logId}`);
-    console.log(`   💰 Final Networth: ₹${params.finalNetworth.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`);
-    if (params.finalCAGR) {
-      console.log(`   📈 CAGR: ${params.finalCAGR.toFixed(2)}%`);
-    }
-    if (params.profitLoss !== undefined) {
-      const profitSign = params.profitLoss >= 0 ? '+' : '';
-      console.log(`   💵 Profit/Loss: ${profitSign}₹${params.profitLoss.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`);
-    }
-    console.log(`\n   📊 Portfolio Breakdown:`);
-    Object.entries(params.portfolioBreakdown).forEach(([asset, value]) => {
-      if (value > 0) {
-        const percentage = ((value / params.finalNetworth) * 100).toFixed(1);
-        console.log(`      • ${asset.padEnd(20)} ₹${value.toLocaleString('en-IN', { maximumFractionDigits: 0 })} (${percentage}%)`);
-      }
-    });
-    console.log(`═══════════════════════════════════════════════════════════════\n`);
 
     return {
       success: true,

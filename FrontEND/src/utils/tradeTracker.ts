@@ -30,16 +30,6 @@ class TradeTracker {
     };
 
     this.trades.push(tradeWithId);
-
-    console.log(`📝 Trade Logged:`, {
-      type: trade.transactionType.toUpperCase(),
-      asset: `${trade.assetName} (${trade.assetType})`,
-      qty: trade.quantity,
-      price: `₹${trade.price.toFixed(2)}`,
-      total: `₹${trade.totalValue.toFixed(2)}`,
-      time: `Y${trade.gameYear}M${trade.gameMonth}`,
-      holding: `${trade.holdingQuantityBefore} → ${trade.holdingQuantityAfter}`,
-    });
   }
 
   getTrades(): TradeLog[] {
@@ -131,16 +121,12 @@ class TradeTracker {
   ) {
     const bankingLogs = bankingTracker.getBankingLogs();
     if (this.trades.length === 0 && (!bankingLogs || bankingLogs.length === 0) && (!cashTransactions || cashTransactions.length === 0)) {
-      console.log('📊 No trades, banking transactions, or cash transactions to upload');
       return;
     }
-
-    console.log(`📊 Uploading ${this.trades.length} trades for ${playerName} (Unique ID: ${logUniqueId})`);
 
     try {
     // Precompute banking metrics
     const bankingSummary = this.computeBankingMetrics(savingsAccount, fixedDeposits);
-    console.log('🏦 Banking Summary:', bankingSummary);
 
     // Precompute summary metrics
     const totalTrades = this.getTradeCount();
@@ -225,14 +211,6 @@ class TradeTracker {
         cashTransactions: cashTransactions || [],
         holdings: holdings || [],
       };
-      console.log('📤 Upload payload:', {
-        uniqueId: logUniqueId,
-        playerName,
-        tradeCount: payload.trades.length,
-        bankingTransactionCount: payload.bankingTransactions.length,
-        cashTransactionCount: payload.cashTransactions.length,
-        holdingsCount: payload.holdings.length,
-      });
 
       const response = await fetch(`${getServerUrl()}/api/trades/bulk`, {
         method: 'POST',
@@ -243,7 +221,6 @@ class TradeTracker {
       const result = await response.json();
 
       if (response.ok) {
-        console.log(`✅ ${result.message}`);
         return { success: true, message: result.message };
       } else {
         console.error('❌ Failed to upload trades:', result);
@@ -359,7 +336,6 @@ class TradeTracker {
 
   clearTrades() {
     this.trades = [];
-    console.log('🗑️ Trade history cleared');
   }
 
   getTradesSummary() {

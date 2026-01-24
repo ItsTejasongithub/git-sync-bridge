@@ -12,12 +12,6 @@ import {
 import { priceStore } from '../stores/priceStore';
 
 const SERVER_URL = getServerUrl();
-console.log('\n🔧 ===== SOCKET SERVICE INITIALIZATION =====');
-console.log('🔧 Server URL:', SERVER_URL);
-console.log('🔧 Environment Mode:', import.meta.env.MODE);
-console.log('🔧 VITE_SERVER_URL:', import.meta.env.VITE_SERVER_URL || 'NOT SET (using runtime or inferred)');
-console.log('🔧 Window __SERVER_URL:', (window as any).__SERVER_URL || 'NOT SET');
-console.log('🔧 ==========================================\n');
 
 // Key exchange data structure
 interface KeyExchangeData {
@@ -72,23 +66,19 @@ class SocketService {
 
   connect(): void {
     if (this.socket?.connected) {
-      console.log('🔄 Already connected to server');
       return;
     }
 
     if (this.isConnecting) {
-      console.log('🔄 Connection already in progress');
       return;
     }
 
     if (this.socket) {
-      console.log('🔄 Socket instance exists, reconnecting');
       this.socket.connect();
       return;
     }
 
     this.isConnecting = true;
-    console.log('🔌 Attempting to connect to:', SERVER_URL);
 
     this.socket = io(SERVER_URL, {
       transports: ['polling', 'websocket'], // Try polling first, then upgrade to websocket
@@ -103,12 +93,10 @@ class SocketService {
 
     this.socket.on('connect', () => {
       this.isConnecting = false;
-      console.log('✅ Connected to server - Socket ID:', this.socket?.id);
       this.emit('connect');
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('❌ Disconnected from server - Reason:', reason);
       this.emit('disconnect');
     });
 
@@ -151,13 +139,7 @@ class SocketService {
     this.socket.on('finalLeaderboard', (data) => this.emit('finalLeaderboard', data));
     this.socket.on('quizTriggered', (data) => this.emit('quizTriggered', data));
     this.socket.on('quizCompleted', (data) => this.emit('quizCompleted', data));
-    // Diagnostic: log when lifeEventTriggered arrives from server
     this.socket.on('lifeEventTriggered', (data) => {
-      try {
-        console.log(`🔔 lifeEventTriggered (socket): ${data?.event?.message} (${data?.event?.amount}), postPocketCash=${typeof data?.postPocketCash === 'number' ? `₹${data.postPocketCash}` : 'n/a'}`);
-      } catch (err) {
-        // noop
-      }
       this.emit('lifeEventTriggered', data);
     });
     this.socket.on('adminSettingsUpdated', (data) => this.emit('adminSettingsUpdated', data));
@@ -167,16 +149,12 @@ class SocketService {
     // Handle encrypted price ticks from server
     this.socket.on('priceTick', async (data) => {
       if (!isDecryptionInitialized()) {
-        console.warn('⚠️ Received priceTick but decryption not initialized yet');
         return;
       }
 
       try {
-        console.log(`📦 Received encrypted price tick for Year ${data.year}, Month ${data.month}`);
         const prices = await decryptPriceData(data.encrypted);
         if (prices) {
-          const priceCount = Object.keys(prices).length;
-          console.log(`🔓 Decrypted ${priceCount} prices successfully`);
           priceStore.updatePrices(prices);
           this.emit('pricesUpdated', { year: data.year, month: data.month, prices });
         } else {
@@ -189,17 +167,10 @@ class SocketService {
 
     // Handle key exchange response
     this.socket.on('keyExchangeResponse', async (data) => {
-      console.log('📨 Received keyExchangeResponse event:', {
-        hasSessionKey: !!data.sessionKey,
-        hasAssetIndexMap: !!data.assetIndexMap,
-        assetCount: data.assetIndexMap ? Object.keys(data.assetIndexMap).length : 0
-      });
-
       try {
         await initializeDecryption(data.sessionKey, data.assetIndexMap);
         priceStore.enable();
         this.emit('keyExchangeComplete', data);
-        console.log('🔐 Key exchange complete - using server prices');
       } catch (error) {
         console.error('Failed to initialize decryption:', error);
         this.emit('keyExchangeError', error);
@@ -208,11 +179,6 @@ class SocketService {
 
     // Handle networth validation results
     this.socket.on('networthValidation', (data) => {
-      if (!data.valid) {
-        console.warn(
-          `⚠️ Networth mismatch: client=${data.clientNetworth}, server=${data.serverNetworth}, deviation=${data.deviation.toFixed(2)}%`
-        );
-      }
       this.emit('networthValidation', data);
     });
   }
@@ -332,17 +298,14 @@ class SocketService {
         return;
       }
 
-      console.log('📤 Sending requestKeyExchange to server...');
 
       // Set up one-time listeners for the result
       const onComplete = () => {
-        console.log('✅ keyExchangeComplete event received');
         cleanup();
         resolve({ success: true });
       };
 
       const onError = (error: any) => {
-        console.error('❌ keyExchangeError event received:', error);
         cleanup();
         resolve({ success: false, error: error?.message || 'Key exchange failed' });
       };
@@ -358,14 +321,9 @@ class SocketService {
 
       // Request the key exchange
       this.socket.emit('requestKeyExchange', (response) => {
-        console.log('📥 Received requestKeyExchange callback:', response);
-
         if (!response.success) {
-          console.error('❌ Server returned error:', response.error);
           cleanup();
           resolve({ success: false, error: response.error || 'Key exchange failed' });
-        } else {
-          console.log('✅ Server callback success, waiting for keyExchangeComplete event...');
         }
         // If success, wait for keyExchangeComplete event
       });
