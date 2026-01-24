@@ -9,7 +9,12 @@ export interface AssetInfo {
 export type StockInfo = AssetInfo;
 
 export const STOCK_INFO_DATABASE: { [key: string]: StockInfo } = {
-  // 1996 batch - IT Giants & Banks
+  // Indian Stocks - IT Sector
+  'TCS': {
+    fullName: 'Tata Consultancy Services',
+    sector: 'Information Technology',
+    description: 'Largest IT services and consulting company in India'
+  },
   'INFY': {
     fullName: 'Infosys Limited',
     sector: 'Information Technology',
@@ -20,16 +25,82 @@ export const STOCK_INFO_DATABASE: { [key: string]: StockInfo } = {
     sector: 'Information Technology',
     description: 'Leading IT services, consulting, and business process services company'
   },
+  'HCLTECH': {
+    fullName: 'HCL Technologies Limited',
+    sector: 'Information Technology',
+    description: 'Global IT services company specializing in digital transformation'
+  },
+  'TECHM': {
+    fullName: 'Tech Mahindra Limited',
+    sector: 'Information Technology',
+    description: 'Leading IT services and consulting provider with telecom expertise'
+  },
+
+  // Banking & Finance Sector
   'HDFCBANK': {
     fullName: 'HDFC Bank Limited',
     sector: 'Banking & Finance',
     description: "India's largest private sector bank by assets"
+  },
+  'ICICIBANK': {
+    fullName: 'ICICI Bank Limited',
+    sector: 'Banking & Finance',
+    description: 'Second largest private sector bank in India'
   },
   'SBIN': {
     fullName: 'State Bank of India',
     sector: 'Banking & Finance',
     description: 'Largest public sector bank in India with nationwide presence'
   },
+  'AXISBANK': {
+    fullName: 'Axis Bank Limited',
+    sector: 'Banking & Finance',
+    description: 'Third largest private sector bank in India'
+  },
+  'KOTAKBANK': {
+    fullName: 'Kotak Mahindra Bank Limited',
+    sector: 'Banking & Finance',
+    description: 'Leading private sector bank with diverse financial services'
+  },
+  'INDUSINDBK': {
+    fullName: 'IndusInd Bank Limited',
+    sector: 'Banking & Finance',
+    description: 'New generation private sector bank with innovative banking solutions'
+  },
+  'UCOBANK': {
+    fullName: 'UCO Bank',
+    sector: 'Banking & Finance',
+    description: 'Public sector bank with pan-India presence and international operations'
+  },
+  'YESBANK': {
+    fullName: 'Yes Bank Limited',
+    sector: 'Banking & Finance',
+    description: 'Private sector bank that faced crisis in 2020, now recovering'
+  },
+
+  // Financial Services
+  'BAJFINANCE': {
+    fullName: 'Bajaj Finance Limited',
+    sector: 'Financial Services',
+    description: 'Leading non-banking financial company in consumer finance'
+  },
+  'BAJAJFINSV': {
+    fullName: 'Bajaj Finserv Limited',
+    sector: 'Financial Services',
+    description: 'Diversified financial services holding company'
+  },
+  'SBILIFE': {
+    fullName: 'SBI Life Insurance Company',
+    sector: 'Insurance',
+    description: 'Leading private life insurance company in India'
+  },
+  'SHRIRAMFIN': {
+    fullName: 'Shriram Finance Limited',
+    sector: 'Financial Services',
+    description: 'Leading commercial vehicle financing company'
+  },
+
+  // Energy & Oil & Gas
   'RELIANCE': {
     fullName: 'Reliance Industries Limited',
     sector: 'Conglomerate',
@@ -40,89 +111,32 @@ export const STOCK_INFO_DATABASE: { [key: string]: StockInfo } = {
     sector: 'Oil & Gas',
     description: "India's largest crude oil and natural gas exploration company"
   },
-  'M&M': {
-    fullName: 'Mahindra & Mahindra Limited',
-    sector: 'Automotive',
-    description: 'Leading manufacturer of tractors, utility vehicles, and commercial vehicles'
+  'NTPC': {
+    fullName: 'NTPC Limited',
+    sector: 'Power Generation',
+    description: 'Largest power generation company in India'
   },
-  'HINDUNILVR': {
-    fullName: 'Hindustan Unilever Limited',
-    sector: 'FMCG',
-    description: "India's largest FMCG company with iconic consumer brands"
+  'POWERGRID': {
+    fullName: 'Power Grid Corporation of India',
+    sector: 'Power Transmission',
+    description: 'Central transmission utility responsible for national power grid'
   },
-  'ITC': {
-    fullName: 'ITC Limited',
-    sector: 'Conglomerate',
-    description: 'Diversified conglomerate in FMCG, hotels, paperboards, and agri-business'
-  },
-  'TATACONSUM': {
-    fullName: 'Tata Consumer Products Limited',
-    sector: 'FMCG',
-    description: 'Leading consumer goods company with brands like Tata Tea and Tata Salt'
-  },
-  'TITAN': {
-    fullName: 'Titan Company Limited',
-    sector: 'Consumer Durables',
-    description: 'Leading manufacturer of watches, jewelry, and eyewear'
-  },
-  'TATASTEEL': {
-    fullName: 'Tata Steel Limited',
-    sector: 'Metals & Mining',
-    description: "India's largest integrated steel producer"
-  },
-  'HINDALCO': {
-    fullName: 'Hindalco Industries Limited',
-    sector: 'Metals & Mining',
-    description: 'Leading aluminum and copper manufacturer in India'
-  },
-  'SUNPHARMA': {
-    fullName: 'Sun Pharmaceutical Industries',
-    sector: 'Pharmaceuticals',
-    description: "India's largest pharmaceutical company by market cap"
-  },
-  'Hindustan Construction': {
-    fullName: 'Hindustan Construction Company',
-    sector: 'Infrastructure',
-    description: 'Pioneer in infrastructure development and construction'
-  },
-
-  // 1997-1998
   'GAIL': {
     fullName: 'GAIL (India) Limited',
     sector: 'Oil & Gas',
     description: 'Largest state-owned natural gas processing and distribution company'
   },
-  'AXISBANK': {
-    fullName: 'Axis Bank Limited',
-    sector: 'Banking & Finance',
-    description: 'Third largest private sector bank in India'
-  },
 
-  // 2001-2002
-  'KOTAKBANK': {
-    fullName: 'Kotak Mahindra Bank Limited',
-    sector: 'Banking & Finance',
-    description: 'Leading private sector bank with diverse financial services'
+  // Automotive Sector
+  'MARUTI': {
+    fullName: 'Maruti Suzuki India Limited',
+    sector: 'Automotive',
+    description: 'Largest passenger car manufacturer in India'
   },
-  'ICICIBANK': {
-    fullName: 'ICICI Bank Limited',
-    sector: 'Banking & Finance',
-    description: 'Second largest private sector bank in India'
-  },
-  'INDUSINDBK': {
-    fullName: 'IndusInd Bank Limited',
-    sector: 'Banking & Finance',
-    description: 'New generation private sector bank with innovative banking solutions'
-  },
-  'BAJFINANCE': {
-    fullName: 'Bajaj Finance Limited',
-    sector: 'Financial Services',
-    description: 'Leading non-banking financial company in consumer finance'
-  },
-  'SHRIRAMFIN': {
-    fullName: 'Shriram Finance Limited',
-    sector: 'Financial Services',
-    description: 'Leading commercial vehicle financing company'
+  'M&M': {
+    fullName: 'Mahindra & Mahindra Limited',
+    sector: 'Automotive',
+    description: 'Leading manufacturer of tractors, utility vehicles, and commercial vehicles'
   },
   'BAJAJ-AUTO': {
     fullName: 'Bajaj Auto Limited',
@@ -134,335 +148,377 @@ export const STOCK_INFO_DATABASE: { [key: string]: StockInfo } = {
     sector: 'Automotive',
     description: "World's largest manufacturer of motorcycles and scooters"
   },
-  'ASIANPAINT': {
-    fullName: 'Asian Paints Limited',
-    sector: 'Paints & Coatings',
-    description: 'Largest paint company in India with pan-Asia presence'
-  },
-  'APOLLOHOSP': {
-    fullName: 'Apollo Hospitals Enterprise',
-    sector: 'Healthcare',
-    description: "India's leading integrated healthcare services provider"
-  },
-  'LT': {
-    fullName: 'Larsen & Toubro Limited',
-    sector: 'Infrastructure',
-    description: 'Leading engineering, construction, and technology conglomerate'
-  },
-  'GRASIM': {
-    fullName: 'Grasim Industries Limited',
-    sector: 'Diversified',
-    description: 'Flagship company of Aditya Birla Group in cement and chemicals'
-  },
-  'BHARTIARTL': {
-    fullName: 'Bharti Airtel Limited',
-    sector: 'Telecommunications',
-    description: "India's second largest telecom operator with global presence"
-  },
-  'ADANIENT': {
-    fullName: 'Adani Enterprises Limited',
-    sector: 'Conglomerate',
-    description: 'Flagship company of Adani Group in infrastructure and commodities'
-  },
-  'BEL': {
-    fullName: 'Bharat Electronics Limited',
-    sector: 'Defense & Aerospace',
-    description: 'State-owned aerospace and defense electronics company'
-  },
-  'TRENT': {
-    fullName: 'Trent Limited',
-    sector: 'Retail',
-    description: 'Leading retail chain operating Westside, Zudio, and Star stores'
-  },
-  'Indo National': {
-    fullName: 'Indo National Limited',
-    sector: 'Diversified',
-    description: 'Multi-business conglomerate with interests in trading and manufacturing'
-  },
-  'Zee Entertainment': {
-    fullName: 'Zee Entertainment Enterprises',
-    sector: 'Media & Entertainment',
-    description: 'Leading media and entertainment company with TV channels and digital platforms'
-  },
-  'Ashok Leyland': {
+  'ASHOKLEY': {
     fullName: 'Ashok Leyland Limited',
     sector: 'Automotive',
     description: 'Major commercial vehicle manufacturer specializing in trucks and buses'
   },
-  'ITI Limited': {
-    fullName: 'ITI Limited',
-    sector: 'Telecommunications Equipment',
-    description: 'Public sector telecom equipment manufacturer and IT solutions provider'
+
+  // FMCG & Consumer Goods
+  'HINDUNILVR': {
+    fullName: 'Hindustan Unilever Limited',
+    sector: 'FMCG',
+    description: "India's largest FMCG company with iconic consumer brands"
   },
-  'CESC Limited': {
-    fullName: 'CESC Limited',
-    sector: 'Power & Utilities',
-    description: 'Integrated power utility company serving Kolkata and surrounding areas'
-  },
-  'Trident': {
-    fullName: 'Trident Limited',
-    sector: 'Textiles',
-    description: 'Leading manufacturer of home textiles, yarn, and paper products'
-  },
-  'Weizmann': {
-    fullName: 'Weizmann Forex Limited',
-    sector: 'Financial Services',
-    description: 'Foreign exchange and money transfer service provider'
-  },
-  'TCS': {
-    fullName: 'Tata Consultancy Services',
-    sector: 'Information Technology',
-    description: 'Largest IT services and consulting company in India'
-  },
-  'HCLTECH': {
-    fullName: 'HCL Technologies Limited',
-    sector: 'Information Technology',
-    description: 'Global IT services company specializing in digital transformation'
-  },
-  'BAJAJFINSV': {
-    fullName: 'Bajaj Finserv Limited',
-    sector: 'Financial Services',
-    description: 'Diversified financial services holding company'
+  'ITC': {
+    fullName: 'ITC Limited',
+    sector: 'Conglomerate',
+    description: 'Diversified conglomerate in FMCG, hotels, paperboards, and agri-business'
   },
   'NESTLEIND': {
     fullName: 'Nestlé India Limited',
     sector: 'FMCG',
     description: 'Leading food and beverage company with brands like Maggi and Nescafé'
   },
-  'ULTRACEMCO': {
-    fullName: 'UltraTech Cement Limited',
-    sector: 'Cement',
-    description: 'Largest cement manufacturer in India'
+  'TATACONSUM': {
+    fullName: 'Tata Consumer Products Limited',
+    sector: 'FMCG',
+    description: 'Leading consumer goods company with brands like Tata Tea and Tata Salt'
   },
-  'HFCL': {
-    fullName: 'HFCL Limited',
-    sector: 'Telecommunications Equipment',
-    description: 'Technology enterprise providing telecom and defense equipment solutions'
+
+  // Consumer Durables & Retail
+  'TITAN': {
+    fullName: 'Titan Company Limited',
+    sector: 'Consumer Durables',
+    description: 'Leading manufacturer of watches, jewelry, and eyewear'
+  },
+  'ASIANPAINT': {
+    fullName: 'Asian Paints Limited',
+    sector: 'Paints & Coatings',
+    description: 'Largest paint company in India with pan-Asia presence'
+  },
+  'TRENT': {
+    fullName: 'Trent Limited',
+    sector: 'Retail',
+    description: 'Leading retail chain operating Westside, Zudio, and Star stores'
+  },
+  'HONASA': {
+    fullName: 'Honasa Consumer Limited',
+    sector: 'FMCG',
+    description: 'D2C beauty and personal care brand company (Mamaearth, The Derma Co)'
+  },
+
+  // Metals & Mining
+  'TATASTEEL': {
+    fullName: 'Tata Steel Limited',
+    sector: 'Metals & Mining',
+    description: "India's largest integrated steel producer"
   },
   'JSWSTEEL': {
     fullName: 'JSW Steel Limited',
     sector: 'Metals & Mining',
     description: "India's leading integrated steel manufacturer"
   },
-  'MARUTI': {
-    fullName: 'Maruti Suzuki India Limited',
-    sector: 'Automotive',
-    description: 'Largest passenger car manufacturer in India'
-  },
-  'Subex': {
-    fullName: 'Subex Limited',
-    sector: 'Information Technology',
-    description: 'Provider of telecom analytics and revenue assurance solutions'
-  },
-  'UCO Bank': {
-    fullName: 'UCO Bank',
-    sector: 'Banking & Finance',
-    description: 'Public sector bank with pan-India presence and international operations'
-  },
-  'Jindal Stainless': {
-    fullName: 'Jindal Stainless Limited',
+  'HINDALCO': {
+    fullName: 'Hindalco Industries Limited',
     sector: 'Metals & Mining',
-    description: 'Leading stainless steel manufacturer in India'
+    description: 'Leading aluminum and copper manufacturer in India'
   },
-  'Indiabulls Real Estate': {
-    fullName: 'Indiabulls Real Estate Limited',
-    sector: 'Real Estate',
-    description: 'Real estate development company focused on residential and commercial projects'
+  'HINDCOPPER': {
+    fullName: 'Hindustan Copper Limited',
+    sector: 'Metals & Mining',
+    description: 'Public sector copper mining and smelting company'
   },
-  'NTPC': {
-    fullName: 'NTPC Limited',
-    sector: 'Power Generation',
-    description: 'Largest power generation company in India'
+
+  // Pharmaceuticals & Healthcare
+  'SUNPHARMA': {
+    fullName: 'Sun Pharmaceutical Industries',
+    sector: 'Pharmaceuticals',
+    description: "India's largest pharmaceutical company by market cap"
   },
-  'JP Power Ventures': {
-    fullName: 'Jaiprakash Power Ventures',
-    sector: 'Power Generation',
-    description: 'Power generation company with hydroelectric and thermal projects'
+  'APOLLOHOSP': {
+    fullName: 'Apollo Hospitals Enterprise',
+    sector: 'Healthcare',
+    description: "India's leading integrated healthcare services provider"
   },
-  'Saksoft': {
-    fullName: 'Saksoft Limited',
-    sector: 'Information Technology',
-    description: 'IT consulting and solutions company specializing in digital transformation'
-  },
-  'Yes Bank': {
-    fullName: 'Yes Bank Limited',
-    sector: 'Banking & Finance',
-    description: 'Private sector bank that faced crisis in 2020, now recovering'
-  },
-  'Suzlon Energy': {
-    fullName: 'Suzlon Energy Limited',
-    sector: 'Renewable Energy',
-    description: 'Wind turbine manufacturer facing financial challenges'
-  },
-  'GVK Power & Infra': {
-    fullName: 'GVK Power & Infrastructure',
+
+  // Infrastructure & Construction
+  'LT': {
+    fullName: 'Larsen & Toubro Limited',
     sector: 'Infrastructure',
-    description: 'Infrastructure development company in power, airports, and energy sectors'
+    description: 'Leading engineering, construction, and technology conglomerate'
   },
-  'Vakrangee': {
-    fullName: 'Vakrangee Limited',
-    sector: 'Technology',
-    description: 'Technology company providing banking and retail solutions'
+  'ULTRACEMCO': {
+    fullName: 'UltraTech Cement Limited',
+    sector: 'Cement',
+    description: 'Largest cement manufacturer in India'
   },
-  'TECHM': {
-    fullName: 'Tech Mahindra Limited',
-    sector: 'Information Technology',
-    description: 'Leading IT services and consulting provider with telecom expertise'
+  'GRASIM': {
+    fullName: 'Grasim Industries Limited',
+    sector: 'Diversified',
+    description: 'Flagship company of Aditya Birla Group in cement and chemicals'
   },
-  'Vodafone Idea': {
+  'IRB': {
+    fullName: 'IRB Infrastructure Developers',
+    sector: 'Infrastructure',
+    description: 'Leading highway infrastructure developer and toll road operator'
+  },
+
+  // Telecommunications
+  'BHARTIARTL': {
+    fullName: 'Bharti Airtel Limited',
+    sector: 'Telecommunications',
+    description: "India's second largest telecom operator with global presence"
+  },
+  'IDEA': {
     fullName: 'Vodafone Idea Limited',
     sector: 'Telecommunications',
     description: 'Telecom operator struggling with debt and market share loss'
   },
-  'Dish TV India': {
-    fullName: 'Dish TV India Limited',
-    sector: 'Media & Entertainment',
-    description: 'Direct-to-home satellite television service provider'
+  'RAILTEL': {
+    fullName: 'RailTel Corporation of India',
+    sector: 'Telecommunications',
+    description: 'Public sector telecom infrastructure provider leveraging railway networks'
   },
-  'Websol Energy Systems': {
-    fullName: 'Websol Energy Systems Limited',
-    sector: 'Renewable Energy',
-    description: 'Solar cell and module manufacturing company'
-  },
-  'POWERGRID': {
-    fullName: 'Power Grid Corporation of India',
-    sector: 'Power Transmission',
-    description: 'Central transmission utility responsible for national power grid'
+
+  // Real Estate & REITs
+  'ADANIENT': {
+    fullName: 'Adani Enterprises Limited',
+    sector: 'Conglomerate',
+    description: 'Flagship company of Adani Group in infrastructure and commodities'
   },
   'ADANIPORTS': {
     fullName: 'Adani Ports and SEZ Limited',
     sector: 'Infrastructure',
     description: 'Largest private sector port and logistics company in India'
   },
-  'Reliance Power': {
-    fullName: 'Reliance Power Limited',
-    sector: 'Power Generation',
-    description: 'Power generation company with execution challenges'
+  'IBREALEST': {
+    fullName: 'Indiabulls Real Estate Limited',
+    sector: 'Real Estate',
+    description: 'Real estate development company focused on residential and commercial projects'
   },
-  'IRB Infrastructure': {
-    fullName: 'IRB Infrastructure Developers',
-    sector: 'Infrastructure',
-    description: 'Leading highway infrastructure developer and toll road operator'
-  },
-  'Adani Power': {
+
+  // Power Generation
+  'ADANIPOWER': {
     fullName: 'Adani Power Limited',
     sector: 'Power Generation',
     description: 'Private thermal power generation company'
   },
-  'RattanIndia Power': {
+  'RPOWER': {
+    fullName: 'Reliance Power Limited',
+    sector: 'Power Generation',
+    description: 'Power generation company with execution challenges'
+  },
+  'JPPOWER': {
+    fullName: 'Jaiprakash Power Ventures',
+    sector: 'Power Generation',
+    description: 'Power generation company with hydroelectric and thermal projects'
+  },
+  'RTNPOWER': {
     fullName: 'RattanIndia Power Limited',
     sector: 'Power Generation',
     description: 'Independent power producer with thermal power plants'
   },
-  'Hindustan Copper': {
-    fullName: 'Hindustan Copper Limited',
-    sector: 'Metals & Mining',
-    description: 'Public sector copper mining and smelting company'
+
+  // Utilities
+  'CESC': {
+    fullName: 'CESC Limited',
+    sector: 'Power & Utilities',
+    description: 'Integrated power utility company serving Kolkata and surrounding areas'
   },
-  'Manappuram Finance': {
-    fullName: 'Manappuram Finance Limited',
-    sector: 'Financial Services',
-    description: 'Gold loan and microfinance services provider'
+
+  // Defense & Aerospace
+  'BEL': {
+    fullName: 'Bharat Electronics Limited',
+    sector: 'Defense & Aerospace',
+    description: 'State-owned aerospace and defense electronics company'
   },
-  'RattanIndia Enterprises': {
-    fullName: 'RattanIndia Enterprises Limited',
-    sector: 'Diversified',
-    description: 'Diversified company with interests in drones, e-vehicles, and fintech'
+  'MTARTECH': {
+    fullName: 'MTAR Technologies Limited',
+    sector: 'Defense & Aerospace',
+    description: 'Precision engineering solutions for nuclear, space, and defense sectors'
   },
-  'Spacenet Enterprises': {
-    fullName: 'Spacenet Enterprises India',
-    sector: 'Technology',
-    description: 'Satellite and telecom infrastructure services provider'
+
+  // Media & Entertainment
+  'ZEEL': {
+    fullName: 'Zee Entertainment Enterprises',
+    sector: 'Media & Entertainment',
+    description: 'Leading media and entertainment company with TV channels and digital platforms'
   },
-  'Brightcom Group': {
-    fullName: 'Brightcom Group Limited',
-    sector: 'Digital Marketing',
-    description: 'Digital advertising and marketing technology company'
+  'DISHTV': {
+    fullName: 'Dish TV India Limited',
+    sector: 'Media & Entertainment',
+    description: 'Direct-to-home satellite television service provider'
   },
+
+  // Aviation
   'INDIGO': {
     fullName: 'InterGlobe Aviation (IndiGo)',
     sector: 'Aviation',
     description: "India's largest airline by market share and fleet size"
   },
-  'Quick Heal Technologies': {
-    fullName: 'Quick Heal Technologies Limited',
-    sector: 'Information Technology',
-    description: 'Cybersecurity solutions provider for individuals and enterprises'
-  },
-  'PNB Housing Finance': {
-    fullName: 'PNB Housing Finance Limited',
-    sector: 'Financial Services',
-    description: 'Housing finance company providing home loans and related services'
-  },
-  'Sanginita Chemicals': {
-    fullName: 'Sanginita Chemicals Limited',
-    sector: 'Chemicals',
-    description: 'Specialty chemicals manufacturer for pigments and dyes'
-  },
-  'NACL Industries': {
-    fullName: 'NACL Industries Limited',
-    sector: 'Chemicals',
-    description: 'Agrochemical and specialty chemical manufacturing company'
-  },
-  'SBILIFE': {
-    fullName: 'SBI Life Insurance Company',
-    sector: 'Insurance',
-    description: 'Leading private life insurance company in India'
-  },
-  '5Paisa Capital': {
-    fullName: '5Paisa Capital Limited',
-    sector: 'Financial Services',
-    description: 'Discount brokerage and online trading platform'
-  },
-  'Vertoz': {
-    fullName: 'Vertoz Advertising Limited',
-    sector: 'Digital Marketing',
-    description: 'Programmatic advertising and marketing technology company'
-  },
-  'Indostar Capital Finance': {
-    fullName: 'IndoStar Capital Finance',
-    sector: 'Financial Services',
-    description: 'Non-banking finance company focused on SME and vehicle financing'
-  },
-  'Vinny Overseas': {
-    fullName: 'Vinny Overseas Limited',
-    sector: 'Textiles',
-    description: 'Manufacturer and exporter of home furnishing textiles'
-  },
-  'Ujjivan Small Finance Bank': {
-    fullName: 'Ujjivan Small Finance Bank',
-    sector: 'Banking & Finance',
-    description: 'Small finance bank focused on microfinance and inclusive banking'
-  },
-  'Ksolves India': {
-    fullName: 'Ksolves India Limited',
-    sector: 'Information Technology',
-    description: 'IT services company specializing in cloud and data solutions'
-  },
-  'Railtel Corporation': {
-    fullName: 'RailTel Corporation of India',
-    sector: 'Telecommunications',
-    description: 'Public sector telecom infrastructure provider leveraging railway networks'
-  },
-  'MTAR Technologies': {
-    fullName: 'MTAR Technologies Limited',
-    sector: 'Defense & Aerospace',
-    description: 'Precision engineering solutions for nuclear, space, and defense sectors'
-  },
-  'Easy Trip Planners': {
+
+  // Travel & Hospitality
+  'EASEMYTRIP': {
     fullName: 'Easy Trip Planners Limited',
     sector: 'Travel & Hospitality',
     description: 'Online travel company offering flight, hotel, and holiday bookings'
   },
-  'One97 Communications (Paytm)': {
+
+  // Financial Technology
+  'PAYTM': {
     fullName: 'One97 Communications (Paytm)',
     sector: 'Financial Technology',
     description: 'Digital payments and financial services platform'
   },
-  'Honasa Consumer': {
-    fullName: 'Honasa Consumer Limited',
-    sector: 'FMCG',
-    description: 'D2C beauty and personal care brand company (Mamaearth, The Derma Co)'
+
+  // Technology & IT Services
+  'QUICKHEAL': {
+    fullName: 'Quick Heal Technologies Limited',
+    sector: 'Information Technology',
+    description: 'Cybersecurity solutions provider for individuals and enterprises'
+  },
+  'KSOLVES': {
+    fullName: 'Ksolves India Limited',
+    sector: 'Information Technology',
+    description: 'IT services company specializing in cloud and data solutions'
+  },
+
+  // Renewable Energy
+  'SUZLON': {
+    fullName: 'Suzlon Energy Limited',
+    sector: 'Renewable Energy',
+    description: 'Wind turbine manufacturer facing financial challenges'
+  },
+  'WEBELSOLAR': {
+    fullName: 'Websol Energy Systems Limited',
+    sector: 'Renewable Energy',
+    description: 'Solar cell and module manufacturing company'
+  },
+
+  // Financial Services
+  'PNBHOUSING': {
+    fullName: 'PNB Housing Finance Limited',
+    sector: 'Financial Services',
+    description: 'Housing finance company providing home loans and related services'
+  },
+  'INDOSTAR': {
+    fullName: 'IndoStar Capital Finance',
+    sector: 'Financial Services',
+    description: 'Non-banking finance company focused on SME and vehicle financing'
+  },
+  'MANAPPURAM': {
+    fullName: 'Manappuram Finance Limited',
+    sector: 'Financial Services',
+    description: 'Gold loan and microfinance services provider'
+  },
+  '5PAISA': {
+    fullName: '5Paisa Capital Limited',
+    sector: 'Financial Services',
+    description: 'Discount brokerage and online trading platform'
+  },
+
+  // Banking - Small Finance Bank
+  'UJJIVANSFB': {
+    fullName: 'Ujjivan Small Finance Bank',
+    sector: 'Banking & Finance',
+    description: 'Small finance bank focused on microfinance and inclusive banking'
+  },
+
+  // Textiles
+  'VINNY': {
+    fullName: 'Vinny Overseas Limited',
+    sector: 'Textiles',
+    description: 'Manufacturer and exporter of home furnishing textiles'
+  },
+  'TRIDENT': {
+    fullName: 'Trident Limited',
+    sector: 'Textiles',
+    description: 'Leading manufacturer of home textiles, yarn, and paper products'
+  },
+
+  // Chemicals
+  'SANGINITA': {
+    fullName: 'Sanginita Chemicals Limited',
+    sector: 'Chemicals',
+    description: 'Specialty chemicals manufacturer for pigments and dyes'
+  },
+  'NACLIND': {
+    fullName: 'NACL Industries Limited',
+    sector: 'Chemicals',
+    description: 'Agrochemical and specialty chemical manufacturing company'
+  },
+
+  // Diversified
+  'GVKPIL': {
+    fullName: 'GVK Power & Infrastructure',
+    sector: 'Infrastructure',
+    description: 'Infrastructure development company in power, airports, and energy sectors'
+  },
+  'RTNINDIA': {
+    fullName: 'RattanIndia Enterprises Limited',
+    sector: 'Diversified',
+    description: 'Diversified company with interests in drones, e-vehicles, and fintech'
+  },
+  'SPCENET': {
+    fullName: 'Spacenet Enterprises India',
+    sector: 'Technology',
+    description: 'Satellite and telecom infrastructure services provider'
+  },
+  'BCG': {
+    fullName: 'Brightcom Group Limited',
+    sector: 'Digital Marketing',
+    description: 'Digital advertising and marketing technology company'
+  },
+  'VERTOZ': {
+    fullName: 'Vertoz Advertising Limited',
+    sector: 'Digital Marketing',
+    description: 'Programmatic advertising and marketing technology company'
+  },
+  'VAKRANGEE': {
+    fullName: 'Vakrangee Limited',
+    sector: 'Technology',
+    description: 'Technology company providing banking and retail solutions'
+  },
+  'HFCL': {
+    fullName: 'HFCL Limited',
+    sector: 'Telecommunications Equipment',
+    description: 'Technology enterprise providing telecom and defense equipment solutions'
+  },
+  'SUBEXLTD': {
+    fullName: 'Subex Limited',
+    sector: 'Information Technology',
+    description: 'Provider of telecom analytics and revenue assurance solutions'
+  },
+  'SAKSOFT': {
+    fullName: 'Saksoft Limited',
+    sector: 'Information Technology',
+    description: 'IT consulting and solutions company specializing in digital transformation'
+  },
+  'ITI': {
+    fullName: 'ITI Limited',
+    sector: 'Telecommunications Equipment',
+    description: 'Public sector telecom equipment manufacturer and IT solutions provider'
+  },
+  'WEIZMANIND': {
+    fullName: 'Weizmann Forex Limited',
+    sector: 'Financial Services',
+    description: 'Foreign exchange and money transfer service provider'
+  },
+  'NIPPOBATRY': {
+    fullName: 'Nippo Battery Limited',
+    sector: 'Diversified',
+    description: 'Battery and electrical equipment manufacturer'
+  },
+  'STRTECH': {
+    fullName: 'Strides Tech Limited',
+    sector: 'Technology',
+    description: 'Technology and IT infrastructure provider'
+  },
+  'JSL': {
+    fullName: 'Jindal Saw Limited',
+    sector: 'Metals & Mining',
+    description: 'Manufacturer of welded tubes and pipes'
+  },
+  'HCC': {
+    fullName: 'Hindustan Construction Company',
+    sector: 'Infrastructure',
+    description: 'Pioneer in infrastructure development and construction'
+  },
+  'GUJNRECOKE': {
+    fullName: 'Gujarat NRE Coke Limited',
+    sector: 'Metals & Mining',
+    description: 'Metallurgical coke and chemicals manufacturer'
   }
 };
 
@@ -495,7 +551,7 @@ export const ASSET_INFO_DATABASE: { [key: string]: AssetInfo } = {
     description: 'Leading smart contract platform and second largest cryptocurrency by market cap'
   },
 
-  // Index Funds
+  // Index Funds / ETFs
   'NIFTYBEES': {
     fullName: 'Nippon India ETF Nifty BeES',
     sector: 'Index Fund - ETF',
