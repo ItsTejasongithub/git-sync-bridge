@@ -1,3 +1,11 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: linear-gradient(180deg, #0f1629 0%, #1a1a2e 100%);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -11,7 +19,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
-  background: #1a1a1a;
+  /* Use transparent here because page bg is applied to html/body/#root */
+  background: transparent;
 }
 
 .app {

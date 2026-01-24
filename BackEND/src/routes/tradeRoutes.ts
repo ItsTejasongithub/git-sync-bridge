@@ -7,7 +7,7 @@ const router = Router();
 
 router.post('/bulk', async (req: Request, res: Response) => {
   try {
-    const { logId, uniqueId, playerName: bodyPlayerName, player, trades, bankingTransactions, cashTransactions, reportId, summary } = req.body;
+    const { logId, uniqueId, playerName: bodyPlayerName, player, trades, bankingTransactions, cashTransactions, holdings, reportId, summary } = req.body;
 
     const playerName = bodyPlayerName || (player && player.name) || null;
 
@@ -17,6 +17,8 @@ router.post('/bulk', async (req: Request, res: Response) => {
       playerName,
       tradeCount: trades?.length,
       bankingTransactionCount: bankingTransactions?.length,
+      cashTransactionCount: cashTransactions?.length,
+      holdingsCount: holdings?.length,
       reportId,
     });
 
@@ -43,10 +45,21 @@ router.post('/bulk', async (req: Request, res: Response) => {
       });
     }
 
-    const results = {
+    type TradeResult = { success: boolean; message: string; tradeId?: number };
+    type BankingResult = { success: boolean; id?: number; error?: string };
+    type CashResult = { success: boolean; id?: number; error?: string };
+    type HoldingResult = { success: boolean; message?: string; count?: number };
+
+    const results: {
+      trades: TradeResult[];
+      bankingTransactions: BankingResult[];
+      cashTransactions: CashResult[];
+      holdings: HoldingResult;
+    } = {
       trades: [],
       bankingTransactions: [],
       cashTransactions: [],
+      holdings: { success: false, count: 0 },
     };
 
     // Log trades
@@ -116,6 +129,35 @@ router.post('/bulk', async (req: Request, res: Response) => {
       console.log('⚠️ No cash transactions to upload');
     }
 
+    // Log holdings (end-of-game positions for unrealized P&L tracking)
+    if (Array.isArray(holdings) && holdings.length > 0) {
+      try {
+        const { bulkLogHoldings } = await import('../database/playerHoldings');
+        const holdingsResult = bulkLogHoldings(
+          holdings.map((h: any) => ({
+            logId: resolvedLogId as number,
+            playerName,
+            assetCategory: h.assetCategory,
+            assetName: h.assetName,
+            quantity: h.quantity,
+            avgPrice: h.avgPrice,
+            totalInvested: h.totalInvested,
+            currentPrice: h.currentPrice,
+            currentValue: h.currentValue,
+            unrealizedPL: h.unrealizedPL,
+            gameYear: h.gameYear,
+            gameMonth: h.gameMonth,
+          }))
+        );
+        results.holdings = holdingsResult;
+        console.log(`✅ Holdings uploaded: ${holdingsResult.count || 0} positions`);
+      } catch (err) {
+        console.warn('⚠️ Failed to upload holdings:', err);
+      }
+    } else {
+      console.log('⚠️ No holdings to upload');
+    }
+
     // Persist AI report summary (if provided) for later retrieval
     try {
       if (reportId && summary) {
@@ -151,10 +193,12 @@ router.post('/bulk', async (req: Request, res: Response) => {
 
     const tradeSuccess = results.trades.filter(r => r.success).length;
     const bankingSuccess = results.bankingTransactions.filter(r => r.success).length;
+    const cashSuccess = results.cashTransactions.filter(r => r.success).length;
+    const holdingsCount = results.holdings.count || 0;
 
     res.json({
       success: true,
-      message: `Uploaded ${tradeSuccess} trades and ${bankingSuccess} banking transactions`,
+      message: `Uploaded ${tradeSuccess} trades, ${bankingSuccess} banking transactions, ${cashSuccess} cash transactions, and ${holdingsCount} holdings`,
       results: {
         trades: {
           success: tradeSuccess,
@@ -163,6 +207,14 @@ router.post('/bulk', async (req: Request, res: Response) => {
         bankingTransactions: {
           success: bankingSuccess,
           total: results.bankingTransactions.length,
+        },
+        cashTransactions: {
+          success: cashSuccess,
+          total: results.cashTransactions.length,
+        },
+        holdings: {
+          success: results.holdings.success,
+          count: holdingsCount,
         },
       },
     });

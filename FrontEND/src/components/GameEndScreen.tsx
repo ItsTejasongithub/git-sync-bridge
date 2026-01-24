@@ -1,15 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import './GameEndScreen.css';
-import { GameState, AssetData } from '../types';
-import { calculateNetworth, calculatePortfolioBreakdown, calculateTotalCapital, calculateCAGR } from '../utils/networthCalculator';
+import { GameState } from '../types';
+import { calculateTotalCapital, calculateCAGR, calculateNetworthWithPrices, calculatePortfolioBreakdownWithPrices } from '../utils/networthCalculator';
 import { playerLogsApi } from '../services/adminApi';
 import { AIReportModal } from './AIReportModal';
 import { tradeTracker } from '../utils/tradeTracker';
+import { extractHoldingsDataWithPrices } from '../utils/holdingsExtractor';
+import { usePrices } from '../hooks/usePrices';
 
 interface GameEndScreenProps {
   gameState: GameState;
   isMultiplayer: boolean;
-  assetDataMap: { [key: string]: AssetData[] };
   calendarYear: number;
   leaderboardData?: Array<{
     playerId: string;
@@ -34,7 +35,6 @@ interface GameEndScreenProps {
 const GameEndScreen: React.FC<GameEndScreenProps> = ({
   gameState,
   isMultiplayer,
-  assetDataMap,
   calendarYear,
   leaderboardData,
   onReturnToMenu,
@@ -43,6 +43,13 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
   roomId,
   onFinalNetworthSync,
 }) => {
+  // Use prices for final calculations
+  const { getPrice } = usePrices({
+    selectedAssets: gameState.selectedAssets,
+    calendarYear,
+    currentMonth: gameState.currentMonth,
+    isMultiplayer: false, // Always use API prices on end screen
+  });
   const [isPortfolioExpanded, setIsPortfolioExpanded] = useState(false);
   const [isAIReportOpen, setIsAIReportOpen] = useState(false);
   const [loggedGameId, setLoggedGameId] = useState<number | null>(null);
@@ -88,12 +95,18 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
   };
 
   const totalCapital = calculateTotalCapital(gameState);
-  const finalNetworth = calculateNetworth(gameState, assetDataMap, calendarYear);
+  const finalNetworth = useMemo(
+    () => calculateNetworthWithPrices(gameState, getPrice),
+    [gameState, getPrice]
+  );
   const profit = finalNetworth - totalCapital;
   const profitPercentage = ((profit / totalCapital) * 100).toFixed(2);
   const years = gameState.currentYear; // Total years in game
   const cagr = calculateCAGR(totalCapital, finalNetworth, years).toFixed(2);
-  const breakdown = calculatePortfolioBreakdown(gameState, assetDataMap, calendarYear);
+  const breakdown = useMemo(
+    () => calculatePortfolioBreakdownWithPrices(gameState, getPrice),
+    [gameState, getPrice]
+  );
   const investedBreakdown = getInvestedBreakdown();
 
   // Sync final networth to server for multiplayer (only once)
@@ -140,16 +153,22 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
           setLoggedGameId(response.logId !== undefined ? response.logId : null);
           setLoggedGameUniqueId(response.uniqueId || null);
 
-          // Upload all trades to database for AI analysis using uniqueId
+          // Upload all trades, banking, cash transactions, and holdings to database
           if (response.uniqueId && playerName) {
-            console.log('📊 Uploading trades to database...');
+            console.log('📊 Uploading game data to database...');
+
+            // Extract holdings data with current prices for accurate P&L tracking
+            const holdingsData = extractHoldingsDataWithPrices(gameState, getPrice);
+            console.log(`💼 Extracted ${holdingsData.length} holdings positions`);
+
             await tradeTracker.uploadToDatabase(
               response.uniqueId,
               playerName,
               playerAge,
               gameState.savingsAccount,
               gameState.fixedDeposits,
-              gameState.cashTransactions
+              gameState.cashTransactions,
+              holdingsData
             );
           }
         } else {

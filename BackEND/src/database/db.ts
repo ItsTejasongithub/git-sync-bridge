@@ -215,6 +215,37 @@ function runMigrations(): void {
     db.run(`CREATE INDEX IF NOT EXISTS idx_cash_player ON cash_transactions(player_name)`);
     saveDatabase();
   }
+
+  // Check if player_holdings table exists - stores end-of-game holdings for accurate P&L calculations
+  const holdingsList = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='player_holdings'");
+  const hasHoldingsTable = holdingsList && holdingsList.length > 0 && holdingsList[0].values && holdingsList[0].values.length > 0;
+
+  if (!hasHoldingsTable) {
+    console.log('Migration: creating player_holdings table');
+    db.run(`
+      CREATE TABLE IF NOT EXISTS player_holdings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        log_id INTEGER NOT NULL,
+        player_name TEXT NOT NULL,
+        asset_category TEXT NOT NULL,
+        asset_name TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        avg_price REAL NOT NULL,
+        total_invested REAL NOT NULL,
+        current_price REAL NOT NULL,
+        current_value REAL NOT NULL,
+        unrealized_pl REAL NOT NULL,
+        game_year INTEGER NOT NULL,
+        game_month INTEGER NOT NULL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (log_id) REFERENCES player_logs(id) ON DELETE CASCADE
+      )
+    `);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_holdings_log_id ON player_holdings(log_id)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_holdings_player ON player_holdings(player_name)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_holdings_category ON player_holdings(asset_category)`);
+    saveDatabase();
+  }
 }
 
 /**

@@ -1,8 +1,9 @@
 // Trade tracking utility for comprehensive AI analysis
-import { bankingTracker, BankingLog } from './bankingTracker';
+import { bankingTracker } from './bankingTracker';
 import { getServerUrl } from './getServerUrl';
 
 export interface TradeLog {
+  positionSize: number;
   id: string;
   transactionType: 'buy' | 'sell';
   assetType: string;
@@ -114,6 +115,18 @@ class TradeTracker {
       gameYear?: number | null;
       gameMonth?: number | null;
       timestamp?: number;
+    }>,
+    holdings?: Array<{
+      assetCategory: string;
+      assetName: string;
+      quantity: number;
+      avgPrice: number;
+      totalInvested: number;
+      currentPrice: number;
+      currentValue: number;
+      unrealizedPL: number;
+      gameYear: number;
+      gameMonth: number;
     }>
   ) {
     const bankingLogs = bankingTracker.getBankingLogs();
@@ -210,12 +223,15 @@ class TradeTracker {
         })),
         bankingTransactions: bankingTracker.getBankingLogs(),
         cashTransactions: cashTransactions || [],
+        holdings: holdings || [],
       };
       console.log('📤 Upload payload:', {
         uniqueId: logUniqueId,
         playerName,
         tradeCount: payload.trades.length,
         bankingTransactionCount: payload.bankingTransactions.length,
+        cashTransactionCount: payload.cashTransactions.length,
+        holdingsCount: payload.holdings.length,
       });
 
       const response = await fetch(`${getServerUrl()}/api/trades/bulk`, {
@@ -313,7 +329,6 @@ class TradeTracker {
 
       // Determine risk profile based on FD durations and rates
       const shortTermCount = fixedDeposits.filter(fd => fd.duration === 3).length;
-      const mediumTermCount = fixedDeposits.filter(fd => fd.duration === 12).length;
       const longTermCount = fixedDeposits.filter(fd => fd.duration === 36).length;
 
       if (shortTermCount > longTermCount) {

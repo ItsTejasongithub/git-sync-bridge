@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { MontserratFonts } from './montserratFonts';
 
 interface ReportData {
   playerName: string;
@@ -16,6 +17,8 @@ export function generateReportPDF(data: ReportData): void {
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4',
+    putOnlyUsedFonts: true,
+    compress: true,
   });
 
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -24,239 +27,165 @@ export function generateReportPDF(data: ReportData): void {
   const contentWidth = pageWidth - 2 * margin;
   let yPosition = 0;
 
-  // Add page numbers
+  // ============================================
+  // MONTSERRAT FONT REGISTRATION
+  // ============================================
+  // Register Montserrat font family with jsPDF
+  pdf.addFileToVFS('Montserrat-Regular.ttf', MontserratFonts.regular);
+  pdf.addFont('Montserrat-Regular.ttf', 'Montserrat', 'normal');
+
+  pdf.addFileToVFS('Montserrat-Bold.ttf', MontserratFonts.bold);
+  pdf.addFont('Montserrat-Bold.ttf', 'Montserrat', 'bold');
+
+  pdf.addFileToVFS('Montserrat-Italic.ttf', MontserratFonts.italic);
+  pdf.addFont('Montserrat-Italic.ttf', 'Montserrat', 'italic');
+
+  pdf.addFileToVFS('Montserrat-BoldItalic.ttf', MontserratFonts.boldItalic);
+  pdf.addFont('Montserrat-BoldItalic.ttf', 'Montserrat', 'bolditalic');
+
+  // ============================================
+  // MASTER FONT CONFIGURATION
+  // ============================================
+  // Change font family here to apply globally across the entire PDF
+  const FONT_FAMILY = {
+    base: 'Montserrat',
+  };
+
+  const COLORS = {
+    pageBackground: [18, 18, 18] as [number, number, number],    // Dark background #121212
+    cardBackground: [30, 30, 30] as [number, number, number],     // Dark card #1E1E1E
+    accent: [133, 76, 230] as [number, number, number],           // Purple accent #854CE6 (PhonePe-like)
+    headingText: [255, 255, 255] as [number, number, number],     // White text
+    bodyText: [200, 200, 200] as [number, number, number],        // Light gray text
+    labelGray: [150, 150, 150] as [number, number, number],       // Gray labels
+    positive: [34, 197, 94] as [number, number, number],          // Green for profit
+    negative: [239, 68, 68] as [number, number, number],          // Red for loss
+    divider: [60, 60, 60] as [number, number, number],            // Dark divider
+  };
+
   const addPageNumber = () => {
     const pageCount = (pdf as any).internal.getNumberOfPages();
     pdf.setFontSize(8);
-    pdf.setTextColor(150, 150, 150);
-    pdf.text(`Page ${pageCount}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
+    pdf.setTextColor(...COLORS.labelGray);
+    pdf.text(`Page: ${pageCount}`, pageWidth - 10, pageHeight - 2, { align: 'center' });
   };
 
-  // ===== HEADER SECTION =====
-  // Dark background gradient effect
-  pdf.setFillColor(31, 41, 55); // Dark gray-blue
-  pdf.rect(0, 0, pageWidth, 55, 'F');
+  const drawPageBackground = () => {
+    pdf.setFillColor(...COLORS.pageBackground);
+    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+  };
 
-  // Title
-  pdf.setTextColor(52, 211, 153); // Teal-green from UI
-  pdf.setFontSize(22);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('AI Trading Performance Report', margin, 20);
+  drawPageBackground();
 
-  yPosition = 35;
+  pdf.setFillColor(...COLORS.accent);
+  pdf.rect(0, 0, pageWidth, 3, 'F');
 
-  // ===== PLAYER INFO CARD =====
-  // White card with subtle shadow effect
-  pdf.setFillColor(255, 255, 255);
-  pdf.roundedRect(margin, yPosition, contentWidth, 32, 3, 3, 'F');
-  
-  // Purple accent bar (matching UI)
-  pdf.setFillColor(147, 51, 234);
-  pdf.rect(margin, yPosition, 4, 32, 'F');
+  pdf.setTextColor(...COLORS.headingText);
+  pdf.setFontSize(24);
+  pdf.setFont(FONT_FAMILY.base, 'bold');
+  pdf.text('AI-Powered Trading Analysis Report', pageWidth / 2, 20, { align: 'center' });
 
-  // Player name
-  pdf.setTextColor(30, 30, 30);
-  pdf.setFontSize(16);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(cleanText(data.playerName), margin + 8, yPosition + 10);
-  
-  // Age subtitle
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(107, 114, 128); // Gray-500
-  const ageLabel = data.playerAge < 5 ? '(Early Learner)' : data.playerAge < 15 ? '(Developing)' : '(Experienced)';
-  pdf.text(`Age: ${data.playerAge} ${ageLabel}`, margin + 8, yPosition + 17);
-  
-  // Date and ID
+  yPosition = 30;
+
+  pdf.setFillColor(...COLORS.cardBackground);
+  pdf.roundedRect(margin, yPosition, contentWidth, 24, 8, 8, 'F');
+
+  pdf.setTextColor(...COLORS.headingText);
+  pdf.setFontSize(13);
+  pdf.setFont(FONT_FAMILY.base, 'bold');
+  pdf.text(cleanText(data.playerName), margin + 8, yPosition + 9);
+
   pdf.setFontSize(8);
-  pdf.setTextColor(156, 163, 175); // Gray-400
-  pdf.text(`Generated: ${data.generatedDate}`, margin + 8, yPosition + 23);
-  
+  pdf.setFont(FONT_FAMILY.base, 'normal');
+  pdf.setTextColor(...COLORS.labelGray);
+  const ageLabel = data.playerAge < 20 ? 'Young Learner' : data.playerAge < 30 ? 'Student Explorer' : 'Experienced Learner';
+  pdf.text(`${ageLabel} • Age ${data.playerAge} • ${data.generatedDate}`, margin + 8, yPosition + 15);
+
   if (data.reportId) {
-    pdf.setTextColor(147, 51, 234); // Purple
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(`ID: ${data.reportId}`, margin + 8, yPosition + 28);
+    pdf.setTextColor(...COLORS.accent);
+    pdf.setFont(FONT_FAMILY.base, 'bold');
+    pdf.setFontSize(7.5);
+    pdf.text(`ID: ${data.reportId}`, margin + 8, yPosition + 20);
   }
 
-  yPosition += 40;
+  yPosition += 25;
 
-  // ===== PERFORMANCE METRICS CARDS =====
-  const cardHeight = 35;
-  const cardSpacing = 4;
+  const cardHeight = 30;
+  const cardSpacing = 6;
   const cardWidth = (contentWidth - 2 * cardSpacing) / 3;
 
-  // Card 1: Final Networth (Teal-Green matching UI)
-  pdf.setFillColor(52, 211, 153);
-  pdf.roundedRect(margin, yPosition, cardWidth, cardHeight, 4, 4, 'F');
-  
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('FINAL NETWORTH', margin + cardWidth / 2, yPosition + 10, { align: 'center' });
-  
-  pdf.setFontSize(16);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(`Rs. ${formatNumber(data.finalNetworth)}`, margin + cardWidth / 2, yPosition + 22, { align: 'center' });
+  pdf.setFillColor(...COLORS.cardBackground);
+  pdf.roundedRect(margin, yPosition, cardWidth, cardHeight, 8, 8, 'F');
 
-  // Card 2: CAGR (Blue matching UI)
-  pdf.setFillColor(59, 130, 246);
-  pdf.roundedRect(margin + cardWidth + cardSpacing, yPosition, cardWidth, cardHeight, 4, 4, 'F');
-  
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('CAGR', margin + cardWidth + cardSpacing + cardWidth / 2, yPosition + 10, { align: 'center' });
-  
-  pdf.setFontSize(16);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(`${data.cagr.toFixed(2)}%`, margin + cardWidth + cardSpacing + cardWidth / 2, yPosition + 22, { align: 'center' });
-
-  // Card 3: Profit/Loss (Green/Red)
-  const isProfitable = data.profitLoss >= 0;
-  if (isProfitable) {
-    pdf.setFillColor(34, 197, 94); // Green
-  } else {
-    pdf.setFillColor(239, 68, 68); // Red
-  }
-  pdf.roundedRect(margin + 2 * (cardWidth + cardSpacing), yPosition, cardWidth, cardHeight, 4, 4, 'F');
-  
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('PROFIT/LOSS', margin + 2 * (cardWidth + cardSpacing) + cardWidth / 2, yPosition + 10, { align: 'center' });
-  
-  pdf.setFontSize(16);
-  pdf.setFont('helvetica', 'bold');
-  const plText = `${data.profitLoss >= 0 ? '+' : ''}Rs. ${formatNumber(Math.abs(data.profitLoss))}`;
-  pdf.text(plText, margin + 2 * (cardWidth + cardSpacing) + cardWidth / 2, yPosition + 22, { align: 'center' });
-
-  yPosition += cardHeight + 15;
-
-  // ===== MAIN CONTENT SECTION =====
-  // Light background for content area
-  pdf.setFillColor(249, 250, 251);
-  pdf.rect(0, yPosition - 5, pageWidth, pageHeight - yPosition + 5, 'F');
-
-  // Main title banner
-  pdf.setFillColor(31, 41, 55);
-  pdf.rect(margin - 5, yPosition, contentWidth + 10, 15, 'F');
-  
-  pdf.setTextColor(52, 211, 153); // Teal
-  pdf.setFontSize(14);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('TRADING PERFORMANCE & FINANCIAL DISCIPLINE REPORT', margin, yPosition + 10);
-  
-  yPosition += 22;
-
-  // Summary info section
-  pdf.setFillColor(255, 255, 255);
-  pdf.roundedRect(margin, yPosition, contentWidth, 28, 3, 3, 'F');
-  
-  pdf.setTextColor(30, 30, 30);
+  pdf.setTextColor(...COLORS.labelGray);
   pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(`Player:`, margin + 5, yPosition + 8);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(`${cleanText(data.playerName)} (Age: ${data.playerAge})`, margin + 20, yPosition + 8);
-  
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(`Report ID:`, margin + 5, yPosition + 14);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(147, 51, 234);
-  pdf.text(`${data.reportId || 'N/A'}`, margin + 25, yPosition + 14);
-  
-  pdf.setTextColor(30, 30, 30);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(`Final Networth:`, margin + 5, yPosition + 20);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(`Rs.${formatNumber(data.finalNetworth)}`, margin + 32, yPosition + 20);
-  
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(`Total Profit/Loss:`, margin + 85, yPosition + 20);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(`${data.profitLoss >= 0 ? '+' : ''}Rs.${formatNumber(Math.abs(data.profitLoss))}`, margin + 116, yPosition + 20);
-  
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(`CAGR:`, margin + 5, yPosition + 26);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(`${data.cagr.toFixed(2)}%`, margin + 18, yPosition + 26);
+  pdf.setFont(FONT_FAMILY.base, 'bold');
+  pdf.text('TOTAL MONEY', margin + cardWidth / 2, yPosition + 9, { align: 'center' });
 
-  yPosition += 35;
+  pdf.setTextColor(...COLORS.headingText);
+  pdf.setFontSize(14);
+  pdf.setFont(FONT_FAMILY.base, 'bold');
+  pdf.text(`Rs.${formatNumber(data.finalNetworth)}`, margin + cardWidth / 2, yPosition + 20, { align: 'center' });
 
-  // ===== REPORT CONTENT =====
-  pdf.setTextColor(40, 40, 40);
+  const card2X = margin + cardWidth + cardSpacing;
+  pdf.setFillColor(...COLORS.cardBackground);
+  pdf.roundedRect(card2X, yPosition, cardWidth, cardHeight, 8, 8, 'F');
+
+  pdf.setTextColor(...COLORS.labelGray);
+  pdf.setFontSize(9);
+  pdf.setFont(FONT_FAMILY.base, 'bold');
+  pdf.text('GROWTH RATE', card2X + cardWidth / 2, yPosition + 9, { align: 'center' });
+
+  pdf.setTextColor(...COLORS.headingText);
+  pdf.setFontSize(14);
+  pdf.setFont(FONT_FAMILY.base, 'bold');
+  pdf.text(`${data.cagr.toFixed(2)}%`, card2X + cardWidth / 2, yPosition + 20, { align: 'center' });
+
+  const card3X = margin + 2 * (cardWidth + cardSpacing);
+  const isGrowth = data.profitLoss >= 0;
+
+  pdf.setFillColor(...COLORS.cardBackground);
+  pdf.roundedRect(card3X, yPosition, cardWidth, cardHeight, 8, 8, 'F');
+
+  pdf.setTextColor(...COLORS.labelGray);
+  pdf.setFontSize(9);
+  pdf.setFont(FONT_FAMILY.base, 'bold');
+  pdf.text('MONEY CHANGE', card3X + cardWidth / 2, yPosition + 9, { align: 'center' });
+
+  pdf.setTextColor(...(isGrowth ? COLORS.positive : COLORS.negative));
+  pdf.setFontSize(14);
+  pdf.setFont(FONT_FAMILY.base, 'bold');
+  const plText = `${data.profitLoss >= 0 ? '+' : ''}Rs.${formatNumber(Math.abs(data.profitLoss))}`;
+  pdf.text(plText, card3X + cardWidth / 2, yPosition + 20, { align: 'center' });
+
+  yPosition += cardHeight + 10;
+
+  pdf.setFillColor(...COLORS.divider);
+  pdf.rect(margin, yPosition, contentWidth, 0.5, 'F');
+  yPosition += 6;
+
+  pdf.setTextColor(...COLORS.headingText);
+  pdf.setFontSize(13);
+  pdf.setFont(FONT_FAMILY.base, 'bold');
+  pdf.text('Your Learning Insights', margin + 6, yPosition);
+
+  yPosition += 3;
+
+  pdf.setTextColor(...COLORS.bodyText);
   pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
+  pdf.setFont(FONT_FAMILY.base, 'normal');
 
   const cleanedContent = cleanText(data.reportContent);
   const lines = cleanedContent.split('\n');
 
-  let inCodeBlock = false;
-  let codeBlockLines: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
 
-  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-    const line = lines[lineIndex];
-
-    // Handle code blocks
-    if (line.trim().startsWith('```')) {
-      if (inCodeBlock) {
-        // End of code block - render it
-        if (codeBlockLines.length > 0) {
-          yPosition += 2;
-
-          const codeHeight = codeBlockLines.length * 4.5 + 6;
-
-          if (yPosition + codeHeight > pageHeight - 30) {
-            addPageNumber();
-            pdf.addPage();
-            pdf.setFillColor(249, 250, 251);
-            pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-            yPosition = margin;
-          }
-
-          // Code block background
-          pdf.setFillColor(31, 41, 55); // Dark background
-          pdf.roundedRect(margin, yPosition - 2, contentWidth, codeHeight, 2, 2, 'F');
-
-          // Render code lines
-          pdf.setTextColor(156, 203, 175); // Light green monospace color
-          pdf.setFont('courier', 'normal');
-          pdf.setFontSize(8);
-
-          let codeY = yPosition + 3;
-          for (const codeLine of codeBlockLines) {
-            pdf.text(codeLine, margin + 3, codeY);
-            codeY += 4.5;
-          }
-
-          yPosition += codeHeight + 3;
-          pdf.setFontSize(10);
-          pdf.setFont('helvetica', 'normal');
-          pdf.setTextColor(40, 40, 40);
-
-          codeBlockLines = [];
-        }
-        inCodeBlock = false;
-      } else {
-        // Start of code block
-        inCodeBlock = true;
-      }
-      continue;
-    }
-
-    if (inCodeBlock) {
-      codeBlockLines.push(line);
-      continue;
-    }
-
-    // Page overflow check
-    if (yPosition > pageHeight - 30) {
+    if (yPosition > pageHeight - 32) {
       addPageNumber();
       pdf.addPage();
-      // Continue light background
-      pdf.setFillColor(249, 250, 251);
-      pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-      yPosition = margin;
+      drawPageBackground();
+      yPosition = margin + 14;
     }
 
     if (!line.trim()) {
@@ -264,444 +193,454 @@ export function generateReportPDF(data: ReportData): void {
       continue;
     }
 
-    // Horizontal dividers
-    if (line.trim() === '---' || line.trim() === '___' || line.trim() === '***') {
-      pdf.setDrawColor(209, 213, 219);
-      pdf.setLineWidth(0.5);
-      pdf.line(margin + 15, yPosition + 2, pageWidth - margin - 15, yPosition + 2);
-      yPosition += 7;
-      continue;
-    }
-
-    // Section numbers (# 1., # 2., etc.)
-    const sectionMatch = line.match(/^#?\s*(\d+)\.\s*(.+?):\s*\*\*(.+?)\*\*/);
+    const sectionMatch = line.match(/^##\s+(\d+)\.\s+(.+?)(?:\s*:\s*\*\*(.+?)\*\*)?$/);
     if (sectionMatch) {
-      yPosition += 3;
-      
-      // Section card background
-      pdf.setFillColor(255, 255, 255);
-      pdf.roundedRect(margin, yPosition - 2, contentWidth, 18, 3, 3, 'F');
-      
-      // Number circle (matching UI purple)
-      pdf.setFillColor(147, 51, 234);
-      pdf.circle(margin + 8, yPosition + 6, 5, 'F');
-      
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(11);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(sectionMatch[1], margin + 8, yPosition + 8, { align: 'center' });
-      
-      // Section title
-      pdf.setTextColor(30, 30, 30);
-      pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'bold');
-      const sectionTitle = `${sectionMatch[2]}:`;
-      pdf.text(sectionTitle, margin + 16, yPosition + 7);
-      
-      // Highlighted classification
-      pdf.setTextColor(52, 211, 153); // Teal
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(sectionMatch[3], margin + 16 + pdf.getTextWidth(sectionTitle) + 2, yPosition + 7);
-      
-      yPosition += 22;
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(40, 40, 40);
-      continue;
-    }
+      yPosition += 6;
 
-    // Main headers (full line bold)
-    if (line.trim().startsWith('**') && line.trim().endsWith('**') && line.length < 100 && !line.includes('Analyst Note')) {
-      yPosition += 2;
-      pdf.setFontSize(13);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(147, 51, 234); // Purple
-      const text = line.trim().replace(/^\*\*/, '').replace(/\*\*$/, '');
-      pdf.text(cleanText(text), margin, yPosition);
-      yPosition += 8;
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(40, 40, 40);
-      continue;
-    }
-
-    // Subsection headers (###)
-    if (line.startsWith('### ')) {
-      yPosition += 2;
-      pdf.setFontSize(11);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(59, 130, 246); // Blue
-      const text = line.replace('### ', '');
-      pdf.text(cleanText(text), margin, yPosition);
-      yPosition += 8;
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(40, 40, 40);
-      continue;
-    }
-
-    // Block quotes
-    if (line.trim().startsWith('> ')) {
-      yPosition += 2;
-      const quoteText = line.trim().replace(/^>\s*/, '');
-
-      // Quote background
-      pdf.setFillColor(241, 245, 249); // Light blue-gray
-      pdf.setDrawColor(59, 130, 246); // Blue border
-      pdf.setLineWidth(1);
-
-      const wrappedQuote = pdf.splitTextToSize(cleanText(quoteText), contentWidth - 10);
-      const quoteHeight = wrappedQuote.length * 5 + 4;
-
-      if (yPosition + quoteHeight > pageHeight - 30) {
+      // Ensure section heading has enough space (at least 20mm for heading + some content)
+      const MIN_SPACE_FOR_SECTION = 20;
+      if (yPosition + MIN_SPACE_FOR_SECTION > pageHeight - 32) {
         addPageNumber();
         pdf.addPage();
-        pdf.setFillColor(249, 250, 251);
-        pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-        yPosition = margin;
+        drawPageBackground();
+        yPosition = margin + 14;
       }
 
-      pdf.roundedRect(margin, yPosition - 2, contentWidth, quoteHeight, 2, 2, 'FD');
+      pdf.setTextColor(...COLORS.headingText);
+      pdf.setFontSize(12);
+      pdf.setFont(FONT_FAMILY.base, 'bold');
 
-      pdf.setTextColor(71, 85, 105); // Slate-600
-      pdf.setFont('helvetica', 'italic');
-      pdf.setFontSize(9);
+      const fullSectionText = `${sectionMatch[1]}. ${sectionMatch[2]}`;
+      pdf.text(fullSectionText, margin + 6, yPosition);
 
-      let quoteY = yPosition + 2;
-      for (const quoteLine of wrappedQuote) {
-        pdf.text(quoteLine, margin + 5, quoteY);
-        quoteY += 5;
+      if (sectionMatch[3]) {
+        const titleWidth = pdf.getTextWidth(fullSectionText);
+        pdf.setTextColor(...COLORS.bodyText);
+        pdf.setFont(FONT_FAMILY.base, 'normal');
+        pdf.setFontSize(10);
+        pdf.text(`: ${sectionMatch[3]}`, margin + 6 + titleWidth + 2, yPosition);
       }
 
-      yPosition += quoteHeight + 3;
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(40, 40, 40);
+      yPosition += 8;
       continue;
     }
 
-    // Numbered list items (not section headers)
-    const numberedListMatch = line.trim().match(/^(\d+)\.\s+(.+)$/);
-    if (numberedListMatch && !line.includes('**')) {
-      const num = numberedListMatch[1];
-      let text = numberedListMatch[2];
+    if (line.startsWith('### ')) {
+      yPosition += 4;
 
-      // Remove bold markers
-      text = text.replace(/\*\*/g, '');
-
-      // Number badge (purple accent)
-      pdf.setFillColor(147, 51, 234);
-      pdf.circle(margin + 3, yPosition - 0.5, 1.8, 'F');
-
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(8);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(num, margin + 3, yPosition + 0.5, { align: 'center' });
-
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(55, 65, 81);
-      pdf.setFontSize(10);
-      const wrappedText = pdf.splitTextToSize(cleanText(text), contentWidth - 14);
-      for (let i = 0; i < wrappedText.length; i++) {
-        if (yPosition > pageHeight - 30) {
-          addPageNumber();
-          pdf.addPage();
-          pdf.setFillColor(249, 250, 251);
-          pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-          yPosition = margin;
-        }
-        pdf.text(wrappedText[i], margin + 8, yPosition);
-        yPosition += 5;
+      // Ensure subsection heading has enough space (at least 15mm)
+      const MIN_SPACE_FOR_SUBSECTION = 15;
+      if (yPosition + MIN_SPACE_FOR_SUBSECTION > pageHeight - 32) {
+        addPageNumber();
+        pdf.addPage();
+        drawPageBackground();
+        yPosition = margin + 14;
       }
-      yPosition += 2;
+
+      pdf.setFontSize(10.5);
+      pdf.setFont(FONT_FAMILY.base, 'bold');
+      pdf.setTextColor(...COLORS.headingText);
+
+      const text = line.replace('### ', '');
+      pdf.text(cleanText(text), margin + 6, yPosition);
+
+      yPosition += 7;
+      pdf.setFontSize(10);
+      pdf.setFont(FONT_FAMILY.base, 'normal');
+      pdf.setTextColor(...COLORS.bodyText);
       continue;
     }
 
-    // Bullet points with modern styling
-    if (line.trim().startsWith('- ') || line.trim().startsWith('* ') || line.trim().startsWith('• ')) {
-      let text = line.trim().replace(/^[-*•]\s*/, '');
+    if (line.trim().startsWith('**') && line.trim().endsWith('**') && !line.includes(':')) {
+      yPosition += 4;
 
-      // Remove bold markers from bullet text
+      // Ensure bold heading has enough space (at least 12mm)
+      const MIN_SPACE_FOR_BOLD_HEADING = 12;
+      if (yPosition + MIN_SPACE_FOR_BOLD_HEADING > pageHeight - 32) {
+        addPageNumber();
+        pdf.addPage();
+        drawPageBackground();
+        yPosition = margin + 14;
+      }
+
+      pdf.setFontSize(11);
+      pdf.setFont(FONT_FAMILY.base, 'bold');
+      pdf.setTextColor(...COLORS.headingText);
+
+      const text = line.trim().replace(/^\*\*/, '').replace(/\*\*$/, '');
+      pdf.text(cleanText(text), margin + 6, yPosition);
+
+      yPosition += 7;
+      pdf.setFontSize(10);
+      pdf.setFont(FONT_FAMILY.base, 'normal');
+      pdf.setTextColor(...COLORS.bodyText);
+      continue;
+    }
+
+    if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
+      let text = line.trim().replace(/^[-*]\s*/, '');
       text = text.replace(/\*\*/g, '');
-
-      // Bullet circle (teal accent)
-      pdf.setFillColor(52, 211, 153);
-      pdf.circle(margin + 3, yPosition - 0.5, 1.5, 'F');
 
       const colonIndex = text.indexOf(':');
+      let estimatedLines = 1;
 
-      if (colonIndex > 0 && colonIndex < 60) {
+      // Estimate bullet point height
+      if (colonIndex > 0 && colonIndex < 50) {
+        const label = text.substring(0, colonIndex + 1);
+        const description = text.substring(colonIndex + 1).trim();
+        const labelWidth = pdf.getTextWidth(cleanText(label));
+        const wrappedDescEstimate = pdf.splitTextToSize(cleanText(description), contentWidth - 20 - labelWidth);
+        estimatedLines = wrappedDescEstimate.length;
+      } else {
+        const wrappedTextEstimate = pdf.splitTextToSize(cleanText(text), contentWidth - 20);
+        estimatedLines = wrappedTextEstimate.length;
+      }
+
+      const MIN_LINES_ON_PAGE = 3; // Minimum 3 lines before page break
+
+      // If bullet would be orphaned (less than 3 lines fit), move entire bullet to next page
+      if (yPosition + (MIN_LINES_ON_PAGE * 6) > pageHeight - 32 && estimatedLines > MIN_LINES_ON_PAGE) {
+        addPageNumber();
+        pdf.addPage();
+        drawPageBackground();
+        yPosition = margin + 14;
+      }
+
+      pdf.setFillColor(...COLORS.accent);
+      pdf.circle(margin + 9, yPosition - 1, 1.2, 'F');
+
+      if (colonIndex > 0 && colonIndex < 50) {
         const label = text.substring(0, colonIndex + 1);
         const description = text.substring(colonIndex + 1).trim();
 
-        pdf.setFont('helvetica', 'bold');
-        pdf.setTextColor(30, 30, 30);
-        pdf.text(cleanText(label), margin + 7, yPosition);
+        pdf.setFont(FONT_FAMILY.base, 'bold');
+        pdf.setTextColor(...COLORS.headingText);
+        pdf.setFontSize(10);
+        pdf.text(cleanText(label), margin + 13, yPosition);
+
         const labelWidth = pdf.getTextWidth(cleanText(label));
 
-        pdf.setFont('helvetica', 'normal');
-        pdf.setTextColor(55, 65, 81); // Gray-700
-        const wrappedDesc = pdf.splitTextToSize(cleanText(description), contentWidth - 14 - labelWidth);
+        pdf.setFont(FONT_FAMILY.base, 'normal');
+        pdf.setTextColor(...COLORS.bodyText);
+        pdf.setFontSize(10);
+        const wrappedDesc = pdf.splitTextToSize(cleanText(description), contentWidth - 20 - labelWidth);
 
-        if (wrappedDesc.length > 0) {
-          pdf.text(wrappedDesc[0], margin + 7 + labelWidth + 1, yPosition);
-          yPosition += 5;
-
-          for (let i = 1; i < wrappedDesc.length; i++) {
-            if (yPosition > pageHeight - 30) {
-              addPageNumber();
-              pdf.addPage();
-              pdf.setFillColor(249, 250, 251);
-              pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-              yPosition = margin;
-            }
-            pdf.text(wrappedDesc[i], margin + 7, yPosition);
-            yPosition += 5;
-          }
+        if (wrappedDesc.length > 0 && wrappedDesc[0].trim()) {
+          pdf.text(wrappedDesc[0], margin + 13 + labelWidth + 2, yPosition);
         }
-      } else {
-        pdf.setFont('helvetica', 'normal');
-        pdf.setTextColor(55, 65, 81);
-        const wrappedText = pdf.splitTextToSize(cleanText(text), contentWidth - 14);
-        for (let i = 0; i < wrappedText.length; i++) {
-          if (yPosition > pageHeight - 30) {
+        yPosition += 6;
+
+        for (let j = 1; j < wrappedDesc.length; j++) {
+          if (yPosition > pageHeight - 32) {
             addPageNumber();
             pdf.addPage();
-            pdf.setFillColor(249, 250, 251);
-            pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-            yPosition = margin;
+            drawPageBackground();
+            yPosition = margin + 14;
           }
-          pdf.text(wrappedText[i], margin + 7, yPosition);
-          yPosition += 5;
+          pdf.setFont(FONT_FAMILY.base, 'normal');
+          pdf.setTextColor(...COLORS.bodyText);
+          pdf.text(wrappedDesc[j], margin + 13, yPosition);
+          yPosition += 6;
         }
-      }
-
-      yPosition += 2;
-      continue;
-    }
-
-    // Handle markdown tables
-    if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
-      // Check if it's a table separator line
-      if (line.match(/^\|[\s:-]+\|/)) {
-        yPosition += 2;
-        continue;
-      }
-
-      // Parse table row
-      const cells = line.split('|').filter(cell => cell.trim()).map(cell => cell.trim());
-
-      if (cells.length > 0) {
-        yPosition += 1;
-        const cellWidth = contentWidth / cells.length;
-        let xPos = margin;
-
-        // Check if this is a header row (check if next line is separator)
-        const isHeader = lineIndex + 1 < lines.length && lines[lineIndex + 1].match(/^\|[\s:-]+\|/);
-
-        for (const cell of cells) {
-          if (isHeader) {
-            pdf.setFillColor(147, 51, 234); // Purple header
-            pdf.rect(xPos, yPosition - 3, cellWidth, 8, 'F');
-            pdf.setTextColor(255, 255, 255);
-            pdf.setFont('helvetica', 'bold');
-            pdf.setFontSize(9);
-          } else {
-            pdf.setDrawColor(209, 213, 219);
-            pdf.setLineWidth(0.2);
-            pdf.rect(xPos, yPosition - 3, cellWidth, 8);
-            pdf.setTextColor(55, 65, 81);
-            pdf.setFont('helvetica', 'normal');
-            pdf.setFontSize(9);
-          }
-
-          const cellText = cleanText(cell);
-          pdf.text(cellText, xPos + 2, yPosition + 2);
-          xPos += cellWidth;
-        }
-
-        yPosition += 8;
+      } else {
+        pdf.setFont(FONT_FAMILY.base, 'normal');
+        pdf.setTextColor(...COLORS.bodyText);
         pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'normal');
-        continue;
-      }
-    }
 
-    // Handle **Analyst Note:** special formatting
-    if (line.startsWith('**Analyst Note:**')) {
-      yPosition += 3;
-      pdf.setFillColor(254, 243, 199); // Light yellow
-      const noteHeight = 12;
-      pdf.roundedRect(margin, yPosition - 2, contentWidth, noteHeight, 2, 2, 'F');
-      
-      pdf.setTextColor(146, 64, 14); // Amber-800
-      pdf.setFontSize(9);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Analyst Note:', margin + 3, yPosition + 3);
-      
-      const noteText = line.replace('**Analyst Note:**', '').replace(/^\*/, '').replace(/\*$/, '').trim();
-      pdf.setFont('helvetica', 'italic');
-      pdf.setTextColor(120, 53, 15);
-      const wrappedNote = pdf.splitTextToSize(cleanText(noteText), contentWidth - 6);
-      let noteY = yPosition + 8;
-      for (const noteLine of wrappedNote) {
-        pdf.text(noteLine, margin + 3, noteY);
-        noteY += 4;
+        const wrappedText = pdf.splitTextToSize(cleanText(text), contentWidth - 20);
+        for (let j = 0; j < wrappedText.length; j++) {
+          if (yPosition > pageHeight - 32) {
+            addPageNumber();
+            pdf.addPage();
+            drawPageBackground();
+            yPosition = margin + 14;
+          }
+          pdf.setFont(FONT_FAMILY.base, 'normal');
+          pdf.setTextColor(...COLORS.bodyText);
+          pdf.text(wrappedText[j], margin + 13, yPosition);
+          yPosition += 6;
+        }
       }
-      yPosition += noteHeight + 3;
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(40, 40, 40);
+
       continue;
     }
 
-    // Regular paragraph text (handle inline formatting)
-    const processedLine = cleanText(line);
+    const numberedMatch = line.trim().match(/^(\d+)\.\s+(.+)$/);
+    if (numberedMatch && !line.includes('**')) {
+      const num = numberedMatch[1];
+      let text = numberedMatch[2].replace(/\*\*/g, '');
 
-    // Check if line contains inline formatting (bold or code)
-    if (processedLine.includes('**') || processedLine.includes('`')) {
-      // Split by both bold and code patterns
-      const parts = processedLine.split(/(\*\*.*?\*\*|`.*?`)/g);
-      let xPos = margin;
+      // Estimate numbered item height
+      const wrappedTextEstimate = pdf.splitTextToSize(cleanText(text), contentWidth - 20);
+      const estimatedLines = wrappedTextEstimate.length;
+      const MIN_LINES_ON_PAGE = 3;
 
-      pdf.setTextColor(55, 65, 81);
+      // If numbered item would be orphaned, move entire item to next page
+      if (yPosition + (MIN_LINES_ON_PAGE * 6) > pageHeight - 32 && estimatedLines > MIN_LINES_ON_PAGE) {
+        addPageNumber();
+        pdf.addPage();
+        drawPageBackground();
+        yPosition = margin + 14;
+      }
+
+      pdf.setFillColor(...COLORS.accent);
+      pdf.circle(margin + 9.5, yPosition - 1, 2, 'F');
+
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(8.5);
+      pdf.setFont(FONT_FAMILY.base, 'bold');
+      pdf.text(num, margin + 9.5, yPosition + 0.8, { align: 'center' });
+
+      pdf.setFont(FONT_FAMILY.base, 'normal');
+      pdf.setTextColor(...COLORS.bodyText);
       pdf.setFontSize(10);
 
-      for (const part of parts) {
-        if (!part) continue;
-
-        if (part.startsWith('**') && part.endsWith('**')) {
-          // Bold text
-          pdf.setFont('helvetica', 'bold');
-          pdf.setTextColor(30, 30, 30);
-          const boldText = part.replace(/^\*\*/, '').replace(/\*\*$/, '');
-
-          const boldWidth = pdf.getTextWidth(boldText);
-          if (xPos + boldWidth > pageWidth - margin) {
-            yPosition += 5;
-            xPos = margin;
-            if (yPosition > pageHeight - 30) {
-              addPageNumber();
-              pdf.addPage();
-              pdf.setFillColor(249, 250, 251);
-              pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-              yPosition = margin;
-            }
-          }
-
-          pdf.text(boldText, xPos, yPosition);
-          xPos += boldWidth;
-        } else if (part.startsWith('`') && part.endsWith('`')) {
-          // Inline code
-          const codeText = part.replace(/^`/, '').replace(/`$/, '');
-
-          pdf.setFont('courier', 'normal');
-          pdf.setFontSize(9);
-          const codeWidth = pdf.getTextWidth(codeText);
-
-          if (xPos + codeWidth + 4 > pageWidth - margin) {
-            yPosition += 5;
-            xPos = margin;
-            if (yPosition > pageHeight - 30) {
-              addPageNumber();
-              pdf.addPage();
-              pdf.setFillColor(249, 250, 251);
-              pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-              yPosition = margin;
-            }
-          }
-
-          // Code background
-          pdf.setFillColor(241, 245, 249);
-          pdf.roundedRect(xPos, yPosition - 3, codeWidth + 2, 4.5, 1, 1, 'F');
-
-          pdf.setTextColor(239, 68, 68); // Red code text
-          pdf.text(codeText, xPos + 1, yPosition);
-
-          xPos += codeWidth + 4;
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(10);
-        } else {
-          // Normal text
-          pdf.setFont('helvetica', 'normal');
-          pdf.setTextColor(55, 65, 81);
-
-          const words = part.split(' ');
-          for (let w = 0; w < words.length; w++) {
-            const word = words[w] + (w < words.length - 1 ? ' ' : '');
-            const wordWidth = pdf.getTextWidth(word);
-
-            if (xPos + wordWidth > pageWidth - margin) {
-              yPosition += 5;
-              xPos = margin;
-              if (yPosition > pageHeight - 30) {
-                addPageNumber();
-                pdf.addPage();
-                pdf.setFillColor(249, 250, 251);
-                pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-                yPosition = margin;
-              }
-            }
-
-            pdf.text(word, xPos, yPosition);
-            xPos += wordWidth;
-          }
-        }
-      }
-      yPosition += 6;
-    } else {
-      // Simple paragraph without inline formatting
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(55, 65, 81);
-      const wrappedText = pdf.splitTextToSize(processedLine, contentWidth);
-      for (let i = 0; i < wrappedText.length; i++) {
-        if (yPosition > pageHeight - 30) {
+      const wrappedText = pdf.splitTextToSize(cleanText(text), contentWidth - 20);
+      for (let j = 0; j < wrappedText.length; j++) {
+        if (yPosition > pageHeight - 32) {
           addPageNumber();
           pdf.addPage();
-          pdf.setFillColor(249, 250, 251);
-          pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-          yPosition = margin;
+          drawPageBackground();
+          yPosition = margin + 14;
         }
-        pdf.text(wrappedText[i], margin, yPosition);
-        yPosition += 5;
+        pdf.setFont(FONT_FAMILY.base, 'normal');
+        pdf.setTextColor(...COLORS.bodyText);
+        pdf.text(wrappedText[j], margin + 14, yPosition);
+        yPosition += 6;
       }
-      yPosition += 1;
+
+      continue;
+    }
+
+    if (line.trim().startsWith('> ')) {
+      const quoteText = line.trim().replace(/^>\s*/, '');
+
+      const wrappedQuote = pdf.splitTextToSize(cleanText(quoteText), contentWidth - 18);
+      const quoteHeight = wrappedQuote.length * 6 + 8;
+
+      if (yPosition + quoteHeight > pageHeight - 32) {
+        addPageNumber();
+        pdf.addPage();
+        drawPageBackground();
+        yPosition = margin + 14;
+      }
+
+      pdf.setFillColor(40, 40, 40);
+      pdf.roundedRect(margin + 6, yPosition - 2, contentWidth - 6, quoteHeight, 6, 6, 'F');
+
+      pdf.setFillColor(...COLORS.accent);
+      pdf.rect(margin + 6, yPosition - 2, 3, quoteHeight, 'F');
+
+      pdf.setTextColor(...COLORS.accent);
+      pdf.setFont(FONT_FAMILY.base, 'italic');
+      pdf.setFontSize(9.5);
+
+      let quoteY = yPosition + 3;
+      for (const quoteLine of wrappedQuote) {
+        pdf.text(quoteLine, margin + 12, quoteY);
+        quoteY += 6;
+      }
+
+      yPosition += quoteHeight + 4;
+      pdf.setFontSize(10);
+      pdf.setFont(FONT_FAMILY.base, 'normal');
+      pdf.setTextColor(...COLORS.bodyText);
+      continue;
+    }
+
+    pdf.setTextColor(...COLORS.bodyText);
+    pdf.setFontSize(10);
+
+    const processedLine = cleanText(line);
+
+    if (processedLine.includes('**') || processedLine.includes('*')) {
+      const lineSegments: Array<{ text: string; style: 'normal' | 'bold' | 'italic'; x: number }> = [];
+      let xPosition = margin + 6;
+
+      let currentText = processedLine;
+      let i = 0;
+
+      while (i < currentText.length) {
+        if (currentText.substr(i, 2) === '**') {
+          const endIdx = currentText.indexOf('**', i + 2);
+          if (endIdx !== -1) {
+            const boldText = currentText.substring(i + 2, endIdx);
+
+            const words = boldText.split(' ');
+            for (let w = 0; w < words.length; w++) {
+              const word = words[w] + (w < words.length - 1 ? ' ' : '');
+              pdf.setFont(FONT_FAMILY.base, 'bold');
+              const wordWidth = pdf.getTextWidth(word);
+
+              if (xPosition + wordWidth > pageWidth - margin && lineSegments.length > 0) {
+                for (const seg of lineSegments) {
+                  pdf.setFont(FONT_FAMILY.base, seg.style);
+                  pdf.setTextColor(...COLORS.bodyText);
+                  pdf.text(seg.text, seg.x, yPosition);
+                }
+                yPosition += 6;
+                if (yPosition > pageHeight - 32) {
+                  addPageNumber();
+                  pdf.addPage();
+                  drawPageBackground();
+                  yPosition = margin + 14;
+                }
+                xPosition = margin + 6;
+                lineSegments.length = 0;
+              }
+
+              lineSegments.push({ text: word, style: 'bold', x: xPosition });
+              xPosition += wordWidth;
+            }
+
+            i = endIdx + 2;
+            continue;
+          }
+        }
+
+        if (currentText[i] === '*' && currentText[i + 1] !== '*') {
+          const endIdx = currentText.indexOf('*', i + 1);
+          if (endIdx !== -1 && currentText[endIdx + 1] !== '*') {
+            const italicText = currentText.substring(i + 1, endIdx);
+
+            const words = italicText.split(' ');
+            for (let w = 0; w < words.length; w++) {
+              const word = words[w] + (w < words.length - 1 ? ' ' : '');
+              pdf.setFont(FONT_FAMILY.base, 'italic');
+              const wordWidth = pdf.getTextWidth(word);
+
+              if (xPosition + wordWidth > pageWidth - margin && lineSegments.length > 0) {
+                for (const seg of lineSegments) {
+                  pdf.setFont(FONT_FAMILY.base, seg.style);
+                  pdf.setTextColor(...COLORS.bodyText);
+                  pdf.text(seg.text, seg.x, yPosition);
+                }
+                yPosition += 6;
+                if (yPosition > pageHeight - 32) {
+                  addPageNumber();
+                  pdf.addPage();
+                  drawPageBackground();
+                  yPosition = margin + 14;
+                }
+                xPosition = margin + 6;
+                lineSegments.length = 0;
+              }
+
+              lineSegments.push({ text: word, style: 'italic', x: xPosition });
+              xPosition += wordWidth;
+            }
+
+            i = endIdx + 1;
+            continue;
+          }
+        }
+
+        let nextMarker = currentText.length;
+        const nextBold = currentText.indexOf('**', i);
+        const nextItalic = currentText.indexOf('*', i);
+
+        if (nextBold !== -1 && nextBold < nextMarker) nextMarker = nextBold;
+        if (nextItalic !== -1 && nextItalic < nextMarker && (nextBold === -1 || nextItalic < nextBold)) nextMarker = nextItalic;
+
+        if (nextMarker > i) {
+          const plainText = currentText.substring(i, nextMarker);
+
+          const words = plainText.split(' ');
+          for (let w = 0; w < words.length; w++) {
+            const word = words[w] + (w < words.length - 1 ? ' ' : '');
+            pdf.setFont(FONT_FAMILY.base, 'normal');
+            const wordWidth = pdf.getTextWidth(word);
+
+            if (xPosition + wordWidth > pageWidth - margin && lineSegments.length > 0) {
+              for (const seg of lineSegments) {
+                pdf.setFont(FONT_FAMILY.base, seg.style);
+                pdf.text(seg.text, seg.x, yPosition);
+              }
+              yPosition += 6;
+              if (yPosition > pageHeight - 32) {
+                addPageNumber();
+                pdf.addPage();
+                drawPageBackground();
+                pdf.setFillColor(...COLORS.cardBackground);
+                // pdf.rect(margin, margin + 8, contentWidth, pageHeight - 2 * margin - 30, 'F');
+                yPosition = margin + 14;
+              }
+              xPosition = margin + 6;
+              lineSegments.length = 0;
+            }
+
+            lineSegments.push({ text: word, style: 'normal', x: xPosition });
+            xPosition += wordWidth;
+          }
+
+          i = nextMarker;
+        } else {
+          i++;
+        }
+      }
+
+      if (lineSegments.length > 0) {
+        for (const seg of lineSegments) {
+          pdf.setFont(FONT_FAMILY.base, seg.style);
+          pdf.setTextColor(...COLORS.bodyText);
+          pdf.text(seg.text, seg.x, yPosition);
+        }
+        yPosition += 6;
+      }
+    } else {
+      pdf.setFont(FONT_FAMILY.base, 'normal');
+      pdf.setTextColor(...COLORS.bodyText);
+      const wrappedText = pdf.splitTextToSize(processedLine, contentWidth - 12);
+
+      for (let j = 0; j < wrappedText.length; j++) {
+        if (yPosition > pageHeight - 32) {
+          addPageNumber();
+          pdf.addPage();
+          drawPageBackground();
+          yPosition = margin + 14;
+        }
+        pdf.setTextColor(...COLORS.bodyText);
+        pdf.text(wrappedText[j], margin + 6, yPosition);
+        yPosition += 6;
+      }
     }
   }
 
-  // Add final page number
   addPageNumber();
 
-  // Modern Footer with accent
-  const footerY = pageHeight - 12;
+  const footerY = pageHeight - 16;
 
-  // Dark footer background
-  pdf.setFillColor(31, 41, 55);
-  pdf.rect(0, footerY - 3, pageWidth, 15, 'F');
+  pdf.setFillColor(...COLORS.accent);
+  pdf.setGState(pdf.GState({ opacity: 0.3 }));
+  pdf.rect(0, footerY, pageWidth, 1, 'F');
+  pdf.setGState(pdf.GState({ opacity: 1 }));
 
-  // Teal accent line at top of footer
-  pdf.setFillColor(52, 211, 153);
-  pdf.rect(0, footerY - 3, pageWidth, 1, 'F');
-
-  // Footer text
-  pdf.setFontSize(8);
-  pdf.setTextColor(156, 163, 175);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Generated by BullRun Game', pageWidth / 2, footerY + 2, { align: 'center' });
+  pdf.setFontSize(8.5);
+  pdf.setTextColor(...COLORS.accent);
+  pdf.setFont(FONT_FAMILY.base, 'italic');
+  pdf.text('UNDERSTANDING TRADING PATTERNS AND DECISION-MAKING USING AI INSIGHTS', pageWidth / 2, footerY + 5, { align: 'center' });
 
   pdf.setFontSize(7);
-  pdf.setTextColor(107, 114, 128);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('AI-Powered Trading Performance Analysis', pageWidth / 2, footerY + 6, { align: 'center' });
+  pdf.setTextColor(...COLORS.labelGray);
+  pdf.setFont(FONT_FAMILY.base, 'italic');
+  pdf.text('BullRun Analysis Report Exclusively Developed by 10xTechClub', pageWidth / 2, footerY + 10, { align: 'center' });
 
-  // Generate filename
-  const filename = `TradingReport_${data.playerName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+  const filename = `LearningJourney_${data.playerName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
   pdf.save(filename);
 }
 
 function cleanText(text: string): string {
   return text
     .replace(/₹/g, 'Rs.')
+    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
+    .replace(/[\u{2600}-\u{26FF}]/gu, '')
+    .replace(/[\u{2700}-\u{27BF}]/gu, '')
+    .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
+    .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
+    .replace(/[\u{1F900}-\u{1F9FF}]/gu, '')
+    .replace(/[\u{FE00}-\u{FE0F}]/gu, '')
+    .replace(/[\u{200D}]/gu, '')
+    .replace(/🎓|🎯|🌱|💰|📊|📚|🏦|💸|💡|✅|🔄|📄|⭐|🎮|🎁|🚀|✨/g, '')
     .replace(/\u2019/g, "'")
     .replace(/\u2018/g, "'")
     .replace(/\u201C/g, '"')
@@ -709,16 +648,17 @@ function cleanText(text: string): string {
     .replace(/\u2014/g, '-')
     .replace(/\u2013/g, '-')
     .replace(/\u2026/g, '...')
-    .replace(/[^\x00-\x7F]/g, '');
+    .replace(/•/g, '-')
+    .trim();
 }
 
 function formatNumber(num: number): string {
   const absNum = Math.abs(num);
 
   if (absNum >= 10000000) {
-    return (absNum / 10000000).toFixed(2) + ' Cr';
+    return (absNum / 10000000).toFixed(2) + 'Cr';
   } else if (absNum >= 100000) {
-    return (absNum / 100000).toFixed(2) + ' L';
+    return (absNum / 100000).toFixed(2) + 'L';
   } else if (absNum >= 1000) {
     return (absNum / 1000).toFixed(2) + 'K';
   }

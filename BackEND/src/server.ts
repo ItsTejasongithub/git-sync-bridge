@@ -13,14 +13,17 @@ import {
 } from './types';
 import * as os from 'os';
 import { initializeDatabase, closeDatabase } from './database/db';
+import { initPostgresPool, closePostgresPool, isPostgresPoolInitialized } from './database/postgresDb';
+import { cleanupAllRoomKeys } from './services/roomKeyManager';
 import adminRoutes from './routes/adminRoutes';
 import gameLogRoutes from './routes/gameLogRoutes';
 import aiReportRoutes from './routes/aiReportRoutes';
 import tradeRoutes from './routes/tradeRoutes';
+import priceRoutes from './routes/priceRoutes';
 
 // Performance: Reduce logging for better performance
 const VERBOSE_LOGGING = false; // Set to true only for debugging
-const log = VERBOSE_LOGGING ? console.log.bind(console) : () => {};
+const log = VERBOSE_LOGGING ? console.log.bind(console) : () => { };
 
 const app = express();
 const httpServer = createServer(app);
@@ -106,6 +109,9 @@ app.use('/api/ai-report', aiReportRoutes);
 
 // Trade logging API routes
 app.use('/api/trades', tradeRoutes);
+
+// Price API routes (PostgreSQL market data)
+app.use('/api/prices', priceRoutes);
 
 // DEV-ONLY: Trigger game end for all rooms or a specific room
 // Only enabled when NODE_ENV is not 'production' to avoid accidental use
@@ -227,7 +233,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
   });
 
   // Start game (host only)
-  socket.on('startGame', (data, callback) => {
+  socket.on('startGame', async (data, callback) => {
     try {
       const roomId = socket.data.roomId;
       if (!roomId) {
@@ -275,6 +281,42 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         } catch (err) {
           console.warn('⚠️ Failed to generate life events for room', roomId, err);
         }
+      }
+
+      // Initialize market data from PostgreSQL (MANDATORY for multiplayer)
+      if (room.gameState.selectedAssets && data.adminSettings.gameStartYear) {
+        try {
+          const success = await gameSyncManager.initializeMarketData(
+            roomId,
+            room.gameState.selectedAssets,
+            data.adminSettings.gameStartYear
+          );
+
+          if (!success) {
+            console.error(`❌ Room ${roomId}: Market data initialization failed - PostgreSQL unavailable`);
+            callback({
+              success: false,
+              error: 'Failed to initialize encrypted market data. PostgreSQL is required for multiplayer mode.'
+            });
+            return;
+          }
+
+          console.log(`📈 Room ${roomId}: Market data initialized from PostgreSQL - encryption ready`);
+        } catch (err) {
+          console.error(`❌ Room ${roomId}: Market data init error:`, err);
+          callback({
+            success: false,
+            error: 'Failed to initialize encrypted market data. Please ensure PostgreSQL is running.'
+          });
+          return;
+        }
+      } else {
+        console.error(`❌ Room ${roomId}: Missing selectedAssets or gameStartYear`);
+        callback({
+          success: false,
+          error: 'Invalid game configuration - missing asset selection or start year'
+        });
+        return;
       }
 
       callback({ success: true });
@@ -343,6 +385,44 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     gameSyncManager.handleQuizCompleted(socket, playerId, data.quizCategory);
   });
 
+  // === Secure Price Broadcast Handlers ===
+
+  // Key exchange request
+  socket.on('requestKeyExchange', (callback) => {
+    gameSyncManager.handleKeyExchangeRequest(socket, callback);
+  });
+
+  // Networth submission for validation
+  socket.on('submitNetworth', (data, callback) => {
+    const playerId = socket.data.playerId;
+    if (!playerId) {
+      callback({ valid: false, error: 'Not in a game' });
+      return;
+    }
+
+    const roomId = socket.data.roomId;
+    if (!roomId) {
+      callback({ valid: false, error: 'Not in a room' });
+      return;
+    }
+
+    // Get server prices for validation
+    const prices = gameSyncManager.getRoomPrices(roomId);
+    if (!prices) {
+      // If no server prices, accept client value (fallback for solo mode or early game)
+      roomManager.updatePlayerState(playerId, data.networth, data.portfolioBreakdown);
+      gameSyncManager.broadcastLeaderboard(roomId);
+      callback({ valid: true, serverNetworth: data.networth });
+      return;
+    }
+
+    // For now, accept client networth but log for monitoring
+    // Full server-side validation will be implemented in Phase 5
+    roomManager.updatePlayerState(playerId, data.networth, data.portfolioBreakdown);
+    gameSyncManager.broadcastLeaderboard(roomId);
+    callback({ valid: true, serverNetworth: data.networth });
+  });
+
   // Handle disconnect
   socket.on('disconnect', () => {
     console.log(`🔌 Client disconnected: ${socket.id}`);
@@ -385,9 +465,19 @@ setInterval(() => {
 // Initialize database and start server
 async function startServer() {
   try {
-    // Initialize database
+    // Initialize SQLite database (game data)
     await initializeDatabase();
-    console.log('✅ Database initialized successfully');
+    console.log('✅ SQLite database initialized successfully');
+
+    // Initialize PostgreSQL database (market data)
+    try {
+      await initPostgresPool();
+      console.log('✅ PostgreSQL pool initialized successfully');
+    } catch (pgError) {
+      console.warn('⚠️ PostgreSQL initialization failed - market data will fall back to client CSV');
+      console.warn('   To use server-side prices, ensure Docker PostgreSQL is running');
+      // Continue without PostgreSQL - game will work with client-side CSV
+    }
 
     const PORT = process.env.PORT || 3001;
     const localIP = getLocalNetworkIP();
@@ -410,16 +500,20 @@ async function startServer() {
 }
 
 // Handle graceful shutdown
-process.on('SIGINT', () => {
+async function gracefulShutdown() {
   console.log('\n\n🛑 Server shutting down...');
-  closeDatabase();
-  process.exit(0);
-});
 
-process.on('SIGTERM', () => {
-  console.log('\n\n🛑 Server shutting down...');
+  // Cleanup room encryption keys
+  cleanupAllRoomKeys();
+
+  // Close databases
   closeDatabase();
+  await closePostgresPool();
+
   process.exit(0);
-});
+}
+
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
 
 startServer();
