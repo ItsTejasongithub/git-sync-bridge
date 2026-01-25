@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
-import { createServer } from 'http';
+import { createServer } from 'https';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
 import { RoomManager } from './rooms/roomManager';
@@ -26,7 +28,13 @@ const VERBOSE_LOGGING = false; // Set to true only for debugging
 const log = () => { };
 
 const app = express();
-const httpServer = createServer(app);
+
+// Load SSL certificates for HTTPS (required for Web Crypto API on LAN)
+const httpsOptions = {
+  key: readFileSync(join(__dirname, '../certs/key.pem')),
+  cert: readFileSync(join(__dirname, '../certs/cert.pem')),
+};
+const httpServer = createServer(httpsOptions, app);
 
 // CORS configuration for local network
 app.use(cors());

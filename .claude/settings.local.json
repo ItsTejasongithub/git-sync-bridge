@@ -35,7 +35,8 @@
       "Bash(start \"\" \"C:/Users/dell/Downloads/TradingReport_Admin_as_tester_2026-01-10 \\(2\\).pdf\")",
       "Bash(node convert-fonts.js:*)",
       "Bash(powershell -Command:*)",
-      "Bash(node compare-metadata.js:*)"
+      "Bash(node compare-metadata.js:*)",
+      "Bash(openssl x509:*)"
     ]
   }
 }
