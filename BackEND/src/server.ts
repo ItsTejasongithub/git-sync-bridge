@@ -30,11 +30,15 @@ const log = () => { };
 const app = express();
 
 // Load SSL certificates for HTTPS (required for Web Crypto API on LAN)
+// Use process.cwd() for reliable path resolution in both dev (tsx) and prod (node)
+const certsDir = join(process.cwd(), 'certs');
+console.log('Loading SSL certificates from:', certsDir);
 const httpsOptions = {
-  key: readFileSync(join(__dirname, '../certs/key.pem')),
-  cert: readFileSync(join(__dirname, '../certs/cert.pem')),
+  key: readFileSync(join(certsDir, 'key.pem')),
+  cert: readFileSync(join(certsDir, 'cert.pem')),
 };
 const httpServer = createServer(httpsOptions, app);
+console.log('HTTPS server configured');
 
 // CORS configuration for local network
 app.use(cors());
@@ -479,6 +483,8 @@ async function startServer() {
     const localIP = getLocalNetworkIP();
 
     httpServer.listen(PORT as number, '0.0.0.0', () => {
+      console.log(`🚀 HTTPS Server running on https://${localIP}:${PORT}`);
+      console.log(`   Local: https://localhost:${PORT}`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
