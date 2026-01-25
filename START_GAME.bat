@@ -110,7 +110,7 @@ REM ========================================
 REM STEP 5: Configure Frontend
 REM ========================================
 echo [5/7] Configuring frontend...
-echo VITE_SERVER_URL=http://!IP!:3001 > FrontEND\.env.local
+echo VITE_SERVER_URL=https://!IP!:3001 > FrontEND\.env.local
 echo.
 
 REM ========================================
@@ -157,7 +157,7 @@ REM ========================================
 REM Open Browser
 REM ========================================
 echo [BROWSER] Opening game...
-start http://localhost:5173
+start https://localhost:5173
 timeout /t 1 /nobreak >nul
 
 REM ========================================
@@ -169,8 +169,8 @@ echo.
 echo BULLRUN - SERVER RUNNING
 echo.
 echo PLAY THE GAME:
-echo   This Computer:   http://localhost:5173
-echo   Network Friends: http://!IP!:5173
+echo   This Computer:   https://localhost:5173
+echo   Network Friends: https://!IP!:5173
 echo.
 echo SERVER STATUS:
 echo   Database:   PostgreSQL (Docker) ✓
@@ -178,7 +178,7 @@ echo   BackEND:    Port 3001 ✓
 echo   FrontEND:   Port 5173 ✓
 echo.
 echo HOW TO USE:
-echo   1. Share http://!IP!:5173 with friends
+echo   1. Share https://!IP!:5173 with friends
 echo   2. Everyone on SAME WiFi
 echo   3. To stop: Run STOP_GAME.bat
 echo.

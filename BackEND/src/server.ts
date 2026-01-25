@@ -1,7 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
+import { createServer as createSecureServer } from 'https';
 import { Server, Socket } from 'socket.io';
+import * as fs from 'fs';
+import * as path from 'path';
 import cors from 'cors';
 import { RoomManager } from './rooms/roomManager';
 import { GameSyncManager } from './game/gameSync';
@@ -15,6 +18,7 @@ import * as os from 'os';
 import { initializeDatabase, closeDatabase } from './database/db';
 import { initPostgresPool, closePostgresPool, isPostgresPoolInitialized } from './database/postgresDb';
 import { cleanupAllRoomKeys } from './services/roomKeyManager';
+import { ensureCertificates } from './services/generateCerts';
 import adminRoutes from './routes/adminRoutes';
 import gameLogRoutes from './routes/gameLogRoutes';
 import aiReportRoutes from './routes/aiReportRoutes';
@@ -26,7 +30,21 @@ const VERBOSE_LOGGING = false; // Set to true only for debugging
 const log = () => { };
 
 const app = express();
-const httpServer = createServer(app);
+
+// Create HTTPS server with self-signed certificates
+let httpServer: any;
+const certs = ensureCertificates();
+
+if (certs) {
+  const options = {
+    cert: certs.cert,
+    key: certs.key,
+  };
+  httpServer = createSecureServer(options, app);
+} else {
+  // Fallback to HTTP if certificate generation fails
+  httpServer = createServer(app);
+}
 
 // CORS configuration for local network
 app.use(cors());

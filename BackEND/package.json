@@ -34,6 +34,7 @@
     "@types/node": "^20.10.6",
     "@types/pg": "^8.10.9",
     "@types/sql.js": "^1.4.9",
+    "selfsigned": "^5.5.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   }

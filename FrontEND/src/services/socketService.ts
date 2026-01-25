@@ -81,7 +81,7 @@ class SocketService {
     this.isConnecting = true;
 
     this.socket = io(SERVER_URL, {
-      transports: ['polling', 'websocket'], // Try polling first, then upgrade to websocket
+      transports: ['websocket', 'polling'], // Try websocket first, then fallback to polling
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
@@ -89,6 +89,8 @@ class SocketService {
       timeout: 20000,
       autoConnect: true,
       forceNew: false,
+      // Allow self-signed certificates (for local network HTTPS)
+      rejectUnauthorized: false,
     });
 
     this.socket.on('connect', () => {
