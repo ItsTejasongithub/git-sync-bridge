@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-title Rupee Rush Game Server
+title BULLRUN Game Server
 color 0A
 
 echo.
@@ -166,7 +166,7 @@ REM ========================================
 cls
 color 0A
 echo.
-echo RUPEE RUSH - SERVER RUNNING
+echo BULLRUN - SERVER RUNNING
 echo.
 echo PLAY THE GAME:
 echo   This Computer:   http://localhost:5173

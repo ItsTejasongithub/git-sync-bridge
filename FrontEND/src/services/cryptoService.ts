@@ -25,6 +25,16 @@ export async function initializeDecryption(
   assetMapping: { [symbol: string]: number }
 ): Promise<void> {
   try {
+    // Check if Web Crypto API is available
+    if (!crypto || !crypto.subtle) {
+      throw new Error(
+        'Web Crypto API is not available. This typically happens when:\n' +
+        '1. The app is running on HTTP (not HTTPS or localhost)\n' +
+        '2. Browser security settings restrict access to crypto APIs\n' +
+        'Solution: Access the app over HTTPS or localhost'
+      );
+    }
+
     // Decode the session key from base64
     const keyData = base64ToArrayBuffer(sessionKeyBase64);
 
@@ -63,6 +73,11 @@ export async function decryptPriceData(
   }
 
   try {
+    if (!crypto || !crypto.subtle) {
+      console.error('Web Crypto API is not available for decryption');
+      return null;
+    }
+
     // Decode from base64
     const iv = base64ToArrayBuffer(payload.iv);
     const encryptedData = base64ToArrayBuffer(payload.data);
