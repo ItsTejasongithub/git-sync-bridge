@@ -74,7 +74,7 @@
   max-height: none;
   margin-top: 8px;
   overflow: visible;
-} 
+}
 
 .leaderboard-list {
   background: rgba(0, 0, 0, 0.2);
@@ -91,11 +91,11 @@
 .leaderboard-item {
   background: rgba(255, 255, 255, 0.03);
   border-radius: 6px;
-  padding: 10px 12px;
+  padding: 14px 12px;
   margin-bottom: 6px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   transition: all 0.2s ease;
   border: 1px solid transparent;
   position: relative;
@@ -111,16 +111,17 @@
 .leaderboard-item.current-player::after {
   content: 'YOU';
   position: absolute;
-  right: 8px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.65em;
-  font-weight: 700;
+  font-weight: 800;
   color: #ffffff;
   background: #3b82f6;
-  padding: 3px 8px;
+  padding: 4px 8px;
   border-radius: 4px;
   letter-spacing: 1px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .leaderboard-item::before {
@@ -227,15 +228,16 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding-right: 50px;
+  padding-right: 8px;
+  overflow: hidden;
 }
 
 .current-player .player-details {
-  padding-right: 60px;
+  padding-right: 50px;
 }
 
 .multiplayer-leaderboard-sidebar .player-name {
-  font-size: 0.85em;
+  font-size: 0.9em;
   font-weight: 600;
   margin-bottom: 0;
   white-space: nowrap;
@@ -243,7 +245,7 @@
   text-overflow: ellipsis;
   color: #ffffff;
   letter-spacing: 0.3px;
-} 
+}
 
 /* Make sure player names inside leaderboard are enforced to white (higher specificity) */
 .leaderboard-item .player-name {
@@ -256,18 +258,27 @@
   font-weight: 700;
 }
 
-.player-networth {
-  font-size: 0.8em;
-  font-weight: 600;
-  color: #ffc001;
+.multiplayer-leaderboard-sidebar .player-networth {
+  font-size: 0.65em !important;
+  font-weight: 700;
+  background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 50%, #ffffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  filter: drop-shadow(0 2px 6px rgba(6, 182, 212, 0.6)) drop-shadow(0 0 12px rgba(34, 211, 238, 0.4));
+  letter-spacing: 0px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .networth-icon {
-  font-size: 0.9em;
+  font-size: 0.85em;
+  font-weight: 600;
 }
 
 .no-data {
@@ -329,6 +340,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -344,6 +356,7 @@
   0% {
     background-position: -100% 0;
   }
+
   100% {
     background-position: 200% 0;
   }

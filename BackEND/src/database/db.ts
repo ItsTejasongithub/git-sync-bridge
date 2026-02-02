@@ -134,7 +134,7 @@ function runMigrations(): void {
     // If table exists (older installations), ensure new columns exist
     try {
       const cols = db.exec("PRAGMA table_info(ai_reports)");
-      const columns = (cols && cols[0] && cols[0].values) ? cols[0].values.map((r:any) => r[1]) : [];
+      const columns = (cols && cols[0] && cols[0].values) ? cols[0].values.map((r: any) => r[1]) : [];
       if (!columns.includes('cash_json')) {
         db.run(`ALTER TABLE ai_reports ADD COLUMN cash_json TEXT`);
       }
@@ -232,6 +232,16 @@ function runMigrations(): void {
     db.run(`CREATE INDEX IF NOT EXISTS idx_holdings_category ON player_holdings(asset_category)`);
     saveDatabase();
   }
+
+  // Check if month_duration column exists in admin_settings
+  const infoAdminSettings = db.exec("PRAGMA table_info('admin_settings')");
+  const hasMonthDuration =
+    infoAdminSettings && infoAdminSettings.length > 0 && infoAdminSettings[0].values && infoAdminSettings[0].values.some((row: any) => row[1] === 'month_duration');
+
+  if (!hasMonthDuration) {
+    db.run('ALTER TABLE admin_settings ADD COLUMN month_duration INTEGER NOT NULL DEFAULT 5000');
+    saveDatabase();
+  }
 }
 
 /**
@@ -262,6 +272,7 @@ async function createTables(): Promise<void> {
       recurring_income INTEGER NOT NULL DEFAULT 50000,
       enable_quiz INTEGER NOT NULL DEFAULT 1,
       events_count INTEGER NOT NULL DEFAULT 3,
+      month_duration INTEGER NOT NULL DEFAULT 5000,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);

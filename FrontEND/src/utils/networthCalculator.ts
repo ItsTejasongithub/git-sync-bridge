@@ -78,21 +78,43 @@ export function calculateNetworth(
     currentValue += gameState.holdings.digitalGold.quantity * price;
   }
 
-  // Index Fund
-  if (gameState.holdings.indexFund.quantity > 0 && gameState.selectedAssets?.fundName) {
-    const fundData = assetDataMap[gameState.selectedAssets.fundName];
-    if (fundData) {
-      const price = getAssetPriceAtDate(fundData, calendarYear, gameState.currentMonth);
-      currentValue += gameState.holdings.indexFund.quantity * price;
+  // Index Funds (handle both old single-fund and new multi-fund structure)
+  if (typeof gameState.holdings.indexFund === 'object') {
+    if ('quantity' in gameState.holdings.indexFund && (gameState.holdings.indexFund as any).quantity > 0 && gameState.selectedAssets?.fundName) {
+      // Old structure: single fund
+      const fundData = assetDataMap[gameState.selectedAssets.fundName];
+      if (fundData) {
+        const price = getAssetPriceAtDate(fundData, calendarYear, gameState.currentMonth);
+        currentValue += (gameState.holdings.indexFund as any).quantity * price;
+      }
+    } else {
+      // New structure: dictionary of funds
+      Object.entries(gameState.holdings.indexFund).forEach(([fundName, holding]: [string, any]) => {
+        if (holding.quantity > 0 && assetDataMap[fundName]) {
+          const price = getAssetPriceAtDate(assetDataMap[fundName], calendarYear, gameState.currentMonth);
+          currentValue += holding.quantity * price;
+        }
+      });
     }
   }
 
-  // Mutual Fund
-  if (gameState.holdings.mutualFund.quantity > 0 && gameState.selectedAssets?.fundName) {
-    const fundData = assetDataMap[gameState.selectedAssets.fundName];
-    if (fundData) {
-      const price = getAssetPriceAtDate(fundData, calendarYear, gameState.currentMonth);
-      currentValue += gameState.holdings.mutualFund.quantity * price;
+  // Mutual Funds (handle both old single-fund and new multi-fund structure)
+  if (typeof gameState.holdings.mutualFund === 'object') {
+    if ('quantity' in gameState.holdings.mutualFund && (gameState.holdings.mutualFund as any).quantity > 0 && gameState.selectedAssets?.fundName) {
+      // Old structure: single fund
+      const fundData = assetDataMap[gameState.selectedAssets.fundName];
+      if (fundData) {
+        const price = getAssetPriceAtDate(fundData, calendarYear, gameState.currentMonth);
+        currentValue += (gameState.holdings.mutualFund as any).quantity * price;
+      }
+    } else {
+      // New structure: dictionary of funds
+      Object.entries(gameState.holdings.mutualFund).forEach(([fundName, holding]: [string, any]) => {
+        if (holding.quantity > 0 && assetDataMap[fundName]) {
+          const price = getAssetPriceAtDate(assetDataMap[fundName], calendarYear, gameState.currentMonth);
+          currentValue += holding.quantity * price;
+        }
+      });
     }
   }
 
@@ -317,16 +339,38 @@ export function calculateNetworthWithPrices(
     currentValue += gameState.holdings.digitalGold.quantity * price;
   }
 
-  // Index Fund
-  if (gameState.holdings.indexFund.quantity > 0 && gameState.selectedAssets?.fundName) {
-    const price = getPrice(gameState.selectedAssets.fundName);
-    currentValue += gameState.holdings.indexFund.quantity * price;
+  // Index Funds (handle both old single-fund and new multi-fund structure)
+  if (typeof gameState.holdings.indexFund === 'object') {
+    if ('quantity' in gameState.holdings.indexFund && gameState.holdings.indexFund.quantity > 0 && gameState.selectedAssets?.fundName) {
+      // Old structure: single fund
+      const price = getPrice(gameState.selectedAssets.fundName);
+      currentValue += gameState.holdings.indexFund.quantity * price;
+    } else {
+      // New structure: dictionary of funds
+      Object.entries(gameState.holdings.indexFund).forEach(([fundName, holding]: [string, any]) => {
+        if (holding.quantity > 0) {
+          const price = getPrice(fundName);
+          currentValue += holding.quantity * price;
+        }
+      });
+    }
   }
 
-  // Mutual Fund
-  if (gameState.holdings.mutualFund.quantity > 0 && gameState.selectedAssets?.fundName) {
-    const price = getPrice(gameState.selectedAssets.fundName);
-    currentValue += gameState.holdings.mutualFund.quantity * price;
+  // Mutual Funds (handle both old single-fund and new multi-fund structure)
+  if (typeof gameState.holdings.mutualFund === 'object') {
+    if ('quantity' in gameState.holdings.mutualFund && gameState.holdings.mutualFund.quantity > 0 && gameState.selectedAssets?.fundName) {
+      // Old structure: single fund
+      const price = getPrice(gameState.selectedAssets.fundName);
+      currentValue += gameState.holdings.mutualFund.quantity * price;
+    } else {
+      // New structure: dictionary of funds
+      Object.entries(gameState.holdings.mutualFund).forEach(([fundName, holding]: [string, any]) => {
+        if (holding.quantity > 0) {
+          const price = getPrice(fundName);
+          currentValue += holding.quantity * price;
+        }
+      });
+    }
   }
 
   // Stocks

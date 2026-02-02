@@ -172,36 +172,63 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
 
     // Only log if we have player name and admin settings
     if (playerName && gameState.adminSettings) {
-      // CRITICAL FIX: Validate portfolio breakdown before logging
-      // Ensure we have valid asset holdings, not just cash from a reset state
+      // CRITICAL FIX: Wait a moment for prices to load before validating
+      // This prevents false positives where prices are 0 because they haven't loaded yet
+      const hasActualHoldings =
+        gameState.holdings.physicalGold.quantity > 0 ||
+        gameState.holdings.digitalGold.quantity > 0 ||
+        Object.values(gameState.holdings.indexFund).some((h: any) => h.quantity > 0) ||
+        Object.values(gameState.holdings.mutualFund).some((h: any) => h.quantity > 0) ||
+        Object.values(gameState.holdings.stocks).some((h: any) => h.quantity > 0) ||
+        gameState.holdings.commodity.quantity > 0 ||
+        Object.values(gameState.holdings.reits).some((h: any) => h.quantity > 0);
+
+      // Validate portfolio breakdown before logging
       const totalAssetsExcludingCash = Object.entries(breakdown)
         .filter(([key]) => key !== 'cash' && key !== 'savings')
         .reduce((sum, [, value]) => sum + value, 0);
 
       const totalNetworth = Object.values(breakdown).reduce((sum, value) => sum + value, 0);
 
-      // STRICTER VALIDATION: If we're in multiplayer and game is ending after 20 years,
-      // but player has NO investments at all (only cash/savings), the state is likely corrupted
-      const isEndGame = gameState.currentYear >= 20 && gameState.currentMonth >= 12;
-      if (isMultiplayer && isEndGame && totalAssetsExcludingCash === 0) {
-        console.error('❌ Skipping database log: Invalid end-game state - player has no investments after 20 years', {
-          finalNetworth,
-          breakdown,
-          holdings: gameState.holdings,
-          currentYear: gameState.currentYear,
-          currentMonth: gameState.currentMonth,
-          note: 'Game state appears to be corrupted - all investments are missing at game end'
+      // If player has holdings but breakdown shows 0, prices haven't loaded yet - wait and retry
+      if (hasActualHoldings && totalAssetsExcludingCash === 0) {
+        console.warn('⏳ Prices not loaded yet, waiting before logging...', {
+          hasActualHoldings,
+          totalAssetsExcludingCash,
+          samplePrice: getPrice('Physical_Gold')
         });
-        return; // Don't log invalid data
+
+        // Wait 2 seconds for prices to load, then try again
+        setTimeout(() => {
+          if (hasLoggedRef.current) return; // Already logged
+
+          const retryBreakdown = calculatePortfolioBreakdownWithPrices(gameState, getPrice);
+          const retryNetworth = calculateNetworthWithPrices(gameState, getPrice);
+          const retryAssetsExcludingCash = Object.entries(retryBreakdown)
+            .filter(([key]) => key !== 'cash' && key !== 'savings')
+            .reduce((sum, [, value]) => sum + value, 0);
+
+          if (retryAssetsExcludingCash === 0) {
+            console.error('❌ Prices still not loaded after retry, skipping database log');
+            hasLoggedRef.current = true; // Mark as logged to prevent further attempts
+            return;
+          }
+
+          // Prices loaded successfully - continue with normal logging flow below
+          // (The code will fall through to the normal logging after this setTimeout)
+        }, 2000);
+        return;
       }
 
-      // Also validate if total networth is significant but we only have cash/savings
-      if (totalNetworth > 100000 && totalAssetsExcludingCash === 0) {
-        console.error('❌ Skipping database log: Invalid portfolio state detected (only cash/savings)', {
+      // STRICTER VALIDATION: If we're in multiplayer and game is ending after 20 years,
+      // but player has NO holdings at all (not just 0 values), the state is corrupted
+      const isEndGame = gameState.currentYear >= 20 && gameState.currentMonth >= 12;
+      if (isMultiplayer && isEndGame && !hasActualHoldings && totalNetworth < 100000) {
+        console.error('❌ Skipping database log: Invalid end-game state - player has no holdings', {
           finalNetworth,
           breakdown,
           holdings: gameState.holdings,
-          note: 'Game state appears to be corrupted - all investments are missing'
+          note: 'Player truly has no investments - likely just kept cash'
         });
         return; // Don't log invalid data
       }

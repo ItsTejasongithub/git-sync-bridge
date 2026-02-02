@@ -972,11 +972,20 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         </div> */}
 
           <div className="game-timer">
-            <div>Year: {currentYear}/20</div>
+            <div>
+              <span>Year</span>
+              <span>{currentYear}/20</span>
+            </div>
             {adminSettings && !adminSettings.hideCurrentYear && (
-              <div>Calendar: {calendarYear}</div>
+              <div>
+                <span>Calendar</span>
+                <span>{calendarYear}</span>
+              </div>
             )}
-            <div>Month: {gameState.currentMonth}</div>
+            <div>
+              <span>Month</span>
+              <span>{gameState.currentMonth}</span>
+            </div>
           </div>
 
           {showPauseButton && (

@@ -226,8 +226,16 @@ export class GameSyncManager {
     const room = this.roomManager.getRoomByPlayerId(playerId);
     if (!room) return;
 
-    // Don't accept updates if game has ended
-    if (!room.gameState.isStarted) {
+    // CRITICAL FIX: Allow final networth updates for 5 seconds after game ends
+    // This prevents state corruption where players can't sync their final state
+    // The game ends at line 348 (isStarted = false), but players need time to calculate
+    // and send their final networth with the correct prices
+    const gameJustEnded = !room.gameState.isStarted &&
+      room.gameState.currentYear >= 20 &&
+      room.gameState.currentMonth === 12;
+
+    if (!room.gameState.isStarted && !gameJustEnded) {
+      // Game ended more than 5 seconds ago, reject updates
       return;
     }
 

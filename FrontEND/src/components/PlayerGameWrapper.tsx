@@ -139,17 +139,17 @@ export const PlayerGameWrapper: React.FC = () => {
             }
           });
 
-          // STEP 1: Mark game as ended to prevent further state updates
-          markGameAsEnded();
+          // STEP 1: Deep clone the CURRENT game state and mark as ended immediately
+          // This ensures we capture the valid state before any potential corruption or resets
+          const finalState = JSON.parse(JSON.stringify(currentState));
+          finalState.isStarted = false; // Ensure it's marked as ended in the frozen copy
 
-          // STEP 2: Deep clone the game state to freeze it
-          // Use setTimeout to ensure markGameAsEnded state update has applied
-          setTimeout(() => {
-            const stateToFreeze = gameStateRef.current;
-            console.log('🧊 Freezing game state after marking as ended');
-            setFrozenGameState(JSON.parse(JSON.stringify(stateToFreeze)));
-            hasGameEndedRef.current = true;
-          }, 50);
+          console.log('🧊 Freezing game state immediately (synchronous)');
+          setFrozenGameState(finalState);
+          hasGameEndedRef.current = true;
+
+          // STEP 2: Mark underlying hook state as ended (for cleanup/timers)
+          markGameAsEnded();
         }
       }
     };

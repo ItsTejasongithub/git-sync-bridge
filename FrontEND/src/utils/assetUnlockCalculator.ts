@@ -134,7 +134,7 @@ export const ASSET_TIMELINE_DATA: { [key: string]: { category: AssetCategory; fi
   'SBI_Bluechip': { category: 'FUNDS', firstYear: 2017, firstMonth: 12, lastYear: 2026 },
 
   // REITs
-  'EMBASSY': { category: 'REIT', firstYear: 2019, firstMonth: 4, lastYear: 2026 },
+  'EMBASSY': { category: 'REIT', firstYear: 2019, firstMonth: 3, lastYear: 2026 },
   'MINDSPACE': { category: 'REIT', firstYear: 2020, firstMonth: 8, lastYear: 2026 },
 };
 
@@ -430,7 +430,8 @@ export const generateAssetUnlockSchedule = (
         .filter(([name, data]) =>
           data.category === 'FUNDS' &&
           data.firstYear <= 2017 &&
-          ['SBI_Bluechip', 'ICICI_Bluechip', 'Axis_Midcap', 'Kotak_Emerging', 'PGIM_Midcap', 'HDFC_SmallCap'].includes(name)
+          // Exclude HDFC_SmallCap (starts Jan 2018, not Dec 2017)
+          ['SBI_Bluechip', 'ICICI_Bluechip', 'Axis_Midcap', 'Kotak_Emerging', 'PGIM_Midcap'].includes(name)
         )
         .map(([name]) => name);
 
