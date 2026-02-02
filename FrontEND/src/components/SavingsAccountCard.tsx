@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatIndianNumber } from '../utils/constants';
 import './AssetCard.css';
 import './StockTooltip.css';
 
@@ -19,6 +20,7 @@ export const SavingsAccountCard: React.FC<SavingsAccountCardProps> = ({
   const [inputAmount, setInputAmount] = useState('');
   const [operation, setOperation] = useState<'deposit' | 'withdraw'>('deposit');
   const [isShaking, setIsShaking] = useState(false);
+  const [isMaxClicked, setIsMaxClicked] = useState(false);
 
   // Trigger shake animation
   const triggerShake = () => {
@@ -35,17 +37,21 @@ export const SavingsAccountCard: React.FC<SavingsAccountCardProps> = ({
     setOperation('deposit');
     setShowInput(true);
     setInputAmount('');
+    setIsMaxClicked(false);
   };
 
   const handleWithdraw = () => {
     setOperation('withdraw');
     setShowInput(true);
     setInputAmount('');
+    setIsMaxClicked(false);
   };
 
   const handleMax = () => {
   const maxAmount = operation === 'deposit' ? pocketCash : balance;
-  setInputAmount(maxAmount.toFixed(2));
+  // Show rounded value in UI, but mark that MAX was clicked
+  setInputAmount(Math.round(maxAmount).toString());
+  setIsMaxClicked(true);
 };
 
 const handleConfirm = () => {
@@ -53,24 +59,29 @@ const handleConfirm = () => {
   if (isNaN(amount) || amount <= 0) return;
 
   if (operation === 'deposit') {
+    // If MAX was clicked, use exact pocket cash value
+    const actualAmount = isMaxClicked ? pocketCash : amount;
     // Use a small epsilon for floating-point comparison
-    if (amount > pocketCash + 0.01) {
+    if (actualAmount > pocketCash + 0.01) {
       triggerShake();
       return;
     }
     // Ensure we don't deposit more than available
-    onDeposit(Math.min(amount, pocketCash));
+    onDeposit(Math.min(actualAmount, pocketCash));
   } else {
-    if (amount > balance + 0.01) {
+    // If MAX was clicked, use exact balance value
+    const actualAmount = isMaxClicked ? balance : amount;
+    if (actualAmount > balance + 0.01) {
       triggerShake();
       return;
     }
     // Ensure we don't withdraw more than available
-    onWithdraw(Math.min(amount, balance));
+    onWithdraw(Math.min(actualAmount, balance));
   }
 
   setShowInput(false);
   setInputAmount('');
+  setIsMaxClicked(false);
 };
 
   return (
@@ -86,7 +97,7 @@ const handleConfirm = () => {
 
       <div className="balance-display">
         <div className="balance-label">Balance</div>
-        <div className="balance-amount">₹{balance.toFixed(2)}</div>
+        <div className="balance-amount">₹{formatIndianNumber(balance)}</div>
       </div>
 
       {!showInput ? (
@@ -110,7 +121,10 @@ const handleConfirm = () => {
               type="number"
               className="amount-input"
               value={inputAmount}
-              onChange={(e) => setInputAmount(e.target.value)}
+              onChange={(e) => {
+                setInputAmount(e.target.value);
+                setIsMaxClicked(false); // Reset flag when user manually changes input
+              }}
               placeholder="Enter amount"
             />
             <button className="max-button" onClick={handleMax}>
@@ -123,7 +137,10 @@ const handleConfirm = () => {
             </button>
             <button
               className="action-button cancel-btn"
-              onClick={() => setShowInput(false)}
+              onClick={() => {
+                setShowInput(false);
+                setIsMaxClicked(false);
+              }}
             >
               Cancel
             </button>

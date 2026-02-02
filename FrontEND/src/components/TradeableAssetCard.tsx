@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AssetHolding } from '../types';
 import { MiniChart } from './MiniChart';
 import { getAssetInfo } from '../utils/stockInfo';
@@ -39,6 +39,10 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
   const [isShaking, setIsShaking] = useState(false);
   // Local click lock to prevent double clicks before parent state updates
   const [localLock, setLocalLock] = useState(false);
+  // Dynamic Max Mode: When true, quantity updates automatically with price changes
+  const [isMaxMode, setIsMaxMode] = useState(false);
+  // Track if user is manually editing to prevent auto-update conflicts
+  const isManualEditRef = useRef(false);
 
   const priceChange = currentPrice - previousPrice;
   const priceChangePercent = previousPrice > 0 ? (priceChange / previousPrice) * 100 : 0;
@@ -66,6 +70,7 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
       setMode('buy');
       setSelectedQuantity(1);
       setCustomQuantity('');
+      setIsMaxMode(false); // Reset Max mode for fresh transaction
       return;
     }
 
@@ -87,6 +92,7 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
 
     onBuy(quantity);
     setCustomQuantity('');
+    setIsMaxMode(false); // Reset Max mode after transaction
     setMode('none'); // Hide controls after transaction
 
     // Clear local lock after a short delay (parent will also clear via isTransacting)
@@ -103,6 +109,7 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
       setMode('sell');
       setSelectedQuantity(1);
       setCustomQuantity('');
+      setIsMaxMode(false); // Reset Max mode for fresh transaction
       return;
     }
 
@@ -122,6 +129,7 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
 
     onSell(quantity);
     setCustomQuantity('');
+    setIsMaxMode(false); // Reset Max mode after transaction
     setMode('none'); // Hide controls after transaction
 
     setTimeout(() => setLocalLock(false), 300);
@@ -131,6 +139,32 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
   const maxQuantity = mode === 'buy'
     ? Math.floor(pocketCash / currentPrice)
     : holding.quantity;
+
+  // Dynamic Max Mode: Auto-update quantity when price/cash changes while in Max mode
+  useEffect(() => {
+    // Only update if in Max mode and not currently being manually edited
+    if (isMaxMode && !isManualEditRef.current && mode !== 'none') {
+      const newMaxQuantity = mode === 'buy'
+        ? Math.floor(pocketCash / currentPrice)
+        : holding.quantity;
+
+      // Only update if the max quantity is valid (> 0)
+      if (newMaxQuantity > 0) {
+        setCustomQuantity(newMaxQuantity.toString());
+      } else {
+        // If max becomes 0 or invalid, show 0 but keep max mode
+        setCustomQuantity('0');
+      }
+    }
+  }, [currentPrice, pocketCash, holding.quantity, isMaxMode, mode]);
+
+  // Reset Max mode when transaction mode changes to 'none'
+  useEffect(() => {
+    if (mode === 'none') {
+      setIsMaxMode(false);
+      isManualEditRef.current = false;
+    }
+  }, [mode]);
 
   // Get asset info for tooltip (works for all asset types)
   const assetInfo = getAssetInfo(name);
@@ -165,12 +199,12 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
       {/* Row 2: Current Price (left) & Price Change % (right) */}
       <div className="row-2-price-change">
         <span className={`current-price-large ${isPositive ? 'positive' : 'negative'}`}>
-          ₹{currentPrice.toFixed(2)}
+          ₹{formatIndianNumber(currentPrice)}
         </span>
         {/* show unit if provided */}
         {unit && <small className="price-unit">{unit}</small>}
         <span className={`price-change-percent ${isPositive ? 'positive' : 'negative'}`}>
-          {isPositive ? '▲' : '▼'} {Math.abs(priceChangePercent).toFixed(2)}%
+          {isPositive ? '▲' : '▼'} {Math.abs(priceChangePercent).toFixed(1)}%
         </span>
       </div>
 
@@ -183,7 +217,7 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
         </div>
             <div className="stat-item">
             <span className="stat-label">QTY</span>
-            <span className="stat-value">{holding.quantity > 0 ? holding.quantity.toFixed(0) : '--'}</span>
+            <span className="stat-value">{holding.quantity > 0 ? Math.round(holding.quantity) : '--'}</span>
           </div>
 
         {/* Hover: Show all three stats */}
@@ -233,6 +267,7 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
               onClick={() => {
                 setSelectedQuantity(1);
                 setCustomQuantity('');
+                setIsMaxMode(false); // Exit Max mode when selecting preset
               }}
             >
               1
@@ -243,6 +278,7 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
               onClick={() => {
                 setSelectedQuantity(10);
                 setCustomQuantity('');
+                setIsMaxMode(false); // Exit Max mode when selecting preset
               }}
             >
               10
@@ -250,20 +286,40 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
             <div className="input-container">
               <input
                 type="number"
-                className="qty-input"
+                className={`qty-input ${isMaxMode ? 'max-mode-active' : ''}`}
                 value={customQuantity}
-                onChange={(e) => setCustomQuantity(e.target.value)}
+                onChange={(e) => {
+                  // User is manually editing - exit Max mode
+                  isManualEditRef.current = true;
+                  setIsMaxMode(false);
+                  setCustomQuantity(e.target.value);
+                  // Reset flag after a short delay to allow future Max mode activations
+                  setTimeout(() => { isManualEditRef.current = false; }, 100);
+                }}
+                onFocus={() => {
+                  // If user focuses on input while in Max mode, prepare for manual edit
+                  if (isMaxMode) {
+                    isManualEditRef.current = true;
+                  }
+                }}
+                onBlur={() => {
+                  isManualEditRef.current = false;
+                }}
                 placeholder="Custom"
               />
               <button
                 type="button"
-                className="max-button"
+                className={`max-button ${isMaxMode ? 'max-mode-active' : ''}`}
                 onClick={() => {
+                  // Enable dynamic Max mode
+                  setIsMaxMode(true);
+                  isManualEditRef.current = false;
                   setCustomQuantity(maxQuantity.toString());
                   setSelectedQuantity(0);
                 }}
+                title={isMaxMode ? 'Max mode active - quantity updates with price' : 'Click to set maximum quantity'}
               >
-                MAX
+                {isMaxMode ? '⟳ MAX' : 'MAX'}
               </button>
             </div>
           </div>

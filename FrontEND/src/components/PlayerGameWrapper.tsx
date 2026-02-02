@@ -1,9 +1,10 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { useMultiplayer } from '../contexts/MultiplayerContext';
 import { useGameState } from '../hooks/useGameState';
 import { GameScreen } from './GameScreen';
 import { QuizWaitingOverlay } from './QuizWaitingOverlay';
 import { socketService } from '../services/socketService';
+import { GameState } from '../types';
 import './PlayerGameWrapper.css';
 
 export const PlayerGameWrapper: React.FC = () => {
@@ -31,12 +32,17 @@ export const PlayerGameWrapper: React.FC = () => {
     markQuizCompleted,
     updateTime,
     updatePauseState,
+    markGameAsEnded,
     isTransactionPending,
     lifeEventPopup,
     applyLifeEvent,
     clearLifeEventPopup,
     forceShowLifeEventPopup
   } = useGameState(true); // true = multiplayer mode, disables local timer, includes life event handler
+
+  // CRITICAL FIX: Freeze game state when game ends to prevent corruption
+  const [frozenGameState, setFrozenGameState] = useState<GameState | null>(null);
+  const hasGameEndedRef = useRef(false);
 
   // Initialize game state with multiplayer admin settings when game starts
   useEffect(() => {
@@ -63,9 +69,15 @@ export const PlayerGameWrapper: React.FC = () => {
       return;
     }
 
+    // CRITICAL FIX: Stop processing time updates if game has ended
+    // This prevents state corruption after game completion
+    if (!multiplayerGameState.isStarted && gameState.currentYear >= 20) {
+      return;
+    }
+
     // Update local game time to match server time
     updateTime(multiplayerGameState.currentYear, multiplayerGameState.currentMonth);
-  }, [multiplayerGameState?.currentYear, multiplayerGameState?.currentMonth, gameState.mode, updateTime]);
+  }, [multiplayerGameState?.currentYear, multiplayerGameState?.currentMonth, multiplayerGameState?.isStarted, gameState.mode, gameState.currentYear, updateTime]);
 
   // Sync pause state with server
   useEffect(() => {
@@ -101,6 +113,82 @@ export const PlayerGameWrapper: React.FC = () => {
       socketService.off('lifeEventTriggered', handler);
     };
   }, [applyLifeEvent]);
+
+  // Track current gameState in a ref to avoid recreating event handlers on every state change
+  const gameStateRef = useRef(gameState);
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
+  // CRITICAL FIX: When gameEnded event is received:
+  // 1. Mark game as ended to lock state updates (sets isStarted = false)
+  // 2. Freeze game state to prevent any further changes
+  useEffect(() => {
+    const handler = () => {
+      if (!hasGameEndedRef.current) {
+        const currentState = gameStateRef.current;
+
+        if (currentState.mode === 'solo') {
+          console.log('🔒 Game ended event received - locking and freezing state:', {
+            year: currentState.currentYear,
+            month: currentState.currentMonth,
+            networth: currentState.pocketCash,
+            holdingsSnapshot: {
+              gold: currentState.holdings.physicalGold.quantity + currentState.holdings.digitalGold.quantity,
+              stocks: Object.keys(currentState.holdings.stocks).length,
+            }
+          });
+
+          // STEP 1: Mark game as ended to prevent further state updates
+          markGameAsEnded();
+
+          // STEP 2: Deep clone the game state to freeze it
+          // Use setTimeout to ensure markGameAsEnded state update has applied
+          setTimeout(() => {
+            const stateToFreeze = gameStateRef.current;
+            console.log('🧊 Freezing game state after marking as ended');
+            setFrozenGameState(JSON.parse(JSON.stringify(stateToFreeze)));
+            hasGameEndedRef.current = true;
+          }, 50);
+        }
+      }
+    };
+
+    socketService.on('gameEnded', handler);
+    return () => {
+      socketService.off('gameEnded', handler);
+    };
+  }, [markGameAsEnded]); // Only depend on the callback, not gameState
+
+  // DISABLED: Backup freeze mechanism
+  // This was triggering when isStarted=false, which happens BEFORE the final price tick
+  // This caused players to calculate networth with old prices from Month 11 instead of Month 12
+  // The primary freeze mechanism (gameEnded event handler above) is sufficient
+  /*
+  useEffect(() => {
+    const currentState = gameStateRef.current;
+
+    // Check if game has just ended via state (backup mechanism)
+    if (!multiplayerGameState?.isStarted && currentState.mode === 'solo' && currentState.currentYear >= 20) {
+      if (!hasGameEndedRef.current && !frozenGameState) {
+        console.log('🧊 Freezing game state at game end (backup mechanism):', {
+          year: currentState.currentYear,
+          month: currentState.currentMonth,
+          holdings: currentState.holdings
+        });
+
+        // Mark as ended and freeze
+        markGameAsEnded();
+
+        setTimeout(() => {
+          const stateToFreeze = gameStateRef.current;
+          setFrozenGameState(JSON.parse(JSON.stringify(stateToFreeze)));
+          hasGameEndedRef.current = true;
+        }, 50);
+      }
+    }
+  }, [multiplayerGameState?.isStarted, frozenGameState, markGameAsEnded]); // Remove gameState dependency
+  */
 
   // Handle networth updates from GameScreen
   const handleNetworthCalculated = useCallback((networth: number, portfolioBreakdown: any) => {
@@ -177,7 +265,7 @@ export const PlayerGameWrapper: React.FC = () => {
 
       {/* Main Game Screen (reuse from solo) */}
       <GameScreen
-        gameState={gameState}
+        gameState={frozenGameState || gameState}
         onDeposit={depositToSavings}
         onWithdraw={withdrawFromSavings}
         onCreateFD={createFixedDeposit}

@@ -4,6 +4,39 @@ export const STARTING_CASH = 100000; // Starting pocket cash in rupees
 export const SAVINGS_INTEREST_RATE = 0.025; // 2.5% per annum
 export const GAME_START_YEAR = 2005; // Game year 1 maps to calendar year 2005
 
+// Valid game start year range (user-selectable)
+export const VALID_START_YEAR_MIN = 2000;
+export const VALID_START_YEAR_MAX = 2005;
+
+// Disabled categories - these will not appear in the game
+export const DISABLED_CATEGORIES = ['CRYPTO', 'FOREX'] as const;
+
+// Maximum cards per asset category (HARD-CODED - Single Source of Truth)
+// This cannot be overridden by admin settings
+export const CATEGORY_MAX_CARDS: { [key: string]: number } = {
+  SAVINGS: 1,           // Enabled at game start
+  FD: 1,                // Enabled at game start
+  PHYSICAL_GOLD: 1,     // Enabled at start of Year 2
+  DIGITAL_GOLD: 1,      // Gold ETF - unlocks when calendar >= 2012
+  COMMODITIES: 1,       // 1 random card at start of Year 3
+  INDEX_FUND: 2,        // Progressive: NIFTYBEES at 2009, 1 random at 2015
+  MUTUAL_FUND: 2,       // 2 cards when calendar >= 2017
+  STOCKS: 3,            // 3 cards total at Year 4 (2 random fixed + 1 additional random)
+  REITS: 1,             // 1 card when calendar >= 2020
+  CRYPTO: 0,            // DISABLED
+  FOREX: 0,             // DISABLED
+};
+
+// Calendar year triggers for specific asset unlocks (HARD-CODED - Single Source of Truth)
+// These define when assets become available based on in-game calendar year
+export const CALENDAR_YEAR_TRIGGERS: { [key: string]: number } = {
+  INDEX_FUND: 2009,      // First index fund (NIFTYBEES) unlocks when calendar year >= 2009
+  INDEX_FUND_2: 2015,    // Second random index fund unlocks when calendar year >= 2015 (progressive)
+  DIGITAL_GOLD: 2012,    // Gold ETF (1 card) unlocks when calendar year >= 2012
+  MUTUAL_FUND: 2017,     // 2 cards unlock when calendar year >= 2017
+  REITS: 2020,           // 1 card unlocks when calendar year >= 2020
+};
+
 // Financial quotes - one random quote per year
 export const FINANCIAL_QUOTES = [
   "Rule No. 1 is never lose money. Rule No. 2 is never forget Rule No. 1.",
@@ -32,16 +65,20 @@ export const FINANCIAL_QUOTES = [
   "The intelligent investor is a realist who sells to optimists and buys from pessimists."
 ];
 
-// Asset unlock timeline based on year
+// Asset unlock timeline based on game year (HARD-CODED - Single Source of Truth)
+// RULE: No new asset category should unlock in the last 3 game years (Years 18-20)
+// NOTE: Some assets unlock based on calendar year instead (see CALENDAR_YEAR_TRIGGERS)
 export const ASSET_UNLOCK_TIMELINE: { [key: number]: string[] } = {
-  1: ['SAVINGS_AC'],
-  2: ['FIXED_DEPOSIT'],
-  3: ['PHYSICAL_GOLD', 'DIGITAL_GOLD'],
-  4: ['INDEX_FUND', 'MUTUAL_FUND'], // User can select one
-  5: ['INDIAN_STOCKS'], // Min 2, Max 5 stocks
-  6: ['BTC', 'ETH'],
-  7: ['COMMODITY'], // User can select one
-  8: ['EMBASSY', 'MINDSPACE'] // Both REITs
+  1: ['SAVINGS_AC', 'FIXED_DEPOSIT'],  // Both enabled at game start (1 card each)
+  2: ['PHYSICAL_GOLD'],                 // Physical gold at start of year 2 (1 card)
+  3: ['COMMODITY'],                     // Commodity at start of year 3 (1 random card)
+  4: ['INDIAN_STOCKS'],                 // 3 stocks at start of year 4 (2 random fixed + 1 additional)
+  // Calendar-based unlocks (not tied to game year):
+  // - INDEX_FUND: Progressive unlock - NIFTYBEES at 2009, 1 random at 2015 (2 cards total)
+  // - DIGITAL_GOLD (Gold ETF): Calendar >= 2012 (1 card)
+  // - MUTUAL_FUND: Calendar >= 2017 (2 cards)
+  // - REITS: Calendar >= 2020 (1 card)
+  // DISABLED categories (always 0 cards): CRYPTO, FOREX
 };
 
 // Available stocks for selection - ALL 90 stocks (data served from PostgreSQL)
@@ -84,7 +121,7 @@ export const AVAILABLE_INDEX_FUNDS = [
 // Available mutual funds (user selects one in Year 4)
 export const AVAILABLE_MUTUAL_FUNDS = [
   'SBI_Bluechip', 'ICICI_Bluechip', 'Axis_Midcap',
-  'Kotak_Emerging', 'PGIM_Midcap', 'Nippon_SmallCap', 'HDFC_SmallCap'
+  'Kotak_Emerging', 'PGIM_Midcap', 'HDFC_SmallCap'
 ];
 
 // Available commodities (user selects one in Year 7)
@@ -92,6 +129,17 @@ export const AVAILABLE_COMMODITIES = [
   'COTTON', 'WHEAT', 'CRUDEOIL_WTI', 'SILVER', 'NATURALGAS',
   'COPPER', 'BRENT'
 ];
+
+// Commodity unit mapping - correct units for each commodity type
+export const COMMODITY_UNITS: { [key: string]: string } = {
+  COTTON: '/lb',
+  WHEAT: '/bushel',
+  CRUDEOIL_WTI: '/barrel',
+  SILVER: '/oz',
+  NATURALGAS: '/MMBtu',
+  COPPER: '/lb',
+  BRENT: '/barrel'
+};
 
 // DEPRECATED: CSV-based asset loading is no longer used
 // All price data is now served from PostgreSQL via encrypted socket connection
@@ -124,18 +172,19 @@ export const getRandomItem = <T>(array: T[]): T => {
 };
 
 // Utility function to format numbers in Indian numbering system (lakhs, crores)
+// Returns whole numbers without decimals for kid-friendly UI
 export const formatIndianNumber = (num: number): string => {
-  const numStr = Math.abs(num).toFixed(2);
-  const [integerPart, decimalPart] = numStr.split('.');
+  const rounded = Math.round(Math.abs(num));
+  const numStr = rounded.toString();
 
   // Indian numbering system: last 3 digits, then groups of 2
-  const lastThree = integerPart.slice(-3);
-  const otherNumbers = integerPart.slice(0, -3);
+  const lastThree = numStr.slice(-3);
+  const otherNumbers = numStr.slice(0, -3);
 
   let formatted = lastThree;
   if (otherNumbers !== '') {
     formatted = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + lastThree;
   }
 
-  return formatted + '.' + decimalPart;
+  return formatted;
 };

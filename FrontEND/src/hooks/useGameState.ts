@@ -20,13 +20,13 @@ import { tradeTracker } from '../utils/tradeTracker';
 import { bankingTracker } from '../utils/bankingTracker';
 
 // Performance optimization: Disable debug logging in production
-const DEBUG_MODE = false; // Set to true only when debugging
+// const DEBUG_MODE = false; // Set to true only when debugging
 
 const initialHoldings = {
   physicalGold: { quantity: 0, avgPrice: 0, totalInvested: 0 },
   digitalGold: { quantity: 0, avgPrice: 0, totalInvested: 0 },
-  indexFund: { quantity: 0, avgPrice: 0, totalInvested: 0 },
-  mutualFund: { quantity: 0, avgPrice: 0, totalInvested: 0 },
+  indexFund: {}, // Changed to dictionary to support multiple index funds
+  mutualFund: {}, // Changed to dictionary to support multiple mutual funds
   stocks: {},
   crypto: {},
   commodity: { quantity: 0, avgPrice: 0, totalInvested: 0 },
@@ -58,7 +58,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
 
   // Track if a transaction is in progress to prevent race conditions
   const transactionInProgress = useRef(false);
-  const pendingTimeUpdate = useRef<{year: number; month: number} | null>(null);
+  const pendingTimeUpdate = useRef<{ year: number; month: number } | null>(null);
   // Forward declare updateTime so it can be referenced earlier (see finishTransaction)
   let updateTime: ((year: number, month: number) => void) | undefined;
 
@@ -309,7 +309,10 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         stocks: extractedAssets.stocks,
         fundType,
         fundName: extractedAssets.fundName || (fundType === 'index' ? getRandomItem(AVAILABLE_INDEX_FUNDS) : getRandomItem(AVAILABLE_MUTUAL_FUNDS)),
-        commodity: extractedAssets.commodity || getRandomItem(AVAILABLE_COMMODITIES)
+        indexFunds: extractedAssets.indexFunds,
+        mutualFunds: extractedAssets.mutualFunds,
+        commodity: extractedAssets.commodity || getRandomItem(AVAILABLE_COMMODITIES),
+        reit: extractedAssets.reit || 'EMBASSY' // Fallback to EMBASSY if not in schedule
       };
 
       shuffledQuotes = [...FINANCIAL_QUOTES].sort(() => Math.random() - 0.5);
@@ -361,7 +364,8 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       selectedCommodity = extractedAssets.commodity || getRandomItem(AVAILABLE_COMMODITIES);
     } else {
       // Fallback: Random selection for quick start (no admin settings)
-      selectedStocks = getRandomItems(AVAILABLE_STOCKS, 2, 5);
+      // Select exactly 3 stocks: 2 unlock immediately + 1 unlocks progressively
+      selectedStocks = getRandomItems(AVAILABLE_STOCKS, 3, 3);
       fundType = Math.random() > 0.5 ? 'index' : 'mutual';
       fundName = fundType === 'index'
         ? getRandomItem(AVAILABLE_INDEX_FUNDS)
@@ -373,7 +377,10 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       stocks: selectedStocks,
       fundType,
       fundName,
-      commodity: selectedCommodity
+      indexFunds: assetUnlockSchedule ? extractSelectedAssetsFromSchedule(assetUnlockSchedule).indexFunds : [],
+      mutualFunds: assetUnlockSchedule ? extractSelectedAssetsFromSchedule(assetUnlockSchedule).mutualFunds : [],
+      commodity: selectedCommodity,
+      reit: assetUnlockSchedule ? extractSelectedAssetsFromSchedule(assetUnlockSchedule).reit : 'EMBASSY'
     };
 
     // Shuffle quotes for this game - one unique quote per year
@@ -426,11 +433,11 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     setGameState(prev => {
       if (gameHasEnded(prev)) return prev; // no updates after game end
       if (amount > prev.pocketCash) return prev;
-      
+
       const newBalance = prev.savingsAccount.balance + amount;
       // Log banking transaction
       bankingTracker.logDeposit(amount, newBalance, prev.currentYear, prev.currentMonth, 'manual_deposit');
-      
+
       return {
         ...prev,
         pocketCash: prev.pocketCash - amount,
@@ -454,7 +461,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       const withdrawalRatio = amount / currentBalance;
       const newTotalDeposited = Math.max(0, currentDeposited - (currentDeposited * withdrawalRatio));
       const newBalance = currentBalance - amount;
-      
+
       // Log banking transaction
       bankingTracker.logWithdrawal(amount, newBalance, prev.currentYear, prev.currentMonth, 'manual_withdrawal');
 
@@ -470,7 +477,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     });
   }, []);
 
-  const createFixedDeposit = useCallback((amount: number, duration: 3 | 12 | 36, interestRate: number) => {
+  const createFixedDeposit = useCallback((amount: number, duration: 12 | 24 | 36, interestRate: number) => {
     setGameState(prev => {
       if (gameHasEnded(prev)) return prev;
       if (amount > prev.pocketCash || prev.fixedDeposits.length >= 3) return prev;
@@ -489,7 +496,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
         maturityYear,
         isMatured: false
       };
-      
+
       const newBalance = prev.savingsAccount.balance;
       // Log FD investment transaction
       bankingTracker.logFDInvestment(newFD.id, amount, duration, interestRate, newBalance, prev.currentYear, prev.currentMonth);
@@ -503,7 +510,8 @@ export const useGameState = (isMultiplayer: boolean = false) => {
   }, []);
 
   const collectFD = useCallback((fdId: string) => {
-    setGameState(prev => {      if (gameHasEnded(prev)) return prev;      const fd = prev.fixedDeposits.find(f => f.id === fdId);
+    setGameState(prev => {
+      if (gameHasEnded(prev)) return prev; const fd = prev.fixedDeposits.find(f => f.id === fdId);
       if (!fd || !fd.isMatured) return prev;
 
       // FD rates are annual (PA - Per Annum)
@@ -535,7 +543,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       const penalty = 0.01; // 1% penalty
       const penaltyAmount = fd.amount * penalty;
       const returnAmount = fd.amount * (1 - penalty);
-      
+
       // Log FD break transaction with penalty
       bankingTracker.logFDBreak(fdId, fd.amount, returnAmount, penaltyAmount, prev.pocketCash + returnAmount, prev.currentYear, prev.currentMonth);
 
@@ -561,7 +569,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       return;
     }
 
-      // Signature to detect duplicate rapid transactions
+    // Signature to detect duplicate rapid transactions
     const txSignature = `${assetType}|${assetName}|${quantity}|${currentPrice.toFixed(6)}`;
     const now = Date.now();
     const prevTs = recentTransactions.current.get(txSignature);
@@ -609,11 +617,10 @@ export const useGameState = (isMultiplayer: boolean = false) => {
 
       // Get holding quantity before buy
       let holdingQuantityBefore = 0;
-      if (assetType === 'physicalGold' || assetType === 'digitalGold' || assetType === 'indexFund' ||
-          assetType === 'mutualFund' || assetType === 'commodity') {
+      if (assetType === 'physicalGold' || assetType === 'digitalGold' || assetType === 'commodity') {
         holdingQuantityBefore = (prev.holdings[assetType as keyof typeof prev.holdings] as AssetHolding).quantity;
-      } else if (assetType === 'stocks' || assetType === 'crypto' || assetType === 'reits') {
-        const assetGroup = prev.holdings[assetType as 'stocks' | 'crypto' | 'reits'];
+      } else if (assetType === 'stocks' || assetType === 'crypto' || assetType === 'reits' || assetType === 'indexFund' || assetType === 'mutualFund') {
+        const assetGroup = prev.holdings[assetType as 'stocks' | 'crypto' | 'reits' | 'indexFund' | 'mutualFund'];
         holdingQuantityBefore = assetGroup[assetName]?.quantity || 0;
       }
 
@@ -621,8 +628,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       // which can cause duplicate-applied changes when multiple transactions are processed rapidly.
       const newHoldings = { ...prev.holdings } as typeof prev.holdings;
 
-      if (assetType === 'physicalGold' || assetType === 'digitalGold' || assetType === 'indexFund' ||
-          assetType === 'mutualFund' || assetType === 'commodity') {
+      if (assetType === 'physicalGold' || assetType === 'digitalGold' || assetType === 'commodity') {
         // Clone the specific holding object
         const holding = { ...(newHoldings[assetType as keyof typeof newHoldings] as AssetHolding) };
         const newQuantity = holding.quantity + quantity;
@@ -632,9 +638,9 @@ export const useGameState = (isMultiplayer: boolean = false) => {
           avgPrice: newTotalInvested / newQuantity,
           totalInvested: newTotalInvested
         };
-      } else if (assetType === 'stocks' || assetType === 'crypto' || assetType === 'reits') {
-        // Clone the asset group (stocks/crypto/reits) before mutating
-        const assetGroup = { ...(newHoldings[assetType as 'stocks' | 'crypto' | 'reits']) };
+      } else if (assetType === 'stocks' || assetType === 'crypto' || assetType === 'reits' || assetType === 'indexFund' || assetType === 'mutualFund') {
+        // Clone the asset group (stocks/crypto/reits/indexFund/mutualFund) before mutating
+        const assetGroup = { ...(newHoldings[assetType as 'stocks' | 'crypto' | 'reits' | 'indexFund' | 'mutualFund']) };
         const holding = assetGroup[assetName] ? { ...assetGroup[assetName] } : { quantity: 0, avgPrice: 0, totalInvested: 0 };
         const newQuantity = holding.quantity + quantity;
         const newTotalInvested = holding.totalInvested + totalCost;
@@ -644,7 +650,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
           totalInvested: newTotalInvested
         };
         // Assign the cloned group back to newHoldings to keep immutability
-        (newHoldings[assetType as 'stocks' | 'crypto' | 'reits']) = assetGroup;
+        (newHoldings[assetType as 'stocks' | 'crypto' | 'reits' | 'indexFund' | 'mutualFund']) = assetGroup;
       }
 
       const updatedState = {
@@ -715,13 +721,12 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       const newHoldings = { ...prev.holdings } as typeof prev.holdings;
       let holding: AssetHolding | undefined;
 
-      if (assetType === 'physicalGold' || assetType === 'digitalGold' || assetType === 'indexFund' ||
-          assetType === 'mutualFund' || assetType === 'commodity') {
+      if (assetType === 'physicalGold' || assetType === 'digitalGold' || assetType === 'commodity') {
         // Clone the specific holding object
         holding = { ...((newHoldings[assetType as keyof typeof newHoldings] as AssetHolding)) };
-      } else if (assetType === 'stocks' || assetType === 'crypto' || assetType === 'reits') {
+      } else if (assetType === 'stocks' || assetType === 'crypto' || assetType === 'reits' || assetType === 'indexFund' || assetType === 'mutualFund') {
         // Clone the asset group before reading/modifying
-        const assetGroup = { ...(newHoldings[assetType as 'stocks' | 'crypto' | 'reits']) };
+        const assetGroup = { ...(newHoldings[assetType as 'stocks' | 'crypto' | 'reits' | 'indexFund' | 'mutualFund']) };
         holding = assetGroup[assetName];
       }
 
@@ -733,16 +738,15 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       const newQuantity = holding.quantity - quantity;
       const reducedInvestment = (holding.totalInvested / holding.quantity) * quantity;
 
-      if (assetType === 'physicalGold' || assetType === 'digitalGold' || assetType === 'indexFund' ||
-          assetType === 'mutualFund' || assetType === 'commodity') {
+      if (assetType === 'physicalGold' || assetType === 'digitalGold' || assetType === 'commodity') {
         (newHoldings[assetType as keyof typeof newHoldings] as AssetHolding) = {
           quantity: newQuantity,
           avgPrice: newQuantity > 0 ? (holding.totalInvested - reducedInvestment) / newQuantity : 0,
           totalInvested: holding.totalInvested - reducedInvestment
         };
-      } else if (assetType === 'stocks' || assetType === 'crypto' || assetType === 'reits') {
+      } else if (assetType === 'stocks' || assetType === 'crypto' || assetType === 'reits' || assetType === 'indexFund' || assetType === 'mutualFund') {
         // Operate on cloned asset group and assign back immutably
-        const assetGroup = { ...(newHoldings[assetType as 'stocks' | 'crypto' | 'reits']) };
+        const assetGroup = { ...(newHoldings[assetType as 'stocks' | 'crypto' | 'reits' | 'indexFund' | 'mutualFund']) };
         if (newQuantity === 0) {
           delete assetGroup[assetName];
         } else {
@@ -752,7 +756,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
             totalInvested: holding.totalInvested - reducedInvestment
           };
         }
-        (newHoldings[assetType as 'stocks' | 'crypto' | 'reits']) = assetGroup;
+        (newHoldings[assetType as 'stocks' | 'crypto' | 'reits' | 'indexFund' | 'mutualFund']) = assetGroup;
       }
       const updatedState = {
         ...prev,
@@ -938,7 +942,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
           newCashTransactions.push(transaction);
         }
 
-  
+
         return {
           ...prev,
           currentYear: TOTAL_GAME_YEARS,
@@ -1024,6 +1028,22 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     }));
   }, []);
 
+  // CRITICAL: Mark game as ended (for multiplayer when gameEnded event received)
+  // This ensures gameHasEnded() returns true and prevents further state updates
+  const markGameAsEnded = useCallback(() => {
+    setGameState(prev => {
+      // Only mark as ended if we're at or past the final year
+      if (prev.currentYear >= TOTAL_GAME_YEARS) {
+        console.log('🔒 Marking game as ended - locking state updates');
+        return {
+          ...prev,
+          isStarted: false
+        };
+      }
+      return prev;
+    });
+  }, []);
+
   return {
     gameState,
     openSettings,
@@ -1042,6 +1062,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     markQuizCompleted,
     updateTime,
     updatePauseState,
+    markGameAsEnded,
     // Reactive flag for UI components to know whether a transaction is pending
     isTransactionPending,
     // Life event popup & handler
@@ -1080,3 +1101,4 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     }
   };
 };
+

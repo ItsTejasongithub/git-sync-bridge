@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { adminAuthApi, adminSettingsApi } from '../services/adminApi';
 import { AdminSettings, AssetCategory } from '../types';
-import { calculateGameStartYear, getLatestAssetYear } from '../utils/assetUnlockCalculator';
 
 interface AdminPanelModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const ASSET_CATEGORIES: Array<{ id: AssetCategory; label: string; mandatory?: boolean }> = [
-  { id: 'BANKING', label: 'Banking (Mandatory)', mandatory: true },
-  { id: 'GOLD', label: 'Gold' },
-  { id: 'STOCKS', label: 'Stocks' },
-  { id: 'FUNDS', label: 'Index & Mutual Funds' },
-  { id: 'CRYPTO', label: 'Cryptocurrency' },
-  { id: 'REIT', label: 'REITs' },
-  { id: 'COMMODITIES', label: 'Commodities' },
+// HARD-CODED Asset Categories (Single Source of Truth - Admin CANNOT change this)
+const ASSET_CATEGORIES: Array<{ id: AssetCategory; label: string; enabled: boolean; description?: string }> = [
+  { id: 'BANKING', label: 'Banking', enabled: true, description: 'Savings & FD' },
+  { id: 'GOLD', label: 'Gold', enabled: true, description: 'Physical & ETF' },
+  { id: 'STOCKS', label: 'Stocks', enabled: true, description: '3 cards at Year 4' },
+  { id: 'FUNDS', label: 'Index & Mutual Funds', enabled: true, description: '2+2 cards' },
+  { id: 'COMMODITIES', label: 'Commodities', enabled: true, description: '1 random card' },
+  { id: 'REIT', label: 'REITs', enabled: true, description: '1 card at 2020' },
+  { id: 'CRYPTO', label: 'Cryptocurrency', enabled: false, description: 'Disabled' },
+  { id: 'FOREX', label: 'Forex', enabled: false, description: 'Disabled' },
 ];
+
+// Hard-coded enabled categories (cannot be changed)
+const HARDCODED_ENABLED_CATEGORIES: AssetCategory[] = ['BANKING', 'GOLD', 'STOCKS', 'FUNDS', 'COMMODITIES', 'REIT'];
 
 export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClose }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -30,21 +34,17 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
   const [loading, setLoading] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
-  // Admin Settings State
+  // Admin Settings State - Asset categories are hard-coded and cannot be changed
   const [settings, setSettings] = useState<AdminSettings>({
-    selectedCategories: ['BANKING', 'GOLD', 'STOCKS', 'FUNDS', 'CRYPTO', 'REIT', 'COMMODITIES'],
-    gameStartYear: 2005,
+    selectedCategories: HARDCODED_ENABLED_CATEGORIES,
+    gameStartYear: 2004, // Required minimum to allow REITs unlock before Year 17
     hideCurrentYear: false,
     initialPocketCash: 100000,
     recurringIncome: 50000,
     enableQuiz: true,
-    // Number of random life events per player (default 3, 1..20)
     eventsCount: 3,
     monthDuration: 5000, // Default: 5 seconds per month
   });
-
-  // Track latest asset year
-  const [latestAssetYear, setLatestAssetYear] = useState<number>(2005);
 
   // Load current settings when authenticated
   useEffect(() => {
@@ -53,23 +53,19 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
     }
   }, [isAuthenticated]);
 
-  // Auto-calculate game start year when categories change
-  useEffect(() => {
-    if (settings.selectedCategories.length > 0) {
-      const latest = getLatestAssetYear(settings.selectedCategories);
-      const calculated = calculateGameStartYear(settings.selectedCategories);
-      setLatestAssetYear(latest);
-
-      // Auto-update the game start year in settings
-      setSettings(prev => ({ ...prev, gameStartYear: calculated }));
-    }
-  }, [settings.selectedCategories]);
+  // Game start year is calculated based on REIT unlock requirement (2020)
+  // REIT needs to unlock by Year 17, so minimum start year = 2020 - 17 + 1 = 2004
+  const REQUIRED_START_YEAR = 2004;
 
   const loadSettings = async () => {
     setLoading(true);
     const response = await adminSettingsApi.getSettings();
     if (response.success && response.settings) {
-      setSettings(response.settings);
+      // Always override selectedCategories with hard-coded values
+      setSettings({
+        ...response.settings,
+        selectedCategories: HARDCODED_ENABLED_CATEGORIES
+      });
     }
     setLoading(false);
   };
@@ -95,7 +91,13 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
     setLoading(true);
     setSaveMessage('');
 
-    const response = await adminSettingsApi.updateSettings(settings);
+    // Always use hard-coded categories when saving
+    const settingsToSave = {
+      ...settings,
+      selectedCategories: HARDCODED_ENABLED_CATEGORIES
+    };
+
+    const response = await adminSettingsApi.updateSettings(settingsToSave);
 
     setLoading(false);
 
@@ -139,17 +141,6 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
     }
   };
 
-  const handleCategoryToggle = (categoryId: AssetCategory) => {
-    if (categoryId === 'BANKING') return; // Cannot toggle mandatory category
-
-    setSettings((prev) => {
-      const newCategories = prev.selectedCategories.includes(categoryId)
-        ? prev.selectedCategories.filter((c) => c !== categoryId)
-        : [...prev.selectedCategories, categoryId];
-
-      return { ...prev, selectedCategories: newCategories };
-    });
-  };
 
   const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
@@ -322,11 +313,14 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
               Admin Settings
             </h2>
 
-            {/* Asset Categories */}
+            {/* Asset Categories (Read-Only) */}
             <div style={{ marginBottom: '20px' }}>
               <h3 style={{ color: '#fff', marginBottom: '10px', fontSize: '16px' }}>
-                Asset Categories
+                Asset Categories (Hard-Coded - Read Only)
               </h3>
+              <p style={{ color: '#888', fontSize: '12px', marginBottom: '10px' }}>
+                These categories are fixed and cannot be changed by admin settings.
+              </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 {ASSET_CATEGORIES.map((cat) => (
                   <label
@@ -334,48 +328,57 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({ isOpen, onClos
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      color: '#fff',
-                      cursor: cat.mandatory ? 'not-allowed' : 'pointer',
-                      opacity: cat.mandatory ? 0.7 : 1,
+                      color: cat.enabled ? '#fff' : '#666',
+                      cursor: 'default',
+                      opacity: cat.enabled ? 1 : 0.5,
                     }}
                   >
                     <input
                       type="checkbox"
-                      checked={settings.selectedCategories.includes(cat.id)}
-                      onChange={() => handleCategoryToggle(cat.id)}
-                      disabled={cat.mandatory}
-                      style={{ marginRight: '8px', cursor: cat.mandatory ? 'not-allowed' : 'pointer' }}
+                      checked={cat.enabled}
+                      disabled={true}
+                      readOnly
+                      style={{ marginRight: '8px', cursor: 'default' }}
                     />
-                    {cat.label}
+                    <span>
+                      {cat.label}
+                      {cat.description && (
+                        <span style={{ color: '#888', fontSize: '11px', marginLeft: '4px' }}>
+                          ({cat.description})
+                        </span>
+                      )}
+                    </span>
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Game Start Year - Auto-calculated */}
+            {/* Game Start Year - Fixed to ensure all assets can unlock */}
             <div style={{ marginBottom: '15px' }}>
               <label style={{ color: '#fff', display: 'block', marginBottom: '5px' }}>
-                Game Start Year (Auto-calculated)
+                Game Start Year (Selectable: 2000-2005)
               </label>
-              <input
-                type="number"
-                min="1996"
-                max="2025"
+              <select
                 value={settings.gameStartYear}
-                readOnly
+                onChange={(e) => setSettings({ ...settings, gameStartYear: Number(e.target.value) })}
                 style={{
                   width: '100%',
                   padding: '10px',
                   borderRadius: '5px',
                   border: '1px solid #4ecca3',
-                  backgroundColor: '#0f3460',
-                  color: '#4ecca3',
+                  backgroundColor: '#16213e',
+                  color: '#fff',
                   fontSize: '14px',
-                  cursor: 'not-allowed',
                 }}
-              />
+              >
+                {[2000, 2001, 2002, 2003, 2004, 2005].map((year) => (
+                  <option key={year} value={year} style={{ color: '#000' }}>
+                    {year} {year < REQUIRED_START_YEAR ? '(REITs may not unlock in time)' : ''}
+                  </option>
+                ))}
+              </select>
               <p style={{ color: '#888', fontSize: '12px', marginTop: '5px' }}>
-                Automatically calculated based on selected asset categories (Latest asset: {latestAssetYear})
+                Minimum recommended: {REQUIRED_START_YEAR} (to ensure REITs unlock before Year 17)
               </p>
               <p style={{ color: '#888', fontSize: '12px' }}>
                 Game will run from {settings.gameStartYear} to {settings.gameStartYear + 19}

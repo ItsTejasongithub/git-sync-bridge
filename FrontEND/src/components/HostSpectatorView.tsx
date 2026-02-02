@@ -47,7 +47,6 @@ export const HostSpectatorView: React.FC = () => {
       <div className="spectator-header">
         <div className="game-info">
           <h1>BULL RUN  HOST VIEW</h1>
-          <p className="room-code">Room: {roomInfo.roomId}</p>
         </div>
 
         {/* Logo in the center */}
@@ -71,28 +70,54 @@ export const HostSpectatorView: React.FC = () => {
         </div>
       </div>
 
-      {/* Pause Status */}
-      <div className="pause-controls">
-        {gameState.isPaused && (
-          <div className="pause-banner">
-            ⏸️ GAME PAUSED
-            {gameState.pauseReason === 'quiz' && (
-              <span className="pause-reason"> - Players completing quiz</span>
-            )}
+      {/* Progress Timeline Bar */}
+      <div className="progress-timeline">
+        <div className="timeline-header">
+          <span className="timeline-label">Game Progress</span>
+          <span className="timeline-percentage">
+            {(((gameState.currentYear - 1) * 12 + gameState.currentMonth) / 240 * 100).toFixed(1)}%
+          </span>
+        </div>
+        <div className="timeline-bar">
+          <div
+            className="timeline-fill"
+            style={{ width: `${((gameState.currentYear - 1) * 12 + gameState.currentMonth) / 240 * 100}%` }}
+          >
+            <div className="timeline-wave"></div>
+            <div className="timeline-glow"></div>
           </div>
-        )}
+          <div className="timeline-markers">
+            {[5, 10, 15, 20].map(year => (
+              <div
+                key={year}
+                className={`timeline-marker ${gameState.currentYear >= year ? 'passed' : ''}`}
+                style={{ left: `${(year / 20) * 100}%` }}
+              >
+                <div className="marker-dot"></div>
+                <span className="marker-label">Y{year}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
+      {/* Pause Controls */}
+      <div className="pause-controls">
         {/* Host-only pause/resume button (only for the room host) */}
         {roomInfo.isHost && (
           <button
-            className="pause-button host-pause"
+            className={`pause-button host-pause ${(gameState.currentYear === 20 && gameState.currentMonth === 12) || gameState.currentYear > 20 ? 'game-ended' : ''}`}
             onClick={() => {
               // Host toggles pause globally via socket
-              import('../services/socketService').then(({ socketService }) => socketService.togglePause());
+              if (gameState.currentYear < 20 || (gameState.currentYear === 20 && gameState.currentMonth < 12)) {
+                import('../services/socketService').then(({ socketService }) => socketService.togglePause());
+              }
             }}
-            disabled={gameState.pauseReason === 'quiz'}
+            disabled={gameState.pauseReason === 'quiz' || (gameState.currentYear === 20 && gameState.currentMonth === 12) || gameState.currentYear > 20}
           >
-            {gameState.isPaused ? '▶ RESUME' : '⏸ PAUSE'}
+            {(gameState.currentYear === 20 && gameState.currentMonth === 12) || gameState.currentYear > 20
+              ? '🏁 GAME ENDED'
+              : gameState.isPaused ? '▶ RESUME' : '⏸ PAUSE'}
           </button>
         )}
       </div>
@@ -103,7 +128,7 @@ export const HostSpectatorView: React.FC = () => {
         <div className="leaderboard-grid">
           {leaderboard.map((player, index) => {
             const isExpanded = expandedPlayers.has(player.id);
-            
+
             return (
               <div key={player.id} className={`leaderboard-card rank-${index + 1}`}>
                 <div className="rank-badge">#{index + 1}</div>
@@ -128,8 +153,8 @@ export const HostSpectatorView: React.FC = () => {
 
                   {/* Portfolio Breakdown - Expandable */}
                   <div className="portfolio-breakdown">
-                    <div 
-                      className="portfolio-header" 
+                    <div
+                      className="portfolio-header"
                       onClick={() => togglePortfolio(player.id)}
                     >
                       <h4>
@@ -155,6 +180,13 @@ export const HostSpectatorView: React.FC = () => {
                             <span className="amount">{formatCurrency(player.portfolioBreakdown.savings)}</span>
                           </div>
                         )}
+                        {player.portfolioBreakdown.fixedDeposits > 0 && (
+                          <div className="breakdown-item">
+                            <span className="category">Fixed Deposits</span>
+                            <span className="percentage">{getPortfolioPercentage(player, 'fixedDeposits').toFixed(1)}%</span>
+                            <span className="amount">{formatCurrency(player.portfolioBreakdown.fixedDeposits)}</span>
+                          </div>
+                        )}
                         {player.portfolioBreakdown.gold > 0 && (
                           <div className="breakdown-item">
                             <span className="category">Gold</span>
@@ -162,11 +194,18 @@ export const HostSpectatorView: React.FC = () => {
                             <span className="amount">{formatCurrency(player.portfolioBreakdown.gold)}</span>
                           </div>
                         )}
-                        {player.portfolioBreakdown.funds > 0 && (
+                        {player.portfolioBreakdown.indexFunds > 0 && (
                           <div className="breakdown-item">
-                            <span className="category">Funds</span>
-                            <span className="percentage">{getPortfolioPercentage(player, 'funds').toFixed(1)}%</span>
-                            <span className="amount">{formatCurrency(player.portfolioBreakdown.funds)}</span>
+                            <span className="category">Index Funds</span>
+                            <span className="percentage">{getPortfolioPercentage(player, 'indexFunds').toFixed(1)}%</span>
+                            <span className="amount">{formatCurrency(player.portfolioBreakdown.indexFunds)}</span>
+                          </div>
+                        )}
+                        {player.portfolioBreakdown.mutualFunds > 0 && (
+                          <div className="breakdown-item">
+                            <span className="category">Mutual Funds</span>
+                            <span className="percentage">{getPortfolioPercentage(player, 'mutualFunds').toFixed(1)}%</span>
+                            <span className="amount">{formatCurrency(player.portfolioBreakdown.mutualFunds)}</span>
                           </div>
                         )}
                         {player.portfolioBreakdown.stocks > 0 && (

@@ -186,7 +186,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ onBack }) =>
         </button>
 
         <div className="room-header">
-          <h1>Room Code</h1>
+          <h2>Room Code</h2>
           <div className="room-code">{roomInfo.roomId}</div>
           <p className="room-hint">Share this code with other players</p>
         </div>
@@ -260,10 +260,10 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ onBack }) =>
             {loadingSettings
               ? 'LOADING SETTINGS...'
               : !adminSettings
-              ? 'SETTINGS UNAVAILABLE'
-              : nonHostPlayerCount < 2
-              ? 'WAITING FOR PLAYERS...'
-              : 'START GAME'}
+                ? 'SETTINGS UNAVAILABLE'
+                : nonHostPlayerCount < 2
+                  ? 'WAITING FOR PLAYERS...'
+                  : 'START GAME'}
           </button>
         )}
       </div>

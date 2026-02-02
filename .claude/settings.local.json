@@ -36,7 +36,12 @@
       "Bash(node convert-fonts.js:*)",
       "Bash(powershell -Command:*)",
       "Bash(node compare-metadata.js:*)",
-      "Bash(openssl x509:*)"
+      "Bash(openssl x509:*)",
+      "Bash(docker compose:*)",
+      "Bash(restore_database.bat)",
+      "Bash(docker volume:*)",
+      "Bash(docker inspect:*)",
+      "Read(//c/Users/dell/Pictures/Screenshots/**)"
     ]
   }
 }

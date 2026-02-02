@@ -347,8 +347,8 @@ export class GameSyncManager {
         // Mark game as ended (stops all further updates)
         room.gameState.isStarted = false;
 
-        // Cleanup room encryption and price data
-        this.cleanupRoom(roomId);
+        // IMPORTANT: Do NOT cleanup room yet - players need encrypted prices for final calculations!
+        // Cleanup will happen after players have logged to database (see setTimeout below)
 
         // Emit game ended event FIRST so players can log to database
         this.io.to(roomId).emit('gameEnded', {
@@ -368,11 +368,16 @@ export class GameSyncManager {
             const { getPlayerLogs } = require('../database/playerLogs');
             const logs = getPlayerLogs({ roomId, gameMode: 'multiplayer' });
 
+            console.log(`📊 Fetched ${logs.length} logs for room ${roomId}`);
+
             // Deduplicate by normalized player name (first occurrence is latest since logs are ordered by completed_at DESC)
             const latestByPlayer: Map<string, any> = new Map();
             for (const log of logs) {
               const key = (log.playerName || '').trim().toLowerCase();
-              if (!latestByPlayer.has(key)) latestByPlayer.set(key, log);
+              if (!latestByPlayer.has(key)) {
+                console.log(`📝 Player ${log.playerName} portfolioBreakdown:`, log.portfolioBreakdown);
+                latestByPlayer.set(key, log);
+              }
             }
 
             const leaderboard = Array.from(latestByPlayer.values()).map(l => ({
@@ -382,10 +387,17 @@ export class GameSyncManager {
               portfolioBreakdown: l.portfolioBreakdown,
             })).sort((a, b) => b.networth - a.networth);
 
+            console.log(`🏆 Final leaderboard for room ${roomId}:`, JSON.stringify(leaderboard, null, 2));
+
             this.io.to(roomId).emit('finalLeaderboard', { leaderboard });
           } catch (err) {
             console.error('Error fetching/broadcasting final leaderboard from DB:', err);
           }
+
+          // CRITICAL FIX: Cleanup room AFTER players have logged to database
+          // This ensures encrypted prices are still available for final networth calculations
+          console.log(`🧹 Cleaning up room ${roomId} after final leaderboard broadcast`);
+          this.cleanupRoom(roomId);
         }, 3000);
 
         return;

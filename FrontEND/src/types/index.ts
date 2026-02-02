@@ -45,7 +45,10 @@ export interface SelectedAssets {
   stocks: string[];
   fundType: 'index' | 'mutual';
   fundName: string;
+  indexFunds: string[]; // Array of index fund names (unlocks progressively at calendar 2009, 2015)
+  mutualFunds: string[]; // Array of mutual fund names (unlocks at calendar 2017)
   commodity: string;
+  reit: string; // Randomly selected REIT (EMBASSY or MINDSPACE) - unlocks at calendar 2020
 }
 
 export interface SavingsAccount {
@@ -57,7 +60,7 @@ export interface SavingsAccount {
 export interface FixedDeposit {
   id: string;
   amount: number;
-  duration: 3 | 12 | 36; // in months
+  duration: 12 | 24 | 36; // in months (1 year, 2 years, 3 years)
   interestRate: number;
   startMonth: number;
   startYear: number;
@@ -69,8 +72,8 @@ export interface FixedDeposit {
 export interface Holdings {
   physicalGold: AssetHolding;
   digitalGold: AssetHolding;
-  indexFund: AssetHolding;
-  mutualFund: AssetHolding;
+  indexFund: { [key: string]: AssetHolding }; // Changed to dictionary to support multiple index funds
+  mutualFund: { [key: string]: AssetHolding }; // Changed to dictionary to support multiple mutual funds
   stocks: { [key: string]: AssetHolding };
   crypto: { [key: string]: AssetHolding };
   commodity: AssetHolding;
@@ -97,12 +100,12 @@ export interface AssetInfo {
 
 export interface FDRate {
   year: number;
-  threeMonth: number;
   oneYear: number;
+  twoYear: number;
   threeYear: number;
 }
 
-export type AssetCategory = 'BANKING' | 'GOLD' | 'STOCKS' | 'FUNDS' | 'CRYPTO' | 'REIT' | 'COMMODITIES';
+export type AssetCategory = 'BANKING' | 'GOLD' | 'STOCKS' | 'FUNDS' | 'CRYPTO' | 'REIT' | 'COMMODITIES' | 'FOREX';
 
 export interface AdminSettings {
   selectedCategories: AssetCategory[];
@@ -124,4 +127,19 @@ export interface UnlockEntry {
   assetType: string;
   assetNames?: string[];
   calendarYear: number;
+  maxCards?: number; // Maximum number of cards for this asset type
+}
+
+// Window/Row layout for 3-row display system
+export interface WindowLayout {
+  row1: UnlockedAsset[]; // Banking + Gold (max 4)
+  row2: UnlockedAsset[]; // Stocks + Funds (max 5)
+  row3: UnlockedAsset[]; // Overflow + Commodities + REITs (max 5)
+}
+
+export interface UnlockedAsset {
+  category: AssetCategory;
+  assetType: string;
+  assetName: string;
+  displayName?: string;
 }

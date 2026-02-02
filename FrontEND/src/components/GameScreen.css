@@ -5,12 +5,11 @@
   height: 100vh;
   overflow: hidden;
   background: linear-gradient(135deg,
-    #FF9933 0%,
-    #FFFFFF 25%,
-    #138808 50%,
-    #FFFFFF 75%,
-    #FF9933 100%
-  );
+      #FF9933 0%,
+      #FFFFFF 25%,
+      #138808 50%,
+      #FFFFFF 75%,
+      #FF9933 100%);
   position: relative;
 }
 
@@ -44,6 +43,7 @@
   0% {
     background-position: 0 0;
   }
+
   100% {
     background-position: 1000px 1000px;
   }
@@ -211,10 +211,13 @@
 }
 
 @keyframes flowDown {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
     opacity: 0.8;
   }
+
   50% {
     transform: translateY(3px);
     opacity: 1;
@@ -236,9 +239,12 @@
 }
 
 @keyframes debtFlash {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 0 rgba(231, 76, 60, 0);
   }
+
   50% {
     box-shadow: 0 0 20px rgba(231, 76, 60, 0.8), 0 0 40px rgba(231, 76, 60, 0.4);
   }
@@ -278,15 +284,31 @@
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.03); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes flash {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 .pocket-tooltip-wrapper {
@@ -299,7 +321,7 @@
   left: 50%;
   transform: translateX(-50%) translateY(6px);
   bottom: -36px;
-  background: rgba(0,0,0,0.9);
+  background: rgba(0, 0, 0, 0.9);
   color: #fff;
   padding: 6px 10px;
   border-radius: 6px;
@@ -351,7 +373,7 @@
   font-weight: 700;
   margin-bottom: 5px;
   color: #FFFFFF;
-  text-shadow: 0 5px 1px rgba(0,0,0,0.25);
+  text-shadow: 0 5px 1px rgba(0, 0, 0, 0.25);
 }
 
 .net-worth-pl {
@@ -370,7 +392,8 @@
   left: 50%;
   transform: translateX(-50%) translateY(6px);
   bottom: -36px;
-  background: rgb(0, 0, 0); /* match pocket tooltip */
+  background: rgb(0, 0, 0);
+  /* match pocket tooltip */
   border-radius: 6px;
   padding: 10px;
   min-width: 260px;
@@ -379,30 +402,36 @@
   transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
   z-index: 9999;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-  font-size: 12px; /* smaller, like pocket tooltip */
+  font-size: 12px;
+  /* smaller, like pocket tooltip */
 }
 
 .net-tooltip-wrapper:hover .net-worth-breakdown {
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(0px);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 12px;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
 }
+
 .net-worth-breakdown .breakdown-title {
   font-size: 13px;
   margin-bottom: 8px;
 }
+
 .net-worth-breakdown .breakdown-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 10px; /* add horizontal padding for breathing room */
+  padding: 6px 10px;
+  /* add horizontal padding for breathing room */
   font-size: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  background: transparent; /* remove boxed background */
-  margin-bottom: 6px; /* separate items visually without boxes */
+  background: transparent;
+  /* remove boxed background */
+  margin-bottom: 6px;
+  /* separate items visually without boxes */
   border-radius: 6px;
 }
 
@@ -436,11 +465,12 @@
 }
 
 .breakdown-item.highlight {
-  background: linear-gradient(90deg, rgba(102,126,234,0.08), rgba(255,153,51,0.06));
+  background: linear-gradient(90deg, rgba(102, 126, 234, 0.08), rgba(255, 153, 51, 0.06));
   border-radius: 6px;
   padding: 6px 12px;
   box-shadow: 0 8px 20px rgba(255, 209, 102, 0.08);
-  border-left: 4px solid #ffd166; /* golden accent */
+  border-left: 4px solid #ffd166;
+  /* golden accent */
   position: relative;
   z-index: 2;
 }
@@ -558,8 +588,104 @@
 /* Year-specific layouts - Responsive Grid-Based Approach */
 
 /* ============================================ */
-/* DYNAMIC INTELLIGENT LAYOUT */
-/* Adapts based on unlocked assets, not year */
+/* 3-ROW WINDOW LAYOUT SYSTEM */
+/* Row 1: Banking + Gold (max 4 cards) */
+/* Row 2: Stocks + Funds (max 5 cards) */
+/* Row 3: Overflow + Commodities + REITs */
+/* ============================================ */
+
+.asset-windows-layout {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.5vw, 20px);
+  align-items: center;
+  width: 100%;
+  min-height: 100%;
+  padding: clamp(8px, 1vw, 15px);
+  padding-top: 20px;
+  padding-bottom: 40px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.asset-window {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.25);
+  padding: clamp(10px, 1.2vw, 15px);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: calc((260px * 5) + (10px * 4) + 30px);
+  /* 5 cards + 4 gaps + padding */
+}
+
+.window-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(8px, 1vw, 10px);
+  justify-content: center;
+  width: 100%;
+}
+
+/* Window 1 (Row 1): Banking + Gold - max 4 cards */
+.asset-window.window-1 {
+  border-left: 4px solid #FF9933;
+  /* Orange accent for Banking/Gold */
+}
+
+/* Window 2 (Row 2): Stocks + Funds - max 5 cards */
+.asset-window.window-2 {
+  border-left: 4px solid #138808;
+  /* Green accent for Stocks/Funds */
+}
+
+/* Window 3 (Row 3): Overflow + Commodities + REITs */
+.asset-window.window-3 {
+  border-left: 4px solid #667eea;
+  /* Blue accent for Commodities/REITs */
+}
+
+/* Responsive: Tablet */
+@media (max-width: 1024px) {
+  .asset-windows-layout {
+    gap: 15px;
+    padding: 10px;
+  }
+
+  .asset-window {
+    padding: 12px;
+    max-width: 100%;
+  }
+
+  .window-cards {
+    gap: 8px;
+  }
+}
+
+/* Responsive: Mobile */
+@media (max-width: 768px) {
+  .asset-windows-layout {
+    gap: 12px;
+    padding: 8px;
+  }
+
+  .asset-window {
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  .window-cards {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+/* ============================================ */
+/* LEGACY: DYNAMIC INTELLIGENT LAYOUT */
+/* Kept for backward compatibility */
 /* ============================================ */
 
 .dynamic-assets-layout {
@@ -568,7 +694,6 @@
   flex-wrap: wrap;
   gap: clamp(6px, 0.5vw, 10px);
   align-items: flex-start;
-  align-content: flex-start;
   justify-content: center;
   width: 100%;
   min-height: 100%;
@@ -579,51 +704,57 @@
   overflow-x: hidden;
 }
 
+/* First row container - ONLY Banking and Gold - Forces Row 1 */
+.first-row-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: clamp(6px, 0.5vw, 10px);
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 100%;
+  flex-basis: 100%;
+}
+
 /* Tablet: Adjust layout */
 @media (max-width: 1024px) {
   .dynamic-assets-layout {
     gap: 8px;
     padding: 8px;
   }
+
+  .first-row-container {
+    gap: 8px;
+  }
 }
 
 /* Mobile: Single column layout */
 @media (max-width: 768px) {
   .dynamic-assets-layout {
-    flex-direction: column;
-    align-items: center;
     gap: 12px;
     padding: 10px;
   }
+
+  .first-row-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
 }
 
-/* When only 1 section exists (Banking only) - Center it vertically and horizontally */
-.dynamic-assets-layout:has(> section:only-child) {
+/* When only Banking + Gold exist (first row only) - Center vertically and horizontally */
+.dynamic-assets-layout:has(.first-row-container):not(:has(.stocks-section)):not(:has(.index-section)):not(:has(.mutual-section)):not(:has(.commodity-section)):not(:has(.reit-section)) {
   min-height: calc(100vh - 80px);
-  justify-content: center;
-  align-items: center;
   align-content: center;
-}
-
-/* When 2-3 sections exist - Center them vertically and horizontally */
-.dynamic-assets-layout:has(> section:nth-child(1)):has(> section:nth-child(2)):not(:has(> section:nth-child(4))) {
-  min-height: calc(100vh - 80px);
   justify-content: center;
-  align-items: center;
-  align-content: center;
 }
 
-/* When 4+ sections exist - Center them horizontally, align top */
-.dynamic-assets-layout:has(> section:nth-child(4)) {
-  justify-content: center;
-  align-items: flex-start;
-  align-content: flex-start;
-}
-
-/* Common section styling */
+/* Common section styling - Each section gets its own white border */
 .banking-section,
 .gold-section,
 .index-section,
+.mutual-section,
 .stocks-section,
 .crypto-section,
 .commodity-section,
@@ -636,19 +767,22 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
   flex: 0 1 auto;
-  max-width: 100%; /* Prevent overflow */
+  max-width: 100%;
+  /* Prevent overflow */
 }
 
 /* Specific section widths for proper row layout - ALL DYNAMIC */
 .banking-section,
 .gold-section,
 .index-section,
+.mutual-section,
 .crypto-section,
 .commodity-section,
 .reit-section {
   width: fit-content;
   flex: 0 0 auto;
-  min-width: min-content; /* Allow shrinking on small screens */
+  min-width: min-content;
+  /* Allow shrinking on small screens */
 }
 
 /* Individual Stocks section - dynamic width based on number of stocks */
@@ -664,7 +798,8 @@
   flex-wrap: wrap;
   gap: 6px;
   width: fit-content;
-  max-width: calc((260px * 5) + (6px * 4)); /* Maximum 5 cards per row: 5 cards + 4 gaps */
+  max-width: calc((260px * 5) + (6px * 4));
+  /* Maximum 5 cards per row: 5 cards + 4 gaps */
 }
 
 .section-cards {
@@ -672,11 +807,12 @@
   flex-wrap: wrap;
   gap: 6px;
   width: 100%;
-  max-width: calc((260px * 5) + (6px * 4)); /* Maximum 5 cards per row: 5 cards + 4 gaps */
+  max-width: calc((260px * 5) + (6px * 4));
+  /* Maximum 5 cards per row: 5 cards + 4 gaps */
 }
 
 /* Laptop/smaller screens - Better responsive behavior */
-@media (max-width: 1366px) {
+@media (max-width: 1536px) {
   .dynamic-assets-layout {
     gap: 2px;
     padding: 2px;
@@ -685,13 +821,11 @@
   .banking-section,
   .gold-section,
   .index-section,
+  .mutual-section,
   .stocks-section,
   .crypto-section,
   .commodity-section,
-  .reit-section {
-    padding: 8px;
-  }
-
+  .reit-section,
   .section-cards {
     gap: 6px;
   }
@@ -699,9 +833,11 @@
 
 /* Narrower viewports - like with DevTools open */
 @media (max-width: 1000px) {
+
   .banking-section,
   .gold-section,
   .index-section,
+  .mutual-section,
   .crypto-section,
   .commodity-section,
   .reit-section,
@@ -770,6 +906,22 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
+.section-header {
+  width: 100%;
+  font-size: clamp(12px, 1.2vw, 14px);
+  font-weight: 700;
+  color: #FEFDF8;
+  margin: 0 0 10px 0;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #138808, #0f6606);
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
 .stocks-grid,
 .crypto-grid,
 .reit-grid {
@@ -792,9 +944,12 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.02);
   }
@@ -833,7 +988,7 @@
 }
 
 /* Small Laptop - 1366px and below */
-@media (max-width: 1366px) {
+@media (max-width: 1536px) {
   .sidebar {
     width: 220px;
     min-width: 220px;
@@ -907,7 +1062,8 @@
 
   .section-cards {
     gap: 6px;
-    max-width: calc((260px * 5) + (6px * 4)); /* Maximum 5 cards per row */
+    max-width: calc((260px * 5) + (6px * 4));
+    /* Maximum 5 cards per row */
   }
 }
 
@@ -947,7 +1103,8 @@
 
   .section-cards {
     gap: 6px;
-    max-width: calc((260px * 5) + (6px * 4)); /* Maximum 5 cards per row */
+    max-width: calc((260px * 5) + (6px * 4));
+    /* Maximum 5 cards per row */
   }
 }
 
@@ -974,6 +1131,7 @@
 /* CUSTOM MEDIA QUERY - ONLY FOR 1536×695 SCREEN */
 /* ============================================ */
 @media (min-width: 1500px) and (max-width: 1600px) and (min-height: 650px) and (max-height: 750px) {
+
   /* Sidebar customization */
   .sidebar {
     width: 250px;
@@ -1009,7 +1167,8 @@
 
   .section-cards {
     gap: 6px;
-    max-width: calc((260px * 5) + (6px * 4)); /* Maximum 5 cards per row */
+    max-width: calc((260px * 5) + (6px * 4));
+    /* Maximum 5 cards per row */
   }
 }
 
@@ -1053,7 +1212,8 @@
 
   .section-cards {
     gap: 6px;
-    max-width: calc((260px * 5) + (6px * 4)); /* Maximum 5 cards per row */
+    max-width: calc((260px * 5) + (6px * 4));
+    /* Maximum 5 cards per row */
   }
 }
 
@@ -1151,6 +1311,7 @@
     transform: translate(-50%, -150%);
     opacity: 0;
   }
+
   to {
     transform: translate(-50%, -50%);
     opacity: 1;
@@ -1158,9 +1319,12 @@
 }
 
 @keyframes bounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -1170,9 +1334,11 @@
   0% {
     transform: scale(0.9);
   }
+
   50% {
     transform: scale(1.05);
   }
+
   100% {
     transform: scale(1);
   }

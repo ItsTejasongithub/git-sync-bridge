@@ -98,7 +98,7 @@ class SocketService {
       this.emit('connect');
     });
 
-    this.socket.on('disconnect', (reason) => {
+    this.socket.on('disconnect', (_reason) => {
       this.emit('disconnect');
     });
 

@@ -27,7 +27,10 @@ export function generateInitialGameData(adminSettings: AdminSettings) {
     stocks: assetsFromSchedule.stocks,
     fundType,
     fundName: assetsFromSchedule.fundName,
+    indexFunds: assetsFromSchedule.indexFunds,
+    mutualFunds: assetsFromSchedule.mutualFunds,
     commodity: assetsFromSchedule.commodity,
+    reit: assetsFromSchedule.reit,
   };
 
   const yearlyQuotes = [...FINANCIAL_QUOTES].sort(() => Math.random() - 0.5);

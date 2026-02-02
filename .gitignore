@@ -52,6 +52,10 @@ coverage/
 .cache/
 nul
 
+# AI-generated directories
+.gemini/
+.analysis/
+
 # Package manager lock files (optional - uncomment if needed)
 # package-lock.json
 # yarn.lock

@@ -58,7 +58,7 @@ class BankingTracker {
   logFDInvestment(
     fdId: string,
     amount: number,
-    durationMonths: 3 | 12 | 36,
+    durationMonths: 12 | 24 | 36,
     interestRate: number,
     balanceAfter: number,
     gameYear: number,

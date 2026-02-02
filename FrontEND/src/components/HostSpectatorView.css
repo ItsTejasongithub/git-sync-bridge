@@ -1,12 +1,12 @@
 .host-spectator-view {
   min-height: 100vh;
-  height: auto;
+  height: 100vh;
   background: #0a0e27;
   background-image:
     radial-gradient(at 20% 30%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
     radial-gradient(at 80% 70%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
-  padding: 1px;
-  padding-bottom: 4px;
+  padding: 20px;
+  padding-bottom: 40px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
   overflow-y: auto;
   overflow-x: hidden;
@@ -20,7 +20,7 @@
 }
 
 .game-logo {
-  width: 120px;
+  width: 180px;
   height: auto;
   object-fit: contain;
   filter: drop-shadow(0 4px 16px rgba(59, 130, 246, 0.4));
@@ -28,9 +28,12 @@
 }
 
 @keyframes logoGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     filter: drop-shadow(0 8px 24px rgba(59, 130, 246, 0.3));
   }
+
   50% {
     filter: drop-shadow(0 8px 32px rgba(168, 85, 247, 0.4));
   }
@@ -43,16 +46,15 @@
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 10px 300px;
+  padding: 20px 40px;
   border-radius: 16px;
-  margin-bottom: 1px;
+  margin-bottom: 20px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  overflow-y: auto;
 }
 
 .game-info h1 {
   margin: 0;
-  font-size: 1.5em;
+  font-size: 1.8em;
   font-weight: 700;
   background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
   -webkit-background-clip: text;
@@ -62,9 +64,9 @@
 }
 
 .room-code {
-  margin: 6px 0 0 0;
+  margin: 8px 0 0 0;
   color: #94a3b8;
-  font-size: 0.85em;
+  font-size: 0.9em;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -80,22 +82,22 @@
   flex-direction: column;
   align-items: center;
   background: rgba(255, 255, 255, 0.05);
-  padding: 8px 16px;
+  padding: 12px 20px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .timer-label {
-  font-size: 0.65em;
+  font-size: 0.7em;
   color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 600;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .timer-value {
-  font-size: 10px;
+  font-size: 1.4em;
   font-weight: 700;
   background: linear-gradient(135deg, #fff 0%, #e0e7ff 100%);
   -webkit-background-clip: text;
@@ -106,12 +108,12 @@
 .pause-banner {
   background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
   color: white;
-  padding: 12px 20px;
+  padding: 16px 24px;
   text-align: center;
   border-radius: 12px;
-  font-size: 1em;
+  font-size: 1.1em;
   font-weight: 700;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
   animation: pulse 2s infinite;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -121,7 +123,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .pause-controls .host-pause {
@@ -133,22 +135,218 @@
   cursor: not-allowed;
 }
 
+.pause-controls .host-pause.game-ended {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  color: white;
+  font-weight: 700;
+  cursor: default;
+  opacity: 1;
+}
+
 .pause-reason {
-  font-size: 0.8em;
+  font-size: 0.85em;
   opacity: 0.95;
-  margin-top: 2px;
+  margin-top: 4px;
   font-weight: 500;
 }
 
 @keyframes pulse {
-  0%, 100% { 
+
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
-  50% { 
+
+  50% {
     opacity: 0.9;
     transform: scale(0.995);
   }
+}
+
+/* Progress Timeline Bar */
+.progress-timeline {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px 30px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.timeline-label {
+  font-size: 0.9em;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.timeline-percentage {
+  font-size: 1.4em;
+  font-weight: 700;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.timeline-bar {
+  position: relative;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  overflow: visible;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.timeline-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg,
+      #0ea5e9 0%,
+      #06b6d4 25%,
+      #14b8a6 50%,
+      #10b981 75%,
+      #34d399 100%);
+  background-size: 300% 100%;
+  border-radius: 12px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: waterFlow 4s ease-in-out infinite;
+  box-shadow:
+    0 0 20px rgba(6, 182, 212, 0.6),
+    0 0 40px rgba(16, 185, 129, 0.4),
+    inset 0 2px 8px rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+@keyframes waterFlow {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.timeline-wave {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: repeating-linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 25%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.1) 75%,
+      transparent 100%);
+  background-size: 50px 100%;
+  animation: waveMove 2s linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes waveMove {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50px);
+  }
+}
+
+.timeline-glow {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 24px;
+  height: 24px;
+  background: radial-gradient(circle,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(52, 211, 153, 0.8) 30%,
+      rgba(6, 182, 212, 0.4) 60%,
+      transparent 100%);
+  border-radius: 50%;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+  filter: blur(2px);
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.5);
+    opacity: 0.6;
+  }
+}
+
+.timeline-markers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.timeline-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.marker-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.timeline-marker.passed .marker-dot {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  border-color: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+  transform: scale(1.2);
+}
+
+.marker-label {
+  position: absolute;
+  top: 24px;
+  font-size: 0.75em;
+  color: #64748b;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.timeline-marker.passed .marker-label {
+  color: #10b981;
+  font-weight: 700;
 }
 
 .leaderboard-main {
@@ -156,53 +354,38 @@
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
+  padding: 30px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  min-height: fit-content;
-  overflow-y: auto;
 }
 
 .leaderboard-main h2 {
   text-align: center;
-  font-size: 1.5em;
-  margin: 0 0 20px 0;
+  font-size: 2em;
+  margin: 0 0 30px 0;
   font-weight: 700;
   background: linear-gradient(135deg, #fff 0%, #c7d2fe 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.02em;
-  overflow-y: auto;
-
 }
 
 .leaderboard-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-width: 900px;
-  max-height: 100%;
+  gap: 16px;
+  max-width: 1200px;
   margin: 0 auto;
-  /* Make host leaderboard scrollable when many players */
-  max-height: min(60vh, 600px);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-right: 8px;
-  overflow-y: auto;
-
 }
 
 .leaderboard-card {
   position: relative;
-  height: auto;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 10px 14px;
+  border-radius: 16px;
+  padding: 20px 24px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-  overflow-y: auto;
-
 }
 
 .leaderboard-card::before {
@@ -247,18 +430,18 @@
 
 .rank-badge {
   position: absolute;
-  top: 10px;
-  right: 14px;
+  top: 20px;
+  right: 24px;
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
   color: white;
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1em;
+  font-size: 1.2em;
   font-weight: 800;
   border: 2px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -283,33 +466,33 @@
 }
 
 .player-info-section {
-  padding-right: 50px;
+  padding-right: 60px;
 }
 
 .player-name-large {
-  font-size: 1.1em;
-  margin: 0 0 4px 0;
+  font-size: 1.4em;
+  margin: 0 0 8px 0;
   color: #fff;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 .networth-display {
-  font-size: 1.3em;
+  font-size: 1.6em;
   font-weight: 800;
   background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin: 4px 0;
+  margin: 8px 0;
   letter-spacing: -0.02em;
 }
 
 .quiz-status {
-  margin: 6px 0 0 0;
-  font-size: 0.75em;
+  margin: 10px 0 0 0;
+  font-size: 0.85em;
   display: inline-block;
-  padding: 4px 10px;
+  padding: 6px 14px;
   border-radius: 12px;
   font-weight: 600;
 }
@@ -339,12 +522,11 @@
 }
 
 .portfolio-breakdown {
-  margin-top: 10px;
+  margin-top: 16px;
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  overflow: hidden;
   transition: all 0.3s ease;
 }
 
@@ -352,10 +534,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 12px 16px;
   cursor: pointer;
   user-select: none;
   transition: background 0.2s ease;
+  border-radius: 12px;
 }
 
 .portfolio-header:hover {
@@ -365,17 +548,17 @@
 .portfolio-header h4 {
   margin: 0;
   color: #e2e8f0;
-  font-size: 0.75em;
+  font-size: 0.9em;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .expand-icon {
-  font-size: 1em;
+  font-size: 1.2em;
   transition: transform 0.3s ease;
   color: #94a3b8;
 }
@@ -385,14 +568,14 @@
 }
 
 .portfolio-content {
-  height: 0px;
+  max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease, padding 0.3s ease;
+  transition: max-height 0.4s ease, padding 0.4s ease;
 }
 
 .portfolio-content.expanded {
-  height: 300px;
-  padding: 0px 12px 12px 12px;
+  max-height: 1000px;
+  padding: 0 16px 16px 16px;
 }
 
 .breakdown-grid {

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AssetCategory, AdminSettings } from '../types';
-import { calculateGameStartYear, getLatestAssetYear } from '../utils/assetUnlockCalculator';
+import { VALID_START_YEAR_MIN, VALID_START_YEAR_MAX } from '../utils/constants';
 import './AdminSettingsPanel.css';
 
 interface AdminSettingsPanelProps {
@@ -11,14 +11,17 @@ interface AdminSettingsPanelProps {
   initialSettings?: AdminSettings;
 }
 
-const ASSET_CATEGORIES: { value: AssetCategory; label: string; description: string }[] = [
-  { value: 'BANKING', label: 'Banking', description: 'Savings Account & Fixed Deposits' },
-  { value: 'GOLD', label: 'Gold', description: 'Physical & Digital Gold' },
-  { value: 'STOCKS', label: 'Stocks', description: 'Indian Stock Market' },
-  { value: 'FUNDS', label: 'Index / Mutual Funds', description: 'Nifty Index & Managed Equity Funds' },
-  { value: 'CRYPTO', label: 'Crypto', description: 'Bitcoin & Ethereum' },
-  { value: 'REIT', label: 'REITs', description: 'Real Estate Investment Trusts' },
-  { value: 'COMMODITIES', label: 'Commodities', description: 'Silver, Oil, Copper, etc.' },
+// HARD-CODED Asset Categories (Single Source of Truth - Admin CANNOT change this)
+// These reflect the assets that will be unlocked during the game
+const ASSET_CATEGORIES: { value: AssetCategory; label: string; description: string; enabled: boolean; disabledReason?: string }[] = [
+  { value: 'BANKING', label: 'Banking', description: 'Savings Account & Fixed Deposits', enabled: true },
+  { value: 'GOLD', label: 'Gold', description: 'Physical Gold & Gold ETF', enabled: true },
+  { value: 'STOCKS', label: 'Stocks', description: 'Indian Stock Market (3 cards)', enabled: true },
+  { value: 'FUNDS', label: 'Index / Mutual Funds', description: 'Index (2) & Mutual Funds (2)', enabled: true },
+  { value: 'COMMODITIES', label: 'Commodities', description: 'Silver, Oil, Cotton, etc. (1 random)', enabled: true },
+  { value: 'REIT', label: 'REITs', description: 'Real Estate Investment Trusts (1 card)', enabled: true },
+  { value: 'CRYPTO', label: 'Crypto', description: 'Bitcoin & Ethereum', enabled: false, disabledReason: 'Disabled' },
+  { value: 'FOREX', label: 'Forex', description: 'Currency Exchange', enabled: false, disabledReason: 'Disabled' },
 ];
 
 export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
@@ -28,57 +31,33 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
   onClose,
   initialSettings
 }) => {
-  const [selectedCategories, setSelectedCategories] = useState<AssetCategory[]>(
-    initialSettings?.selectedCategories || ['BANKING']
-  );
+  // HARD-CODED: Asset categories are fixed and cannot be changed by admin
+  // This is a read-only display of what assets are enabled
+  const HARDCODED_ENABLED_CATEGORIES: AssetCategory[] = ['BANKING', 'GOLD', 'STOCKS', 'FUNDS', 'COMMODITIES', 'REIT'];
+
   const [hideCurrentYear, setHideCurrentYear] = useState(initialSettings?.hideCurrentYear || false);
   const [enableQuiz, setEnableQuiz] = useState(initialSettings?.enableQuiz !== undefined ? initialSettings.enableQuiz : true);
   const [initialPocketCash, setInitialPocketCash] = useState(initialSettings?.initialPocketCash || 100000);
   const [recurringIncome, setRecurringIncome] = useState(initialSettings?.recurringIncome || 50000);
   const [eventsCount, setEventsCount] = useState(initialSettings?.eventsCount || 3);
   const [monthDuration, setMonthDuration] = useState(initialSettings?.monthDuration || 5000);
-  const [calculatedStartYear, setCalculatedStartYear] = useState<number>(2005);
-  const [latestAssetYear, setLatestAssetYear] = useState<number>(2005);
+
+  // Game start year is now user-selectable (2000-2005)
+  // Note: Must be at least 2004 to allow REITs to unlock before year 17
+  const [gameStartYear, setGameStartYear] = useState<number>(
+    initialSettings?.gameStartYear || VALID_START_YEAR_MIN
+  );
 
   // Refs for easier debugging / focusing
   const eventsSelectRef = React.useRef<HTMLSelectElement | null>(null);
 
-  // Diagnostic log to help confirm running build has eventsCount control
-  useEffect(() => {
-  }, []);
-
   const isMultiplayerMode = !!onApply;
 
-  useEffect(() => {
-    if (selectedCategories.length > 0) {
-      const latest = getLatestAssetYear(selectedCategories);
-      const startYear = calculateGameStartYear(selectedCategories);
-      setLatestAssetYear(latest);
-      setCalculatedStartYear(startYear);
-    }
-  }, [selectedCategories]);
-
-  const toggleCategory = (category: AssetCategory) => {
-    if (category === 'BANKING') return; // Banking is mandatory
-
-    setSelectedCategories(prev => {
-      if (prev.includes(category)) {
-        return prev.filter(c => c !== category);
-      } else {
-        return [...prev, category];
-      }
-    });
-  };
-
   const handleStartGame = () => {
-    if (selectedCategories.length === 0) {
-      alert('Please select at least one asset category!');
-      return;
-    }
-
+    // Use hard-coded categories (admin selection is ignored)
     const settings: AdminSettings = {
-      selectedCategories,
-      gameStartYear: calculatedStartYear,
+      selectedCategories: HARDCODED_ENABLED_CATEGORIES,
+      gameStartYear, // User-selected year (2000-2005)
       hideCurrentYear,
       initialPocketCash,
       recurringIncome,
@@ -109,33 +88,75 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
         <p className="settings-subtitle">Customize Your Investment Journey</p>
 
         <div className="settings-section">
-          <h3>Select Asset Categories</h3>
+          <h3>Asset Categories (Read-Only)</h3>
           <p className="section-description">
-            Choose which investment types you want to unlock during the game.
-            Assets will progressively unlock over 20 years based on real historical timelines.
+            The following asset categories are hard-coded and will unlock during the game.
+            This cannot be changed by admin settings.
           </p>
 
           <div className="category-grid">
             {ASSET_CATEGORIES.map(category => (
               <div
                 key={category.value}
-                className={`category-card ${
-                  selectedCategories.includes(category.value) ? 'selected' : ''
-                } ${category.value === 'BANKING' ? 'mandatory' : ''}`}
-                onClick={() => toggleCategory(category.value)}
+                className={`category-card ${category.enabled ? 'selected' : 'disabled'}`}
+                style={{ cursor: 'default', pointerEvents: 'none' }}
               >
                 <div className="category-header">
                   <h4>{category.label}</h4>
-                  {category.value === 'BANKING' && (
-                    <span className="mandatory-badge">Mandatory</span>
+                  {category.enabled && (
+                    <span className="mandatory-badge" style={{
+                      backgroundColor: '#2e7d32',
+                      color: '#fff',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.7rem',
+                      marginLeft: '8px'
+                    }}>Enabled</span>
+                  )}
+                  {!category.enabled && category.disabledReason && (
+                    <span className="disabled-badge" style={{
+                      backgroundColor: '#666',
+                      color: '#fff',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.7rem',
+                      marginLeft: '8px'
+                    }}>{category.disabledReason}</span>
                   )}
                 </div>
                 <p className="category-description">{category.description}</p>
                 <div className="category-checkbox">
-                  {selectedCategories.includes(category.value) ? '✓' : ''}
+                  {category.enabled ? '✓' : '✗'}
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <h3>Game Timeline</h3>
+          <p className="section-description">
+            Choose when your investment journey begins. The game spans 20 years.
+          </p>
+
+          <div className="financial-inputs">
+            <div className="input-group">
+              <label htmlFor="gameStartYear">Game Start Year</label>
+              <select
+                id="gameStartYear"
+                value={gameStartYear}
+                onChange={(e) => setGameStartYear(Number(e.target.value))}
+                style={{ width: '100%', padding: '10px', fontSize: '1rem' }}
+              >
+                {Array.from(
+                  { length: VALID_START_YEAR_MAX - VALID_START_YEAR_MIN + 1 },
+                  (_, i) => VALID_START_YEAR_MIN + i
+                ).map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <small>Select the calendar year when the game begins (2000-2005)</small>
+            </div>
           </div>
         </div>
 
@@ -248,37 +269,37 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
           <h3>Game Information</h3>
           <div className="info-grid">
             <div className="info-item">
-              <span className="info-label">Selected Categories:</span>
-              <span className="info-value">{selectedCategories.length}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Latest Asset Year:</span>
-              <span className="info-value">{latestAssetYear}</span>
+              <span className="info-label">Enabled Categories:</span>
+              <span className="info-value">6</span>
             </div>
             <div className="info-item">
               <span className="info-label">Game Start Year:</span>
-              <span className="info-value">{calculatedStartYear}</span>
+              <span className="info-value">{gameStartYear}</span>
             </div>
             <div className="info-item">
               <span className="info-label">Game End Year:</span>
-              <span className="info-value">{calculatedStartYear + 19}</span>
+              <span className="info-value">{gameStartYear + 19}</span>
             </div>
             <div className="info-item">
               <span className="info-label">Duration:</span>
               <span className="info-value">20 Years</span>
             </div>
-            <div className="info-item">
-              <span className="info-label">No New Unlocks:</span>
-              <span className="info-value">Last 5 Years</span>
-            </div>
           </div>
           <div className="info-note">
-            <strong>Note:</strong> The game will automatically calculate the start year to ensure:
+            <strong>Asset Unlock Schedule (Hard-Coded):</strong>
             <ul>
-              <li>All selected assets can be unlocked based on historical data</li>
-              <li>No new assets unlock in the final 5 years</li>
-              <li>Progressive unlocking throughout the game (max 1 asset type per year)</li>
+              <li><strong>Year 1:</strong> Savings Account (1) + Fixed Deposits (1)</li>
+              <li><strong>Year 2:</strong> Physical Gold (1 card)</li>
+              <li><strong>Year 3:</strong> Commodities (1 random card)</li>
+              <li><strong>Year 4:</strong> Stocks (3 cards - 2 random + 1 additional)</li>
+              <li><strong>Calendar 2009+:</strong> Index Funds (2 cards)</li>
+              <li><strong>Calendar 2012+:</strong> Gold ETF (1 card)</li>
+              <li><strong>Calendar 2017+:</strong> Mutual Funds (2 cards)</li>
+              <li><strong>Calendar 2020+:</strong> REITs (1 card)</li>
             </ul>
+            <p style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.7)', marginTop: '8px' }}>
+              Note: No new assets unlock in the last 3 game years (Years 18-20). CRYPTO and FOREX are disabled.
+            </p>
           </div>
         </div>
 
@@ -289,7 +310,6 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({
           <button
             className="btn-primary"
             onClick={handleStartGame}
-            disabled={selectedCategories.length === 0}
           >
             {isMultiplayerMode ? 'Apply Settings' : 'Start Game'}
           </button>

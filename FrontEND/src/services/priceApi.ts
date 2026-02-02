@@ -67,7 +67,7 @@ export interface HealthResponse {
 export interface FDRatesResponse {
   success: boolean;
   data?: {
-    [year: number]: { 3: number; 12: number; 36: number };
+    [year: number]: { 12: number; 24: number; 36: number };
   };
   error?: string;
 }
@@ -95,8 +95,9 @@ export async function checkPriceServiceHealth(): Promise<boolean> {
 
 /**
  * Fetch FD rates for all years
+ * Returns rates for 12-month (1yr), 24-month (2yr), and 36-month (3yr) FDs
  */
-export async function fetchFDRates(): Promise<{ [year: number]: { 3: number; 12: number; 36: number } }> {
+export async function fetchFDRates(): Promise<{ [year: number]: { 12: number; 24: number; 36: number } }> {
   try {
     const response = await fetchWithTimeout(`${SERVER_URL}/api/prices/fd-rates`);
     if (!response.ok) {
@@ -316,36 +317,44 @@ export async function preloadGamePrices(
 }
 
 /**
- * Get all symbols needed for a game
+ * Get all symbols needed for a game based on the unlock schedule
+ * Only includes assets that are actually unlockable in the game
  */
 export function getGameSymbols(selectedAssets: any): string[] {
   const symbols: string[] = [];
 
-  // Gold (always available)
+  // Gold (always available - Physical Gold unlocks Year 2, Digital Gold unlocks Calendar 2012)
   symbols.push('Physical_Gold', 'Digital_Gold');
 
-  // Fund
-  if (selectedAssets?.fundName) {
-    symbols.push(selectedAssets.fundName);
+  // Index Funds (progressive unlock at Calendar 2009 and 2015)
+  if (selectedAssets?.indexFunds && Array.isArray(selectedAssets.indexFunds)) {
+    symbols.push(...selectedAssets.indexFunds);
   }
 
-  // Stocks
+  // Mutual Funds (unlock at Calendar 2017)
+  if (selectedAssets?.mutualFunds && Array.isArray(selectedAssets.mutualFunds)) {
+    symbols.push(...selectedAssets.mutualFunds);
+  }
+
+  // Stocks (unlock at Year 4)
   if (selectedAssets?.stocks && Array.isArray(selectedAssets.stocks)) {
     symbols.push(...selectedAssets.stocks);
   }
 
-  // Crypto
-  symbols.push('BTC', 'ETH');
-
-  // Commodity
+  // Commodity (unlock at Year 3)
   if (selectedAssets?.commodity) {
     symbols.push(selectedAssets.commodity);
   }
 
-  // REITs
-  symbols.push('EMBASSY', 'MINDSPACE');
+  // REIT (randomly selected EMBASSY or MINDSPACE - unlocks at Calendar 2020)
+  if (selectedAssets?.reit) {
+    symbols.push(selectedAssets.reit);
+  }
 
-  return [...new Set(symbols)];
+  // REMOVED: Crypto (BTC, ETH) - disabled in current game version
+  // REMOVED: Forex (USDINR, EURINR, GBPINR) - disabled in current game version
+
+  return [...new Set(symbols)]; // Deduplicate
 }
 
 /**

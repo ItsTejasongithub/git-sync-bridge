@@ -1,15 +1,16 @@
 services:
   postgres:
+    container_name: bullrun_game_postgres
     image: postgres:15
-    container_name: bullrun_postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: BullRun2024!
+      POSTGRES_PASSWORD: Tej@BOSS
       POSTGRES_DB: BullRun_GameDB_PGSQL
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
 volumes:
   postgres_data:

@@ -305,7 +305,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
             console.error(`❌ Room ${roomId}: Market data initialization failed - PostgreSQL unavailable`);
             callback({
               success: false,
-              error: 'Failed to initialize encrypted market data. PostgreSQL is required for multiplayer mode.'
+              error: 'Database connection error. Please check the database or contact your administrator for assistance.'
             });
             return;
           }
@@ -314,7 +314,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
           console.error(`❌ Room ${roomId}: Market data init error:`, err);
           callback({
             success: false,
-            error: 'Failed to initialize encrypted market data. Please ensure PostgreSQL is running.'
+            error: 'Database error occurred. Please contact your administrator for more information.'
           });
           return;
         }
@@ -469,22 +469,37 @@ setInterval(() => {
 // Initialize database and start server
 async function startServer() {
   try {
+    console.log('📊 Initializing databases...');
+
     // Initialize SQLite database (game data)
     await initializeDatabase();
+    console.log('✓ SQLite database initialized');
 
-    // Initialize PostgreSQL database (market data)
+    // Initialize PostgreSQL database (market data) - MANDATORY
     try {
       await initPostgresPool();
+      console.log('✓ PostgreSQL database connected');
     } catch (pgError) {
-      // Continue without PostgreSQL - game will work with client-side CSV
+      console.error('\n❌ CRITICAL ERROR: PostgreSQL connection failed!');
+      console.error('📋 Details:', pgError instanceof Error ? pgError.message : pgError);
+      console.error('\n🔧 Troubleshooting:');
+      console.error('   1. Make sure Docker container is running: docker ps');
+      console.error('   2. Start the database: docker compose up -d');
+      console.error('   3. Verify connection settings in .env file');
+      console.error('   4. Check database logs: docker logs bullrun_game_postgres');
+      console.error('\n⚠️  PostgreSQL is REQUIRED for the game to function.');
+      console.error('   Please check the database or contact your administrator.\n');
+      process.exit(1);
     }
 
     const PORT = process.env.PORT || 3001;
     const localIP = getLocalNetworkIP();
 
     httpServer.listen(PORT as number, '0.0.0.0', () => {
-      console.log(`🚀 HTTPS Server running on https://${localIP}:${PORT}`);
+      console.log('\n🚀 Server started successfully!');
+      console.log(`   HTTPS: https://${localIP}:${PORT}`);
       console.log(`   Local: https://localhost:${PORT}`);
+      console.log(`   PostgreSQL: Connected on port ${process.env.POSTGRES_PORT || 5432}\n`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

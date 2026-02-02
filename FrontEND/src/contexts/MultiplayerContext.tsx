@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { socketService } from '../services/socketService';
 import { fetchFinalLeaderboard } from '../services/adminApi';
 import { TOTAL_GAME_YEARS } from '../utils/constants';
@@ -55,6 +55,9 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
   const [gameState, setGameState] = useState<MultiplayerGameState | null>(null);
   const [leaderboard, setLeaderboard] = useState<PlayerInfo[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // CRITICAL FIX: Track if we've received final leaderboard to prevent multiple updates
+  const hasFinalLeaderboardRef = useRef(false);
 
   useEffect(() => {
     // Connect to server on mount
@@ -328,6 +331,27 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
       try {
         if (!data?.leaderboard || !Array.isArray(data.leaderboard)) return;
 
+        // CRITICAL FIX: Only accept the FIRST valid final leaderboard to prevent data corruption
+        // from multiple updates or stale data
+        if (hasFinalLeaderboardRef.current) {
+          console.warn('⚠️ Ignoring duplicate final leaderboard event');
+          return;
+        }
+
+        // Validate that the leaderboard has meaningful data (not empty portfolios)
+        const hasValidData = data.leaderboard.some(pl => {
+          if (!pl.portfolioBreakdown) return false;
+          const totalAssets = Object.values(pl.portfolioBreakdown).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
+          return totalAssets > 0;
+        });
+
+        if (!hasValidData) {
+          console.warn('⚠️ Ignoring final leaderboard with invalid/empty portfolio data');
+          return;
+        }
+
+        hasFinalLeaderboardRef.current = true;
+
         // Map DB entries to frontend PlayerInfo-like shape, attempting to preserve existing socket ids
         const mapped = data.leaderboard.map(pl => {
           const normalizedName = pl.playerName?.trim().toLowerCase() || '';
@@ -495,10 +519,14 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
     setMultiplayerMode(null);
     setGameState(null);
     setLeaderboard([]);
+    hasFinalLeaderboardRef.current = false; // Reset for next game
   };
 
   const startGame = async (adminSettings: AdminSettings) => {
     try {
+      // Reset final leaderboard flag for new game
+      hasFinalLeaderboardRef.current = false;
+
       // If we're the host, generate initial game data so all players use the same assets/quotes
       let initialGameState;
       if (roomInfo?.isHost) {

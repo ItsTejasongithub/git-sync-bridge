@@ -44,11 +44,14 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
   onFinalNetworthSync,
 }) => {
   // Use prices for final calculations
+  // CRITICAL: Use the same price source as in-game calculations
+  // Server now keeps encrypted prices available until after database logging
+  // This ensures consistent calculations between in-game and final leaderboard
   const { getPrice } = usePrices({
     selectedAssets: gameState.selectedAssets,
     calendarYear,
     currentMonth: gameState.currentMonth,
-    isMultiplayer: false, // Always use API prices on end screen
+    isMultiplayer: isMultiplayer, // Use actual multiplayer status for consistent prices
   });
   const [isPortfolioExpanded, setIsPortfolioExpanded] = useState(false);
   const [isAIReportOpen, setIsAIReportOpen] = useState(false);
@@ -104,8 +107,31 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
   const years = gameState.currentYear; // Total years in game
   const cagr = calculateCAGR(totalCapital, finalNetworth, years).toFixed(2);
   const breakdown = useMemo(
-    () => calculatePortfolioBreakdownWithPrices(gameState, getPrice),
-    [gameState, getPrice]
+    () => {
+      const result = calculatePortfolioBreakdownWithPrices(gameState, getPrice);
+
+      // Debug: Check if breakdown appears corrupted
+      const totalAssets = Object.values(result).reduce((sum, val) => sum + val, 0);
+      const nonCashAssets = Object.entries(result)
+        .filter(([key]) => key !== 'cash' && key !== 'savings')
+        .reduce((sum, [, val]) => sum + val, 0);
+
+      if (isMultiplayer && gameState.currentYear >= 20 && nonCashAssets === 0 && totalAssets > 0) {
+        console.warn('⚠️ Potential state corruption detected in breakdown calculation:', {
+          breakdown: result,
+          gameYear: gameState.currentYear,
+          gameMonth: gameState.currentMonth,
+          holdingsSummary: {
+            physicalGold: gameState.holdings.physicalGold.quantity,
+            digitalGold: gameState.holdings.digitalGold.quantity,
+            stocksCount: Object.keys(gameState.holdings.stocks).length,
+          }
+        });
+      }
+
+      return result;
+    },
+    [gameState, getPrice, isMultiplayer]
   );
   const investedBreakdown = getInvestedBreakdown();
 
@@ -115,9 +141,29 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
     if (hasSyncedRef.current) return;
     if (!isMultiplayer || !onFinalNetworthSync) return;
 
+    // CRITICAL: Validate portfolio breakdown before syncing
+    const breakdownTotal = Object.values(breakdown).reduce((sum, val) => sum + val, 0);
+    const discrepancy = Math.abs(breakdownTotal - finalNetworth);
+
+    if (discrepancy > 1) {
+      console.error('❌ Portfolio breakdown mismatch - NOT syncing:', {
+        finalNetworth,
+        breakdownTotal,
+        discrepancy,
+        breakdown
+      });
+      return; // Don't sync corrupted data
+    }
+
+    console.log('✅ Syncing final networth to multiplayer server:', {
+      finalNetworth,
+      breakdown,
+      samplePrice: getPrice('Physical_Gold')
+    });
+
     hasSyncedRef.current = true;
     onFinalNetworthSync(finalNetworth, breakdown);
-  }, [isMultiplayer, finalNetworth, breakdown, onFinalNetworthSync]);
+  }, [isMultiplayer, finalNetworth, breakdown, onFinalNetworthSync, getPrice]);
 
   // Log game results when component mounts (only once)
   useEffect(() => {
@@ -126,7 +172,69 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
 
     // Only log if we have player name and admin settings
     if (playerName && gameState.adminSettings) {
+      // CRITICAL FIX: Validate portfolio breakdown before logging
+      // Ensure we have valid asset holdings, not just cash from a reset state
+      const totalAssetsExcludingCash = Object.entries(breakdown)
+        .filter(([key]) => key !== 'cash' && key !== 'savings')
+        .reduce((sum, [, value]) => sum + value, 0);
+
+      const totalNetworth = Object.values(breakdown).reduce((sum, value) => sum + value, 0);
+
+      // STRICTER VALIDATION: If we're in multiplayer and game is ending after 20 years,
+      // but player has NO investments at all (only cash/savings), the state is likely corrupted
+      const isEndGame = gameState.currentYear >= 20 && gameState.currentMonth >= 12;
+      if (isMultiplayer && isEndGame && totalAssetsExcludingCash === 0) {
+        console.error('❌ Skipping database log: Invalid end-game state - player has no investments after 20 years', {
+          finalNetworth,
+          breakdown,
+          holdings: gameState.holdings,
+          currentYear: gameState.currentYear,
+          currentMonth: gameState.currentMonth,
+          note: 'Game state appears to be corrupted - all investments are missing at game end'
+        });
+        return; // Don't log invalid data
+      }
+
+      // Also validate if total networth is significant but we only have cash/savings
+      if (totalNetworth > 100000 && totalAssetsExcludingCash === 0) {
+        console.error('❌ Skipping database log: Invalid portfolio state detected (only cash/savings)', {
+          finalNetworth,
+          breakdown,
+          holdings: gameState.holdings,
+          note: 'Game state appears to be corrupted - all investments are missing'
+        });
+        return; // Don't log invalid data
+      }
+
+      // Additional validation: ensure breakdown matches finalNetworth
+      const breakdownTotal = Object.values(breakdown).reduce((sum, val) => sum + val, 0);
+      const discrepancy = Math.abs(breakdownTotal - finalNetworth);
+      if (discrepancy > 1) {
+        console.warn('⚠️ Portfolio breakdown mismatch detected:', {
+          finalNetworth,
+          breakdownTotal,
+          discrepancy,
+          breakdown
+        });
+      }
+
       hasLoggedRef.current = true;
+
+      console.log('✅ Logging game to database:', {
+        playerName,
+        finalNetworth,
+        breakdown,
+        hasInvestments: totalAssetsExcludingCash > 0,
+        isMultiplayer,
+        priceSource: isMultiplayer ? 'encrypted_websocket' : 'api',
+        samplePrices: {
+          Physical_Gold: getPrice('Physical_Gold'),
+          BTC: getPrice('BTC'),
+        },
+        gameYear: gameState.currentYear,
+        gameMonth: gameState.currentMonth,
+        calendarYear,
+      });
 
       // Calculate game duration in minutes
       const gameDuration = gameState.gameStartTime
@@ -299,32 +407,51 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
             <h2>🏆 Final Leaderboard</h2>
             <div className="leaderboard-table">
               {leaderboardData && leaderboardData.length > 0 ? (
-                leaderboardData.map((player, index) => (
-                  <div key={player.playerId} className={`leaderboard-row rank-${index + 1}`}>
-                    <div className="player-info">
-                      <div className="player-name">
-                        {index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : index === 2 ? '🥉 ' : `#${index + 1} `}
-                        {player.playerName}
+                leaderboardData.map((player, index) => {
+                  // Debug: log player data to console
+                  if (index === 0) {
+                    console.log('🏆 Final Leaderboard Data:', leaderboardData);
+                  }
+
+                  return (
+                    <div key={player.playerId} className={`leaderboard-row rank-${index + 1}`}>
+                      <div className="player-info">
+                        <div className="player-name">
+                          {index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : index === 2 ? '🥉 ' : `#${index + 1} `}
+                          {player.playerName}
+                        </div>
+                        <div className="player-networth">{formatCurrency(player.networth)}</div>
                       </div>
-                      <div className="player-networth">{formatCurrency(player.networth)}</div>
-                    </div>
-                    {player.portfolioBreakdown && (
-                      <div className="player-breakdown-mini">
-                        {Object.entries(player.portfolioBreakdown).map(([asset, value]) => {
-                          if (value === 0) return null;
-                          return (
-                            <div key={asset} className="mini-asset">
-                              <span className="mini-asset-name">{asset}:</span>
-                              <span className="mini-asset-value">{formatCurrency(value)}</span>
+                      {player.portfolioBreakdown && Object.keys(player.portfolioBreakdown).length > 0 ? (
+                        <div className="player-breakdown-mini">
+                          {Object.entries(player.portfolioBreakdown)
+                            .filter(([asset, value]) => value > 0) // Only show non-zero values
+                            .map(([asset, value]) => (
+                              <div key={asset} className="mini-asset">
+                                <span className="mini-asset-name">{asset}:</span>
+                                <span className="mini-asset-value">{formatCurrency(value)}</span>
+                              </div>
+                            ))}
+                          {Object.values(player.portfolioBreakdown).every(v => v === 0) && (
+                            <div className="mini-asset">
+                              <span className="mini-asset-name">No investments recorded</span>
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                ))
+                          )}
+                        </div>
+                      ) : (
+                        <div className="player-breakdown-mini">
+                          <div className="mini-asset">
+                            <span className="mini-asset-name">Portfolio data unavailable</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               ) : (
-                <div className="no-leaderboard">No leaderboard data available</div>
+                <div className="no-leaderboard">
+                  No leaderboard data available. Waiting for players to sync...
+                </div>
               )}
             </div>
           </div>

@@ -60,18 +60,19 @@ export function generateLifeEvents(count: number, assetUnlockSchedule?: any): Li
     const candidate = pool[Math.floor(Math.random() * pool.length)];
     if (usedMessages.has(candidate.message) && usedMessages.size < pool.length) continue;
 
-    let year = randInt(1, TOTAL_GAME_YEARS);
+    // Life events only appear in Years 4-19 (not in first 3 years, not in last year)
+    let year = randInt(4, TOTAL_GAME_YEARS - 1);
     let month = randInt(1, 12);
 
     let innerAttempts = 0;
     while ((disallowed.has(`${year}-${month}`) || events.some(e => e.gameYear === year && e.gameMonth === month)) && innerAttempts < 50) {
-      year = randInt(1, TOTAL_GAME_YEARS);
+      year = randInt(4, TOTAL_GAME_YEARS - 1);
       month = randInt(1, 12);
       innerAttempts++;
     }
 
     if (innerAttempts >= 50) {
-      year = randInt(1, TOTAL_GAME_YEARS);
+      year = randInt(4, TOTAL_GAME_YEARS - 1);
       month = randInt(1, 12);
       let shiftAttempts = 0;
       while (events.some(e => e.gameYear === year && e.gameMonth === month) && shiftAttempts < 24) {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FixedDeposit } from '../types';
+import { formatIndianNumber } from '../utils/constants';
 import './AssetCard.css';
 import './StockTooltip.css';
 import { ConfirmModal } from './ConfirmModal';
@@ -7,10 +8,10 @@ import { ConfirmModal } from './ConfirmModal';
 interface FixedDepositCardProps {
   fixedDeposits: FixedDeposit[];
   pocketCash: number;
-  currentRates: { threeMonth: number; oneYear: number; threeYear: number };
+  currentRates: { oneYear: number; twoYear: number; threeYear: number };
   currentYear: number;
   currentMonth: number;
-  onCreate: (amount: number, duration: 3 | 12 | 36, rate: number) => void;
+  onCreate: (amount: number, duration: 12 | 24 | 36, rate: number) => void;
   onCollect: (fdId: string) => void;
   onBreak: (fdId: string) => void;
 }
@@ -48,10 +49,11 @@ export const FixedDepositCard: React.FC<FixedDepositCardProps> = ({
   };
   const [showInput, setShowInput] = useState(false);
   const [inputAmount, setInputAmount] = useState('');
-  const [selectedDuration, setSelectedDuration] = useState<3 | 12 | 36>(12);
+  const [selectedDuration, setSelectedDuration] = useState<12 | 24 | 36>(12);
   const [isShaking, setIsShaking] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [fdToBreak, setFdToBreak] = useState<string | null>(null);
+  const [isMaxClicked, setIsMaxClicked] = useState(false);
 
   // Trigger shake animation
   const triggerShake = () => {
@@ -69,23 +71,29 @@ export const FixedDepositCard: React.FC<FixedDepositCardProps> = ({
       return;
     }
 
-    if (amount > pocketCash) {
+    // If MAX was clicked, use exact pocket cash value
+    const actualAmount = isMaxClicked ? pocketCash : amount;
+
+    if (actualAmount > pocketCash) {
       triggerShake();
       return;
     }
 
     const rate =
-      selectedDuration === 3 ? currentRates.threeMonth :
       selectedDuration === 12 ? currentRates.oneYear :
-      currentRates.threeYear;
+        selectedDuration === 24 ? currentRates.twoYear :
+          currentRates.threeYear;
 
-    onCreate(amount, selectedDuration, rate);
+    onCreate(Math.min(actualAmount, pocketCash), selectedDuration, rate);
     setShowInput(false);
     setInputAmount('');
+    setIsMaxClicked(false);
   };
 
   const handleMax = () => {
-    setInputAmount(Math.floor(pocketCash).toString());
+    // Show rounded value in UI, but mark that MAX was clicked
+    setInputAmount(Math.round(pocketCash).toString());
+    setIsMaxClicked(true);
   };
 
   const handleBreakClick = (fdId: string) => {
@@ -119,16 +127,16 @@ export const FixedDepositCard: React.FC<FixedDepositCardProps> = ({
 
       <div className="fd-rates">
         <div className="rate-item">
-          <span className="rate-label">3Mo</span>
-          <span className="rate-value">{currentRates.threeMonth}% PA</span>
+          <span className="rate-label">1Yr</span>
+          <span className="rate-value">{currentRates.oneYear.toFixed(1)}% PA</span>
         </div>
         <div className="rate-item">
-          <span className="rate-label">1Yr</span>
-          <span className="rate-value">{currentRates.oneYear}% PA</span>
+          <span className="rate-label">2Yr</span>
+          <span className="rate-value">{currentRates.twoYear.toFixed(1)}% PA</span>
         </div>
         <div className="rate-item">
           <span className="rate-label">3Yr</span>
-          <span className="rate-value">{currentRates.threeYear}% PA</span>
+          <span className="rate-value">{currentRates.threeYear.toFixed(1)}% PA</span>
         </div>
       </div>
 
@@ -153,16 +161,16 @@ export const FixedDepositCard: React.FC<FixedDepositCardProps> = ({
         <div className="input-section">
           <div className="duration-selector">
             <button
-              className={`duration-btn ${selectedDuration === 3 ? 'active' : ''}`}
-              onClick={() => setSelectedDuration(3)}
-            >
-              3 Mo
-            </button>
-            <button
               className={`duration-btn ${selectedDuration === 12 ? 'active' : ''}`}
               onClick={() => setSelectedDuration(12)}
             >
               1 Yr
+            </button>
+            <button
+              className={`duration-btn ${selectedDuration === 24 ? 'active' : ''}`}
+              onClick={() => setSelectedDuration(24)}
+            >
+              2 Yr
             </button>
             <button
               className={`duration-btn ${selectedDuration === 36 ? 'active' : ''}`}
@@ -177,7 +185,10 @@ export const FixedDepositCard: React.FC<FixedDepositCardProps> = ({
               type="number"
               className="amount-input"
               value={inputAmount}
-              onChange={(e) => setInputAmount(e.target.value)}
+              onChange={(e) => {
+                setInputAmount(e.target.value);
+                setIsMaxClicked(false); // Reset flag when user manually changes input
+              }}
               placeholder="Enter amount"
             />
             <button className="max-button" onClick={handleMax}>
@@ -191,7 +202,10 @@ export const FixedDepositCard: React.FC<FixedDepositCardProps> = ({
             </button>
             <button
               className="action-button cancel-btn"
-              onClick={() => setShowInput(false)}
+              onClick={() => {
+                setShowInput(false);
+                setIsMaxClicked(false);
+              }}
             >
               Cancel
             </button>
@@ -218,11 +232,11 @@ export const FixedDepositCard: React.FC<FixedDepositCardProps> = ({
                 />
               </div>
               <div className="fd-info">
-                <span>₹{fd.amount.toFixed(0)}</span>
-                <span>{fd.duration === 3 ? '3Mo' : fd.duration === 12 ? '1Yr' : '3Yr'}</span>
-                <span>{fd.interestRate}%PA</span>
+                <span>₹{formatIndianNumber(fd.amount)}</span>
+                <span className="fd-duration-responsive">{fd.duration === 12 ? '1Yr' : fd.duration === 24 ? '2Yr' : '3Yr'}</span>
+                <span className="fd-rate-responsive">{fd.interestRate}%PA</span>
                 <div className="fd-pnl" style={{ color: pnl >= 0 ? '#288d00ff' : 'rgba(175, 1, 1, 1)' }}>
-                  {pnl >= 0 ? '+' : ''}₹{pnl.toFixed(0)} ({pnl >= 0 ? '+' : ''}{pnlPercentage.toFixed(2)}%)
+                  {pnl >= 0 ? '+' : ''}₹{formatIndianNumber(pnl)} ({pnl >= 0 ? '+' : ''}{pnlPercentage.toFixed(1)}%)
                 </div>
                 {fd.isMatured ? (
                   <button

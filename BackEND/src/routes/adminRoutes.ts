@@ -137,7 +137,7 @@ router.put('/settings', (req: Request, res: Response) => {
     }
 
     if (typeof settings.eventsCount !== 'number' || settings.eventsCount < 1 || settings.eventsCount > 20) {
-      return res.status(400).json({ success: false, message: 'Invalid eventsCount (must be a number between 1 and 20)'});
+      return res.status(400).json({ success: false, message: 'Invalid eventsCount (must be a number between 1 and 20)' });
     }
 
     const result = updateAdminSettings(settings);
@@ -253,5 +253,30 @@ router.delete('/logs', (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
+
+/**
+ * GET /api/admin/asset-metadata
+ * Get asset metadata from PostgreSQL database
+ */
+router.get('/asset-metadata', async (req: Request, res: Response) => {
+  try {
+    const { getAssetMetadata } = await import('../services/marketDataService');
+    const metadata = await getAssetMetadata();
+
+    return res.status(200).json({
+      success: true,
+      metadata,
+      count: metadata.length
+    });
+  } catch (error) {
+    console.error('Get asset metadata error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 
 export default router;

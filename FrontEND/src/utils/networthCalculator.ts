@@ -145,7 +145,8 @@ export function calculatePortfolioBreakdown(
   calendarYear: number
 ) {
   let goldValue = 0;
-  let fundsValue = 0;
+  let indexFundsValue = 0;
+  let mutualFundsValue = 0;
   let stocksValue = 0;
   let cryptoValue = 0;
   let commoditiesValue = 0;
@@ -161,19 +162,39 @@ export function calculatePortfolioBreakdown(
     goldValue += gameState.holdings.digitalGold.quantity * price;
   }
 
-  // Funds
-  if (gameState.holdings.indexFund.quantity > 0 && gameState.selectedAssets?.fundName) {
-    const fundData = assetDataMap[gameState.selectedAssets.fundName];
-    if (fundData) {
-      const price = getAssetPriceAtDate(fundData, calendarYear, gameState.currentMonth);
-      fundsValue += gameState.holdings.indexFund.quantity * price;
+  // Index Funds (separate from Mutual Funds)
+  if (typeof gameState.holdings.indexFund === 'object') {
+    if ('quantity' in gameState.holdings.indexFund && gameState.holdings.indexFund.quantity > 0 && gameState.selectedAssets?.fundName) {
+      const fundData = assetDataMap[gameState.selectedAssets.fundName];
+      if (fundData) {
+        const price = getAssetPriceAtDate(fundData, calendarYear, gameState.currentMonth);
+        indexFundsValue += gameState.holdings.indexFund.quantity * price;
+      }
+    } else {
+      Object.entries(gameState.holdings.indexFund).forEach(([fundName, holding]: [string, any]) => {
+        if (holding.quantity > 0 && assetDataMap[fundName]) {
+          const price = getAssetPriceAtDate(assetDataMap[fundName], calendarYear, gameState.currentMonth);
+          indexFundsValue += holding.quantity * price;
+        }
+      });
     }
   }
-  if (gameState.holdings.mutualFund.quantity > 0 && gameState.selectedAssets?.fundName) {
-    const fundData = assetDataMap[gameState.selectedAssets.fundName];
-    if (fundData) {
-      const price = getAssetPriceAtDate(fundData, calendarYear, gameState.currentMonth);
-      fundsValue += gameState.holdings.mutualFund.quantity * price;
+
+  // Mutual Funds (separate from Index Funds)
+  if (typeof gameState.holdings.mutualFund === 'object') {
+    if ('quantity' in gameState.holdings.mutualFund && gameState.holdings.mutualFund.quantity > 0 && gameState.selectedAssets?.fundName) {
+      const fundData = assetDataMap[gameState.selectedAssets.fundName];
+      if (fundData) {
+        const price = getAssetPriceAtDate(fundData, calendarYear, gameState.currentMonth);
+        mutualFundsValue += gameState.holdings.mutualFund.quantity * price;
+      }
+    } else {
+      Object.entries(gameState.holdings.mutualFund).forEach(([fundName, holding]: [string, any]) => {
+        if (holding.quantity > 0 && assetDataMap[fundName]) {
+          const price = getAssetPriceAtDate(assetDataMap[fundName], calendarYear, gameState.currentMonth);
+          mutualFundsValue += holding.quantity * price;
+        }
+      });
     }
   }
 
@@ -240,7 +261,8 @@ export function calculatePortfolioBreakdown(
     savings: gameState.savingsAccount.balance,
     fixedDeposits: fdValue,
     gold: goldValue,
-    funds: fundsValue,
+    indexFunds: indexFundsValue,
+    mutualFunds: mutualFundsValue,
     stocks: stocksValue,
     crypto: cryptoValue,
     commodities: commoditiesValue,
@@ -352,7 +374,8 @@ export function calculatePortfolioBreakdownWithPrices(
   getPrice: PriceGetter
 ) {
   let goldValue = 0;
-  let fundsValue = 0;
+  let indexFundsValue = 0;
+  let mutualFundsValue = 0;
   let stocksValue = 0;
   let cryptoValue = 0;
   let commoditiesValue = 0;
@@ -368,14 +391,66 @@ export function calculatePortfolioBreakdownWithPrices(
     goldValue += gameState.holdings.digitalGold.quantity * price;
   }
 
-  // Funds
-  if (gameState.holdings.indexFund.quantity > 0 && gameState.selectedAssets?.fundName) {
-    const price = getPrice(gameState.selectedAssets.fundName);
-    fundsValue += gameState.holdings.indexFund.quantity * price;
+  // Index Funds (separate from Mutual Funds)
+  if (typeof gameState.holdings.indexFund === 'object') {
+    // Handle both old structure (single object) and new structure (dictionary)
+    if ('quantity' in gameState.holdings.indexFund && gameState.holdings.indexFund.quantity > 0 && gameState.selectedAssets?.fundName) {
+      const price = getPrice(gameState.selectedAssets.fundName);
+      const value = gameState.holdings.indexFund.quantity * price;
+      console.log('📊 Index Fund (single):', {
+        fundName: gameState.selectedAssets.fundName,
+        quantity: gameState.holdings.indexFund.quantity,
+        price,
+        value
+      });
+      indexFundsValue += value;
+    } else {
+      // Dictionary structure
+      Object.entries(gameState.holdings.indexFund).forEach(([fundName, holding]: [string, any]) => {
+        if (holding.quantity > 0) {
+          const price = getPrice(fundName);
+          const value = holding.quantity * price;
+          console.log('📊 Index Fund (dict):', {
+            fundName,
+            quantity: holding.quantity,
+            price,
+            value
+          });
+          indexFundsValue += value;
+        }
+      });
+    }
   }
-  if (gameState.holdings.mutualFund.quantity > 0 && gameState.selectedAssets?.fundName) {
-    const price = getPrice(gameState.selectedAssets.fundName);
-    fundsValue += gameState.holdings.mutualFund.quantity * price;
+
+  // Mutual Funds (separate from Index Funds)
+  if (typeof gameState.holdings.mutualFund === 'object') {
+    // Handle both old structure (single object) and new structure (dictionary)
+    if ('quantity' in gameState.holdings.mutualFund && gameState.holdings.mutualFund.quantity > 0 && gameState.selectedAssets?.fundName) {
+      const price = getPrice(gameState.selectedAssets.fundName);
+      const value = gameState.holdings.mutualFund.quantity * price;
+      console.log('📊 Mutual Fund (single):', {
+        fundName: gameState.selectedAssets.fundName,
+        quantity: gameState.holdings.mutualFund.quantity,
+        price,
+        value
+      });
+      mutualFundsValue += value;
+    } else {
+      // Dictionary structure
+      Object.entries(gameState.holdings.mutualFund).forEach(([fundName, holding]: [string, any]) => {
+        if (holding.quantity > 0) {
+          const price = getPrice(fundName);
+          const value = holding.quantity * price;
+          console.log('📊 Mutual Fund (dict):', {
+            fundName,
+            quantity: holding.quantity,
+            price,
+            value
+          });
+          mutualFundsValue += value;
+        }
+      });
+    }
   }
 
   // Stocks
@@ -433,15 +508,35 @@ export function calculatePortfolioBreakdownWithPrices(
     }
   });
 
-  return {
+
+  const breakdown = {
     cash: gameState.pocketCash,
     savings: gameState.savingsAccount.balance,
     fixedDeposits: fdValue,
     gold: goldValue,
-    funds: fundsValue,
+    indexFunds: indexFundsValue,
+    mutualFunds: mutualFundsValue,
     stocks: stocksValue,
     crypto: cryptoValue,
     commodities: commoditiesValue,
     reits: reitsValue,
   };
+
+  // Validate breakdown sums correctly
+  const breakdownTotal = Object.values(breakdown).reduce((sum, val) => sum + val, 0);
+  const networth = calculateNetworthWithPrices(gameState, getPrice);
+  const discrepancy = Math.abs(breakdownTotal - networth);
+
+  if (discrepancy > networth * 0.01) { // More than 1% error
+    console.error('❌ PORTFOLIO BREAKDOWN MISMATCH:', {
+      networth,
+      breakdownTotal,
+      discrepancy,
+      discrepancyPercent: ((discrepancy / networth) * 100).toFixed(2) + '%',
+      breakdown,
+      note: 'Breakdown values do not sum to networth!'
+    });
+  }
+
+  return breakdown;
 }

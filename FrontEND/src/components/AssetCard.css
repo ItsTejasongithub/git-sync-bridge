@@ -40,9 +40,26 @@
 
 /* Shake animation for insufficient funds */
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
-  20%, 40%, 60%, 80% { transform: translateX(8px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-8px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(8px);
+  }
 }
 
 .asset-card.shake {
@@ -209,6 +226,36 @@
   background: #B8935E;
 }
 
+/* Max Mode Active - visual indicator that quantity auto-updates with price */
+.max-button.max-mode-active {
+  background: #4ecca3;
+  color: #1a1a2e;
+  border-color: #3daa85;
+  animation: maxModePulse 2s ease-in-out infinite;
+}
+
+.max-button.max-mode-active:hover {
+  background: #3daa85;
+}
+
+@keyframes maxModePulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(78, 204, 163, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(78, 204, 163, 0.2);
+  }
+}
+
+/* Input styling when in Max mode */
+.qty-input.max-mode-active {
+  border-color: #4ecca3;
+  background: rgba(78, 204, 163, 0.1);
+}
+
 .confirm-btn {
   background: #5D8A66;
   color: #FEFDF8;
@@ -231,14 +278,16 @@
   transform: translateY(-1px);
 }
 
-.action-button.disabled, .action-button[disabled] {
+.action-button.disabled,
+.action-button[disabled] {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none !important;
   position: relative;
 }
 
-.action-button.disabled:hover, .action-button[disabled]:hover {
+.action-button.disabled:hover,
+.action-button[disabled]:hover {
   opacity: 0.5;
   transform: none !important;
 }
@@ -438,6 +487,16 @@
   opacity: 0.8;
 }
 
+/* Responsive: Hide Duration and Rate on smaller laptop screens */
+@media (max-width: 1536px) {
+
+  .fd-duration-responsive,
+  .fd-rate-responsive {
+    display: none;
+  }
+}
+
+
 /* Tradeable Asset Card - Unified Settings for ALL tradeable assets */
 .tradeable-card {
   width: clamp(180px, 13vw, 260px);
@@ -548,11 +607,11 @@
 }
 
 /* Hide the default QTY stat-item (not inside stat-details) on hover */
-.row-3-stats > .stat-item {
+.row-3-stats>.stat-item {
   transition: opacity 0.3s ease;
 }
 
-.row-3-stats:hover > .stat-item {
+.row-3-stats:hover>.stat-item {
   opacity: 0;
   pointer-events: none;
 }
@@ -1010,8 +1069,8 @@
   cursor: pointer;
   font-weight: 600;
   font-size: 10px;
-      min-width: 26px;
-          height: 26px;
+  min-width: 26px;
+  height: 26px;
 
 
 }
@@ -1019,8 +1078,8 @@
 
 .stock-card .qty-btn {
   padding: 3px;
-      min-width: 22px;
-    height: 22px;
+  min-width: 22px;
+  height: 22px;
   font-size: 8px;
 }
 

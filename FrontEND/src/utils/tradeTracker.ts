@@ -89,7 +89,7 @@ class TradeTracker {
     fixedDeposits?: Array<{
       id: string;
       amount: number;
-      duration: 3 | 12 | 36;
+      duration: 12 | 24 | 36;
       interestRate: number;
       startMonth: number;
       startYear: number;
@@ -125,77 +125,77 @@ class TradeTracker {
     }
 
     try {
-    // Precompute banking metrics
-    const bankingSummary = this.computeBankingMetrics(savingsAccount, fixedDeposits);
+      // Precompute banking metrics
+      const bankingSummary = this.computeBankingMetrics(savingsAccount, fixedDeposits);
 
-    // Precompute summary metrics
-    const totalTrades = this.getTradeCount();
-    const buyTrades = this.getBuyCount();
-    const sellTrades = this.getSellCount();
-    const averageHoldingTimeMinutes = this.getAverageHoldingTime();
+      // Precompute summary metrics
+      const totalTrades = this.getTradeCount();
+      const buyTrades = this.getBuyCount();
+      const sellTrades = this.getSellCount();
+      const averageHoldingTimeMinutes = this.getAverageHoldingTime();
 
-    // Net P&L and per-trade P&L stats
-    let totalPnL = 0;
-    let bestTrade: TradeLog | null = null;
-    let worstTrade: TradeLog | null = null;
-    let realizedCount = 0;
-    const exposureByAsset: { [key: string]: number } = {};
+      // Net P&L and per-trade P&L stats
+      let totalPnL = 0;
+      let bestTrade: TradeLog | null = null;
+      let worstTrade: TradeLog | null = null;
+      let realizedCount = 0;
+      const exposureByAsset: { [key: string]: number } = {};
 
-    for (const t of this.trades) {
-      // Exposure
-      exposureByAsset[t.assetType] = (exposureByAsset[t.assetType] || 0) + (t.positionSize || 0);
+      for (const t of this.trades) {
+        // Exposure
+        exposureByAsset[t.assetType] = (exposureByAsset[t.assetType] || 0) + (t.positionSize || 0);
 
-      // For realized PnL, we estimate using calculateProfitLoss when sell
-      if (t.transactionType === 'sell') {
-        const pl = this.calculateProfitLoss(t);
-        totalPnL += pl;
-        realizedCount++;
-        if (!bestTrade || pl > (this.calculateProfitLoss(bestTrade))) bestTrade = t;
-        if (!worstTrade || pl < (this.calculateProfitLoss(worstTrade))) worstTrade = t;
+        // For realized PnL, we estimate using calculateProfitLoss when sell
+        if (t.transactionType === 'sell') {
+          const pl = this.calculateProfitLoss(t);
+          totalPnL += pl;
+          realizedCount++;
+          if (!bestTrade || pl > (this.calculateProfitLoss(bestTrade))) bestTrade = t;
+          if (!worstTrade || pl < (this.calculateProfitLoss(worstTrade))) worstTrade = t;
+        }
       }
-    }
 
-    const winCount = this.trades.filter(t => t.transactionType === 'sell' && this.calculateProfitLoss(t) > 0).length;
-    const lossCount = this.trades.filter(t => t.transactionType === 'sell' && this.calculateProfitLoss(t) <= 0).length;
-    const winRate = realizedCount > 0 ? (winCount / realizedCount) : 0;
+      const winCount = this.trades.filter(t => t.transactionType === 'sell' && this.calculateProfitLoss(t) > 0).length;
+      const lossCount = this.trades.filter(t => t.transactionType === 'sell' && this.calculateProfitLoss(t) <= 0).length;
+      const winRate = realizedCount > 0 ? (winCount / realizedCount) : 0;
 
-    // Generate a timestamp-based Report ID
-    function generateReportId() {
-      const now = new Date();
-      const ts = now.toISOString().replace(/[-:T]/g, '').slice(0, 14);
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let rnd = '';
-      for (let i = 0; i < 5; i++) rnd += chars.charAt(Math.floor(Math.random() * chars.length));
-      return `RPT-${ts}-${rnd}`;
-    }
+      // Generate a timestamp-based Report ID
+      function generateReportId() {
+        const now = new Date();
+        const ts = now.toISOString().replace(/[-:T]/g, '').slice(0, 14);
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let rnd = '';
+        for (let i = 0; i < 5; i++) rnd += chars.charAt(Math.floor(Math.random() * chars.length));
+        return `RPT-${ts}-${rnd}`;
+      }
 
-    const reportId = generateReportId();
+      const reportId = generateReportId();
 
-    const payload = {
-      uniqueId: logUniqueId,
-      reportId,
-      player: {
-        name: playerName,
-        age: playerAge || null,
-        tradingId: logUniqueId,
-      },
-      summary: {
-        totalTrades,
-        buyTrades,
-        sellTrades,
-        totalPnL,
-        bestTrade: bestTrade ? { assetType: bestTrade.assetType, assetName: bestTrade.assetName, timestamp: bestTrade.timestamp } : null,
-        worstTrade: worstTrade ? { assetType: worstTrade.assetType, assetName: worstTrade.assetName, timestamp: worstTrade.timestamp } : null,
-        averageHoldingTimeMinutes,
-        winCount,
-        lossCount,
-        winRate,
-        exposureByAsset,
-        tradingFrequency: this.calculateTradingFrequency(),
-        assetTypeDistribution: this.getAssetTypeDistribution(),
-        banking: bankingSummary,
-      },
-      trades: this.trades.map(trade => ({
+      const payload = {
+        uniqueId: logUniqueId,
+        reportId,
+        player: {
+          name: playerName,
+          age: playerAge || null,
+          tradingId: logUniqueId,
+        },
+        summary: {
+          totalTrades,
+          buyTrades,
+          sellTrades,
+          totalPnL,
+          bestTrade: bestTrade ? { assetType: bestTrade.assetType, assetName: bestTrade.assetName, timestamp: bestTrade.timestamp } : null,
+          worstTrade: worstTrade ? { assetType: worstTrade.assetType, assetName: worstTrade.assetName, timestamp: worstTrade.timestamp } : null,
+          averageHoldingTimeMinutes,
+          winCount,
+          lossCount,
+          winRate,
+          exposureByAsset,
+          tradingFrequency: this.calculateTradingFrequency(),
+          assetTypeDistribution: this.getAssetTypeDistribution(),
+          banking: bankingSummary,
+        },
+        trades: this.trades.map(trade => ({
           transactionType: trade.transactionType,
           assetType: trade.assetType,
           assetName: trade.assetName,
@@ -235,9 +235,9 @@ class TradeTracker {
     // Find corresponding buy trade
     const buyTrades = this.trades.filter(
       t => t.transactionType === 'buy' &&
-           t.assetType === sellTrade.assetType &&
-           t.assetName === sellTrade.assetName &&
-           t.timestamp < sellTrade.timestamp
+        t.assetType === sellTrade.assetType &&
+        t.assetName === sellTrade.assetName &&
+        t.timestamp < sellTrade.timestamp
     );
 
     if (buyTrades.length === 0) return 0;
@@ -255,7 +255,7 @@ class TradeTracker {
     fixedDeposits?: Array<{
       id: string;
       amount: number;
-      duration: 3 | 12 | 36;
+      duration: 12 | 24 | 36;
       interestRate: number;
       startMonth: number;
       startYear: number;
@@ -305,7 +305,7 @@ class TradeTracker {
       banking.fdTotalInterestEarned = totalInterest;
 
       // Determine risk profile based on FD durations and rates
-      const shortTermCount = fixedDeposits.filter(fd => fd.duration === 3).length;
+      const shortTermCount = fixedDeposits.filter(fd => fd.duration === 12).length;
       const longTermCount = fixedDeposits.filter(fd => fd.duration === 36).length;
 
       if (shortTermCount > longTermCount) {

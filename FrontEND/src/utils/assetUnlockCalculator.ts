@@ -1,4 +1,10 @@
 import { AssetCategory, AssetUnlockSchedule, UnlockEntry } from '../types';
+import {
+  CATEGORY_MAX_CARDS,
+  CALENDAR_YEAR_TRIGGERS,
+  VALID_START_YEAR_MIN,
+  VALID_START_YEAR_MAX
+} from './constants';
 
 // Asset timeline data from PostgreSQL - Last updated 2026-01-18
 export const ASSET_TIMELINE_DATA: { [key: string]: { category: AssetCategory; firstYear: number; firstMonth: number; lastYear: number } } = {
@@ -49,7 +55,6 @@ export const ASSET_TIMELINE_DATA: { [key: string]: { category: AssetCategory; fi
   'BHARTIARTL': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
   'CESC': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
   'DISHTV': { category: 'STOCKS', firstYear: 2007, firstMonth: 4, lastYear: 2026 },
-  'EASEMYTRIP': { category: 'STOCKS', firstYear: 2021, firstMonth: 3, lastYear: 2026 },
   'GAIL': { category: 'STOCKS', firstYear: 1997, firstMonth: 4, lastYear: 2026 },
   'GRASIM': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
   'GVKPIL': { category: 'STOCKS', firstYear: 2006, firstMonth: 2, lastYear: 2026 },
@@ -61,7 +66,6 @@ export const ASSET_TIMELINE_DATA: { [key: string]: { category: AssetCategory; fi
   'HINDALCO': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
   'HINDCOPPER': { category: 'STOCKS', firstYear: 2010, firstMonth: 1, lastYear: 2026 },
   'HINDUNILVR': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
-  'HONASA': { category: 'STOCKS', firstYear: 2023, firstMonth: 11, lastYear: 2026 },
   'IBREALEST': { category: 'STOCKS', firstYear: 2004, firstMonth: 9, lastYear: 2026 },
   'ICICIBANK': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
   'IDEA': { category: 'STOCKS', firstYear: 2007, firstMonth: 3, lastYear: 2026 },
@@ -81,17 +85,14 @@ export const ASSET_TIMELINE_DATA: { [key: string]: { category: AssetCategory; fi
   'MANAPPURAM': { category: 'STOCKS', firstYear: 2010, firstMonth: 6, lastYear: 2026 },
   'MARUTI': { category: 'STOCKS', firstYear: 2003, firstMonth: 7, lastYear: 2026 },
   'M&M': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
-  'MTARTECH': { category: 'STOCKS', firstYear: 2021, firstMonth: 3, lastYear: 2026 },
   'NACLIND': { category: 'STOCKS', firstYear: 2017, firstMonth: 4, lastYear: 2026 },
   'NESTLEIND': { category: 'STOCKS', firstYear: 2002, firstMonth: 8, lastYear: 2026 },
   'NIPPOBATRY': { category: 'STOCKS', firstYear: 2002, firstMonth: 6, lastYear: 2026 },
   'NTPC': { category: 'STOCKS', firstYear: 2004, firstMonth: 11, lastYear: 2026 },
   'ONGC': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
-  'PAYTM': { category: 'STOCKS', firstYear: 2021, firstMonth: 11, lastYear: 2026 },
   'PNBHOUSING': { category: 'STOCKS', firstYear: 2016, firstMonth: 11, lastYear: 2026 },
   'POWERGRID': { category: 'STOCKS', firstYear: 2007, firstMonth: 10, lastYear: 2026 },
   'QUICKHEAL': { category: 'STOCKS', firstYear: 2016, firstMonth: 2, lastYear: 2026 },
-  'RAILTEL': { category: 'STOCKS', firstYear: 2021, firstMonth: 2, lastYear: 2026 },
   'RELIANCE': { category: 'STOCKS', firstYear: 1995, firstMonth: 12, lastYear: 2026 },
   'RPOWER': { category: 'STOCKS', firstYear: 2008, firstMonth: 2, lastYear: 2026 },
   'RTNINDIA': { category: 'STOCKS', firstYear: 2012, firstMonth: 7, lastYear: 2026 },
@@ -129,12 +130,11 @@ export const ASSET_TIMELINE_DATA: { [key: string]: { category: AssetCategory; fi
   'HDFC_SmallCap': { category: 'FUNDS', firstYear: 2018, firstMonth: 1, lastYear: 2026 },
   'ICICI_Bluechip': { category: 'FUNDS', firstYear: 2017, firstMonth: 12, lastYear: 2026 },
   'Kotak_Emerging': { category: 'FUNDS', firstYear: 2017, firstMonth: 12, lastYear: 2026 },
-  'Nippon_SmallCap': { category: 'FUNDS', firstYear: 2017, firstMonth: 12, lastYear: 2026 },
   'PGIM_Midcap': { category: 'FUNDS', firstYear: 2017, firstMonth: 12, lastYear: 2026 },
   'SBI_Bluechip': { category: 'FUNDS', firstYear: 2017, firstMonth: 12, lastYear: 2026 },
 
   // REITs
-  'EMBASSY': { category: 'REIT', firstYear: 2019, firstMonth: 3, lastYear: 2026 },
+  'EMBASSY': { category: 'REIT', firstYear: 2019, firstMonth: 4, lastYear: 2026 },
   'MINDSPACE': { category: 'REIT', firstYear: 2020, firstMonth: 8, lastYear: 2026 },
 };
 
@@ -155,20 +155,20 @@ export const getLatestAssetYear = (categories: AssetCategory[]): number => {
 
 /**
  * Calculate game start year based on selected categories
- * Ensures game ends by 2025 (max data year)
+ * NEW: Returns the user-selected year, constrained to 2000-2005
+ * @deprecated Use VALID_START_YEAR_MIN and VALID_START_YEAR_MAX directly
  */
-export const calculateGameStartYear = (categories: AssetCategory[]): number => {
-  const MAX_DATA_YEAR = 2025; // PostgreSQL data currently goes up to 2025
-  const GAME_DURATION = 20;
+export const calculateGameStartYear = (_categories: AssetCategory[]): number => {
+  // New system: start year is user-selectable between 2000-2005
+  // Default to 2000 (earliest valid year)
+  return VALID_START_YEAR_MIN;
+};
 
-  // Game must end by 2025, so start year = 2025 - 20 + 1 = 2006
-  const maxStartYear = MAX_DATA_YEAR - GAME_DURATION + 1;
-
-  const latestYear = getLatestAssetYear(categories);
-  const calculatedStartYear = latestYear + 5 - GAME_DURATION + 1;
-
-  // Return the minimum to ensure we don't exceed 2025
-  return Math.min(calculatedStartYear, maxStartYear);
+/**
+ * Validate and constrain game start year to valid range (2000-2005)
+ */
+export const validateGameStartYear = (year: number): number => {
+  return Math.max(VALID_START_YEAR_MIN, Math.min(VALID_START_YEAR_MAX, year));
 };
 
 /**
@@ -182,238 +182,289 @@ export const getAssetsForCategory = (category: AssetCategory): string[] => {
 };
 
 /**
- * Generate asset unlock schedule based on selected categories
+ * Generate asset unlock schedule based on HARD-CODED rules (Single Source of Truth)
+ * Admin settings CANNOT override this logic.
+ *
+ * GAME YEAR BASED UNLOCKS:
+ * - Year 1: Savings (1 card) + FD (1 card) - always enabled at start
+ * - Year 2: Physical Gold (1 card)
+ * - Year 3: Commodity (1 random card from pool)
+ * - Year 4: Stocks (2 cards guaranteed at category unlock)
+ *   - 2 stocks selected with data available at Year 4 or earlier
+ * - Year 4+: Additional Stock (1 card - progressive unlock based on data availability)
+ *   - 1 stock selected (preferably with data available after Year 4)
+ *   - Example: 2 stocks unlock at Year 4, 3rd stock with firstYear=2015 unlocks at Year 11
+ *
+ * CALENDAR YEAR BASED UNLOCKS:
+ * - Calendar >= 2009: Index Fund (NIFTYBEES - 1 fixed card)
+ * - Calendar >= 2012: Gold ETF / Digital Gold (1 card)
+ * - Calendar >= 2015: Index Fund (+1 random card from SETFNIF50, UTINIFTETF, HDFCNIFETF)
+ * - Calendar >= 2017: Mutual Funds (2 cards)
+ * - Calendar >= 2020: REITs (1 card)
+ *
+ * DISABLED CATEGORIES (always 0 cards): CRYPTO, FOREX
+ *
+ * RULE: No new asset category should unlock in the last 3 game years (Years 18-20)
  */
 export const generateAssetUnlockSchedule = (
-  categories: AssetCategory[],
+  _categories: AssetCategory[], // Ignored - using hard-coded categories
   gameStartYear: number
 ): AssetUnlockSchedule => {
   const schedule: AssetUnlockSchedule = {};
   const TOTAL_GAME_YEARS = 20;
-  const NO_UNLOCK_LAST_YEARS = 5;
+  // RULE: No new assets in final 3 years (years 18-20)
+  const MAX_UNLOCK_YEAR = TOTAL_GAME_YEARS - 3; // Year 17 is the last year for new unlocks
 
-  // Collect all assets that need to be unlocked
-  const assetsByCategory: { [key in AssetCategory]?: string[] } = {};
+  // Calculate required start year to ensure REITs can unlock before year 17
+  // REIT triggers at 2020, needs to unlock by year 17
+  // So start year = 2020 - 17 + 1 = 2004
+  const requiredStartYear = CALENDAR_YEAR_TRIGGERS.REITS - MAX_UNLOCK_YEAR + 1;
 
-  categories.forEach(category => {
-    assetsByCategory[category] = getAssetsForCategory(category);
-  });
+  // Validate game start year (must be at least requiredStartYear to allow all unlocks)
+  const validStartYear = Math.max(
+    requiredStartYear,
+    Math.min(VALID_START_YEAR_MAX, gameStartYear),
+    VALID_START_YEAR_MIN
+  );
 
-  let currentGameYear = 1;
-
-  // Year 1: Always unlock Savings Account (if BANKING is selected)
-  if (categories.includes('BANKING')) {
-    schedule[currentGameYear] = [{
+  // ===== GAME YEAR 1: Savings + FD (always enabled at start) =====
+  schedule[1] = [
+    {
       category: 'BANKING',
       assetType: 'SAVINGS_AC',
-      calendarYear: gameStartYear
-    }];
-    currentGameYear++;
-  }
-
-  // Year 2: Fixed Deposit (if BANKING is selected)
-  if (categories.includes('BANKING')) {
-    schedule[currentGameYear] = [{
+      calendarYear: validStartYear,
+      maxCards: CATEGORY_MAX_CARDS.SAVINGS
+    },
+    {
       category: 'BANKING',
       assetType: 'FD',
-      calendarYear: gameStartYear + currentGameYear - 1
+      calendarYear: validStartYear,
+      maxCards: CATEGORY_MAX_CARDS.FD
+    }
+  ];
+
+  // ===== GAME YEAR 2: Physical Gold (1 card) =====
+  const calendarYear2 = validStartYear + 1;
+  schedule[2] = [{
+    category: 'GOLD',
+    assetType: 'Physical_Gold',
+    calendarYear: calendarYear2,
+    maxCards: CATEGORY_MAX_CARDS.PHYSICAL_GOLD
+  }];
+
+  // ===== GAME YEAR 3: Commodity (1 random card) =====
+  const calendarYear3 = validStartYear + 2;
+  const availableCommodities = Object.entries(ASSET_TIMELINE_DATA)
+    .filter(([name, data]) =>
+      data.category === 'COMMODITIES' &&
+      calendarYear3 >= data.firstYear &&
+      ['COTTON', 'WHEAT', 'CRUDEOIL_WTI', 'SILVER', 'NATURALGAS'].includes(name)
+    )
+    .map(([name]) => name);
+
+  if (availableCommodities.length > 0) {
+    const selectedCommodity = availableCommodities[Math.floor(Math.random() * availableCommodities.length)];
+    schedule[3] = [{
+      category: 'COMMODITIES',
+      assetType: selectedCommodity,
+      calendarYear: calendarYear3,
+      maxCards: CATEGORY_MAX_CARDS.COMMODITIES
     }];
-    currentGameYear++;
   }
 
-  // Year 3: Physical Gold (if GOLD is selected)
-  if (categories.includes('GOLD')) {
-    schedule[currentGameYear] = [{
-      category: 'GOLD',
-      assetType: 'Physical_Gold',
-      calendarYear: gameStartYear + currentGameYear - 1
-    }];
-    currentGameYear++;
-  }
+  // ===== STOCKS: 2 stocks at category unlock + 1 progressive unlock =====
+  // RULE: 2 stocks unlock at Year 4 (category unlock), 1 stock unlocks progressively (data-based)
+  const allStocks = Object.entries(ASSET_TIMELINE_DATA)
+    .filter(([_, data]) => data.category === 'STOCKS')
+    .map(([name, data]) => ({ name, data }));
 
-  // Track remaining unlocks for progressive scheduling (must be declared before use)
-  const remainingUnlocks: { category: AssetCategory; assetType: string; minYear: number; minMonth: number }[] = [];
+  if (allStocks.length >= 3) {
+    const calendarYear4 = validStartYear + 3; // Year 4 calendar year
 
-  // Year 4: Stocks - NEW SELECTION RULES
-  // Fixed Stocks: 2 stocks with data available (unlock immediately)
-  // Random Stocks: 1-3 stocks from entire pool (unlock when data available)
-  // Constraint: Total unlocked stocks must be 3-5
-  // All stocks must be unique
-  const selectedStocks: {
-    fixed: string[];
-    random: string[];
-    allSelected: string[];
-  } = { fixed: [], random: [], allSelected: [] };
+    // Split stocks into two groups:
+    // 1. Stocks with data available at Year 4 or earlier
+    // 2. Stocks with data available after Year 4
+    const stocksAvailableAtYear4 = allStocks.filter(({ data }) => data.firstYear <= calendarYear4);
+    const stocksAvailableLater = allStocks.filter(({ data }) => data.firstYear > calendarYear4);
 
-  if (categories.includes('STOCKS')) {
-    const calendarYear = gameStartYear + currentGameYear - 1;
-    const calendarMonth = 1;
+    let selectedStocks: string[] = [];
 
-    // Get ALL stocks in the universe
-    const allStocks = assetsByCategory['STOCKS'] || [];
+    // Select 2 stocks that will unlock at Year 4
+    if (stocksAvailableAtYear4.length >= 2) {
+      const twoEarlyStocks = getRandomItems(stocksAvailableAtYear4, 2).map(s => s.name);
+      selectedStocks = [...twoEarlyStocks];
+    } else {
+      // Fallback: if not enough early stocks, select from all stocks
+      selectedStocks = getRandomItems(allStocks, 2).map(s => s.name);
+    }
 
-    // Filter stocks with data available NOW (data-available pool)
-    const dataAvailableStocks = allStocks.filter(stockName => {
-      const stockData = ASSET_TIMELINE_DATA[stockName];
-      if (!stockData) return false;
-      return calendarYear > stockData.firstYear ||
-        (calendarYear === stockData.firstYear && calendarMonth >= stockData.firstMonth);
-    });
+    // Select 1 stock for progressive unlock (prefer later stocks, fallback to any)
+    const remainingStocks = allStocks.filter(s => !selectedStocks.includes(s.name));
+    let progressiveStock: string | null = null;
 
-    // FIXED STOCKS: Select exactly 2 from data-available pool
-    selectedStocks.fixed = getRandomItems(dataAvailableStocks, 2);
+    if (stocksAvailableLater.length > 0) {
+      // Prefer a stock that unlocks later
+      const laterStocksNotSelected = stocksAvailableLater.filter(s => !selectedStocks.includes(s.name));
+      if (laterStocksNotSelected.length > 0) {
+        progressiveStock = getRandomItems(laterStocksNotSelected, 1)[0].name;
+      }
+    }
 
-    // RANDOM STOCKS: Select 1-3 from remaining stocks (entire universe minus fixed)
-    const stocksExcludingFixed = allStocks.filter(s => !selectedStocks.fixed.includes(s));
-    const randomCount = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3
-    selectedStocks.random = getRandomItems(stocksExcludingFixed, Math.min(randomCount, stocksExcludingFixed.length));
+    // Fallback: if no later stock available, select any remaining stock
+    if (!progressiveStock && remainingStocks.length > 0) {
+      progressiveStock = getRandomItems(remainingStocks, 1)[0].name;
+    }
 
-    // All selected stocks (unique)
-    selectedStocks.allSelected = [...selectedStocks.fixed, ...selectedStocks.random];
+    if (progressiveStock) {
+      selectedStocks.push(progressiveStock);
+    }
 
-    // Determine which stocks unlock NOW vs LATER
-    const stocksToUnlockNow: string[] = [];
-    const stocksToUnlockLater: { name: string; minYear: number; minMonth: number }[] = [];
+    // Group stocks by when they unlock
+    const stockUnlockMap: { [gameYear: number]: string[] } = {};
 
-    selectedStocks.allSelected.forEach(stockName => {
+    selectedStocks.forEach(stockName => {
       const stockData = ASSET_TIMELINE_DATA[stockName];
       if (!stockData) return;
 
-      const isAvailableNow = calendarYear > stockData.firstYear ||
-        (calendarYear === stockData.firstYear && calendarMonth >= stockData.firstMonth);
+      // Calculate which game year this stock's data becomes available
+      const stockCalendarYear = stockData.firstYear;
 
-      if (isAvailableNow) {
-        stocksToUnlockNow.push(stockName);
-      } else {
-        stocksToUnlockLater.push({
-          name: stockName,
-          minYear: stockData.firstYear,
-          minMonth: stockData.firstMonth
-        });
+      // Stock unlocks at the later of:
+      // 1. Year 4 (when stocks category unlocks)
+      // 2. The game year when its data becomes available
+      const dataAvailableAtGameYear = stockCalendarYear - validStartYear + 1;
+      const unlockAtGameYear = Math.max(4, dataAvailableAtGameYear);
+
+      // Only unlock if within valid game years (1-20) and before final 3 years
+      if (unlockAtGameYear >= 1 && unlockAtGameYear <= TOTAL_GAME_YEARS && unlockAtGameYear <= MAX_UNLOCK_YEAR) {
+        if (!stockUnlockMap[unlockAtGameYear]) {
+          stockUnlockMap[unlockAtGameYear] = [];
+        }
+        stockUnlockMap[unlockAtGameYear].push(stockName);
       }
     });
 
-    // Unlock stocks that are available NOW
-    if (stocksToUnlockNow.length > 0) {
-      schedule[currentGameYear] = [{
+    // Add stocks to schedule based on their unlock timing
+    Object.entries(stockUnlockMap).forEach(([gameYearStr, stocks]) => {
+      const gameYear = parseInt(gameYearStr);
+      const calendarYear = validStartYear + gameYear - 1;
+
+      if (!schedule[gameYear]) {
+        schedule[gameYear] = [];
+      }
+
+      schedule[gameYear].push({
         category: 'STOCKS',
         assetType: 'STOCKS',
-        assetNames: stocksToUnlockNow,
-        calendarYear
-      }];
-    }
-
-    currentGameYear++;
-
-    // Schedule progressive unlocks for random stocks without data yet
-    stocksToUnlockLater.sort((a, b) => {
-      if (a.minYear !== b.minYear) return a.minYear - b.minYear;
-      return a.minMonth - b.minMonth;
-    });
-
-    stocksToUnlockLater.forEach(stock => {
-      remainingUnlocks.push({
-        category: 'STOCKS',
-        assetType: stock.name,
-        minYear: stock.minYear,
-        minMonth: stock.minMonth
+        assetNames: stocks,
+        calendarYear: calendarYear,
+        maxCards: stocks.length
       });
     });
   }
 
-  // Year 5: Digital Gold (if GOLD is selected and data available)
-  if (categories.includes('GOLD')) {
-    const calendarYear = gameStartYear + currentGameYear - 1;
-    if (calendarYear >= 2009) {
-      schedule[currentGameYear] = [{
+  // ===== SELECT REIT ONCE (before calendar year loop) =====
+  // Randomly select EMBASSY (2019) or MINDSPACE (2020)
+  const availableReits = ['EMBASSY', 'MINDSPACE'];
+  const selectedReit = availableReits[Math.floor(Math.random() * availableReits.length)];
+  const selectedReitData = ASSET_TIMELINE_DATA[selectedReit];
+
+  // ===== CALENDAR YEAR BASED UNLOCKS =====
+  for (let gameYear = 1; gameYear <= TOTAL_GAME_YEARS; gameYear++) {
+    const calendarYear = validStartYear + gameYear - 1;
+    const calendarUnlocks: UnlockEntry[] = [];
+
+    // Skip calendar-based unlocks if we're in the final 3 years
+    if (gameYear > MAX_UNLOCK_YEAR) {
+      continue;
+    }
+
+    // Index Fund - PROGRESSIVE UNLOCK
+    // 2009: NIFTYBEES (1 fixed card) - only one available in 2009
+    if (calendarYear === CALENDAR_YEAR_TRIGGERS.INDEX_FUND) {
+      calendarUnlocks.push({
+        category: 'FUNDS',
+        assetType: 'INDEX_FUND',
+        assetNames: ['NIFTYBEES'], // Fixed - only NIFTYBEES available in 2009
+        calendarYear,
+        maxCards: 1 // First card only
+      });
+    }
+
+    // 2015: +1 random index fund from newly available options
+    if (calendarYear === CALENDAR_YEAR_TRIGGERS.INDEX_FUND_2) {
+      // Select 1 random from SETFNIF50, UTINIFTETF, HDFCNIFETF (all available from 2015)
+      const availableIndexFunds = Object.entries(ASSET_TIMELINE_DATA)
+        .filter(([name, data]) =>
+          data.category === 'FUNDS' &&
+          calendarYear >= data.firstYear &&
+          ['SETFNIF50', 'UTINIFTETF', 'HDFCNIFETF'].includes(name) // Exclude NIFTYBEES (already unlocked)
+        )
+        .map(([name]) => name);
+
+      if (availableIndexFunds.length > 0) {
+        const selectedFund = getRandomItems(availableIndexFunds, 1);
+        calendarUnlocks.push({
+          category: 'FUNDS',
+          assetType: 'INDEX_FUND',
+          assetNames: selectedFund,
+          calendarYear,
+          maxCards: 1 // Second card (progressive unlock)
+        });
+      }
+    }
+
+    // Gold ETF / Digital Gold (1 card when Calendar >= 2012)
+    if (calendarYear === CALENDAR_YEAR_TRIGGERS.DIGITAL_GOLD) {
+      calendarUnlocks.push({
         category: 'GOLD',
         assetType: 'Digital_Gold',
-        calendarYear
-      }];
-      currentGameYear++;
-    }
-  }
-
-  // Crypto assets (BTC data available from 2014 Sep, ETH from 2017 Nov)
-  if (categories.includes('CRYPTO')) {
-    remainingUnlocks.push({ category: 'CRYPTO', assetType: 'BTC', minYear: 2014, minMonth: 9 });
-    remainingUnlocks.push({ category: 'CRYPTO', assetType: 'ETH', minYear: 2017, minMonth: 11 });
-  }
-
-  // Funds (randomly select one fund - index or mutual)
-  if (categories.includes('FUNDS')) {
-    const availableFunds = assetsByCategory['FUNDS'] || [];
-    if (availableFunds.length > 0) {
-      // Randomly pick one fund (could be index or mutual)
-      const randomFund = availableFunds[Math.floor(Math.random() * availableFunds.length)];
-      const fundData = ASSET_TIMELINE_DATA[randomFund];
-      remainingUnlocks.push({
-        category: 'FUNDS',
-        assetType: randomFund,
-        minYear: fundData?.firstYear || 2009,
-        minMonth: fundData?.firstMonth || 1
+        calendarYear,
+        maxCards: CATEGORY_MAX_CARDS.DIGITAL_GOLD
       });
     }
-  }
 
-  // REITs
-  if (categories.includes('REIT')) {
-    remainingUnlocks.push({ category: 'REIT', assetType: 'EMBASSY', minYear: 2019, minMonth: 4 });
-    remainingUnlocks.push({ category: 'REIT', assetType: 'MINDSPACE', minYear: 2020, minMonth: 8 });
-  }
+    // Mutual Funds (2 cards when Calendar >= 2017)
+    if (calendarYear === CALENDAR_YEAR_TRIGGERS.MUTUAL_FUND) {
+      const availableMutualFunds = Object.entries(ASSET_TIMELINE_DATA)
+        .filter(([name, data]) =>
+          data.category === 'FUNDS' &&
+          data.firstYear <= 2017 &&
+          ['SBI_Bluechip', 'ICICI_Bluechip', 'Axis_Midcap', 'Kotak_Emerging', 'PGIM_Midcap', 'HDFC_SmallCap'].includes(name)
+        )
+        .map(([name]) => name);
 
-  // Commodities
-  if (categories.includes('COMMODITIES')) {
-    const availableCommodities = assetsByCategory['COMMODITIES'] || [];
-    if (availableCommodities.length > 0) {
-      const commodityData = ASSET_TIMELINE_DATA[availableCommodities[0]];
-      remainingUnlocks.push({
-        category: 'COMMODITIES',
-        assetType: availableCommodities[0],
-        minYear: commodityData?.firstYear || 2000,
-        minMonth: commodityData?.firstMonth || 1
-      });
-    }
-  }
-
-  // Sort by minimum year
-  remainingUnlocks.sort((a, b) => a.minYear - b.minYear);
-
-  // Distribute remaining unlocks across available years (not in last 5 years)
-  const maxUnlockYear = TOTAL_GAME_YEARS - NO_UNLOCK_LAST_YEARS;
-
-  remainingUnlocks.forEach(unlock => {
-    // Find the first available year where data exists
-    while (currentGameYear <= maxUnlockYear) {
-      const calendarYear = gameStartYear + currentGameYear - 1;
-      const calendarMonth = 1; // Assume month 1 for unlock year
-
-      // Check if this asset's data is available in this calendar year AND month
-      // Data available if: year > minYear OR (year == minYear AND month >= minMonth)
-      const isDataAvailable = calendarYear > unlock.minYear ||
-        (calendarYear === unlock.minYear && calendarMonth >= unlock.minMonth);
-
-      if (isDataAvailable) {
-        // Only unlock if this slot is not already taken
-        if (!schedule[currentGameYear]) {
-          schedule[currentGameYear] = [];
-        }
-
-        // Check if we're not adding to an already occupied year
-        if (schedule[currentGameYear].length === 0) {
-          schedule[currentGameYear].push({
-            category: unlock.category,
-            assetType: unlock.assetType,
-            calendarYear
-          });
-
-          currentGameYear++;
-          break;
-        }
+      if (availableMutualFunds.length > 0) {
+        const selectedMFs = getRandomItems(availableMutualFunds, Math.min(2, availableMutualFunds.length));
+        calendarUnlocks.push({
+          category: 'FUNDS',
+          assetType: 'MUTUAL_FUND',
+          assetNames: selectedMFs,
+          calendarYear,
+          maxCards: CATEGORY_MAX_CARDS.MUTUAL_FUND // 2 cards
+        });
       }
-      currentGameYear++;
     }
-  });
+
+    // REITs (1 card when the selected REIT's data becomes available)
+    // Use pre-selected REIT: EMBASSY (2019) or MINDSPACE (2020)
+    if (selectedReitData && calendarYear === selectedReitData.firstYear) {
+      calendarUnlocks.push({
+        category: 'REIT',
+        assetType: selectedReit,
+        calendarYear,
+        maxCards: CATEGORY_MAX_CARDS.REITS
+      });
+    }
+
+    // Add calendar-based unlocks to schedule
+    if (calendarUnlocks.length > 0) {
+      if (!schedule[gameYear]) {
+        schedule[gameYear] = [];
+      }
+      schedule[gameYear].push(...calendarUnlocks);
+    }
+  }
 
   return schedule;
 };
@@ -446,36 +497,64 @@ export const isAssetUnlocked = (
 /**
  * Extract selected assets from the unlock schedule
  * This ensures selectedAssets matches what's in the schedule
+ * Updated for hard-coded unlock system (no progressive unlocks)
  */
 export const extractSelectedAssetsFromSchedule = (schedule: AssetUnlockSchedule): {
   stocks: string[];
+  fundType: 'index' | 'mutual';
   fundName: string;
+  indexFunds: string[];
+  mutualFunds: string[];
   commodity: string;
+  reit: string;
 } => {
   let allStocks: string[] = [];
-  let fundName = '';
+  let indexFunds: string[] = [];
+  let mutualFunds: string[] = [];
   let commodity = '';
+  let reit = '';
 
   // Scan through all unlock years to collect assets
   Object.values(schedule).forEach((unlocks: UnlockEntry[]) => {
     unlocks.forEach((unlock: UnlockEntry) => {
+      // Stocks (all 3 cards unlock at Year 4)
       if (unlock.assetType === 'STOCKS' && unlock.assetNames) {
-        // Collect all stock names (initial + progressive)
         allStocks = [...new Set([...allStocks, ...unlock.assetNames])];
-      } else if (unlock.category === 'STOCKS' && typeof unlock.assetType === 'string') {
-        // Individual stock unlock (from progressive unlocks)
-        allStocks.push(unlock.assetType);
-      } else if (unlock.category === 'FUNDS') {
-        fundName = unlock.assetType;
-      } else if (unlock.category === 'COMMODITIES') {
+      }
+
+      // Index Funds (2 cards at calendar 2009)
+      if (unlock.assetType === 'INDEX_FUND' && unlock.assetNames) {
+        indexFunds = [...new Set([...indexFunds, ...unlock.assetNames])];
+      }
+
+      // Mutual Funds (2 cards at calendar 2017)
+      if (unlock.assetType === 'MUTUAL_FUND' && unlock.assetNames) {
+        mutualFunds = [...new Set([...mutualFunds, ...unlock.assetNames])];
+      }
+
+      // Commodities (1 random card at Year 3)
+      if (unlock.category === 'COMMODITIES') {
         commodity = unlock.assetType;
+      }
+
+      // REITs (1 random REIT at Calendar 2020)
+      if (unlock.category === 'REIT') {
+        reit = unlock.assetType;
       }
     });
   });
 
+  // Determine primary fund type (prefer index if available, else mutual)
+  const fundType: 'index' | 'mutual' = indexFunds.length > 0 ? 'index' : 'mutual';
+  const fundName = fundType === 'index' ? (indexFunds[0] || '') : (mutualFunds[0] || '');
+
   return {
     stocks: [...new Set(allStocks)], // Remove duplicates
+    fundType,
     fundName,
-    commodity
+    indexFunds: [...new Set(indexFunds)],
+    mutualFunds: [...new Set(mutualFunds)],
+    commodity,
+    reit
   };
 };

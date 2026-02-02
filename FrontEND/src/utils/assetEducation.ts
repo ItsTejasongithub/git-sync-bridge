@@ -15,6 +15,127 @@ export interface AssetEducationContent {
 }
 
 export const ASSET_EDUCATION_DATA: { [key: string]: AssetEducationContent } = {
+  // BANKING category combines Savings Account and Fixed Deposit concepts
+  // This is shown once at Year 1 when both banking assets unlock together
+  'BANKING': {
+    category: 'BANKING',
+    title: 'Banking: Savings & Fixed Deposits',
+    description: 'Banking provides safe ways to store and grow your money. A Savings Account offers easy access with modest interest, while Fixed Deposits (FDs) lock your money for higher guaranteed returns. Both are insured up to ₹5 lakhs by DICGC.',
+    questions: [
+      {
+        question: 'What is the main benefit of a savings account?',
+        options: [
+          'Tax-free income guaranteed',
+          'Safe storage with interest',
+          'Double money in 1 year',
+          'Highest returns available'
+        ],
+        correctAnswer: 1,
+        hint: 'Think about safety and guaranteed returns!'
+      },
+      {
+        question: 'What happens if you break an FD before maturity?',
+        options: [
+          'You get bonus interest',
+          'You pay a penalty',
+          'You lose all money',
+          'Nothing happens at all'
+        ],
+        correctAnswer: 1,
+        hint: 'Breaking early comes with a cost!'
+      },
+      {
+        question: 'Which offers higher interest - Savings Account or FD?',
+        options: [
+          'Savings Account always',
+          'Both are exactly same',
+          'Fixed Deposit typically',
+          'Depends on bank only'
+        ],
+        correctAnswer: 2,
+        hint: 'Locking money for longer pays more!'
+      },
+      {
+        question: 'What is the deposit insurance limit in India?',
+        options: [
+          'Up to ₹5 lakhs',
+          'Up to ₹1 lakh',
+          'Unlimited insurance',
+          'No insurance exists'
+        ],
+        correctAnswer: 0,
+        hint: 'DICGC provides protection for deposits!'
+      },
+      {
+        question: 'Can you withdraw from a savings account anytime?',
+        options: [
+          'Only after 6 months',
+          'Only on weekdays',
+          'Yes, anytime you need',
+          'Locked for 1 year'
+        ],
+        correctAnswer: 2,
+        hint: 'Savings accounts offer liquidity!'
+      },
+      {
+        question: 'Which FD tenure typically offers the highest interest rate?',
+        options: [
+          '3 years or more',
+          '1 month only',
+          '3 months only',
+          '1 year only'
+        ],
+        correctAnswer: 0,
+        hint: 'Longer lock-in means better rates!'
+      },
+      {
+        question: 'Are FD returns guaranteed?',
+        options: [
+          'Only for government FDs',
+          'Depends on stock market',
+          'Yes, rate locked at start',
+          'No, they fluctuate daily'
+        ],
+        correctAnswer: 2,
+        hint: 'Rate is fixed when you invest!'
+      },
+      {
+        question: 'Who should use banking products like Savings and FDs?',
+        options: [
+          'Only wealthy individuals',
+          'Everyone for emergency funds',
+          'Only senior citizens',
+          'Only business owners'
+        ],
+        correctAnswer: 1,
+        hint: 'Everyone needs safe savings!'
+      },
+      {
+        question: 'Can you take a loan against your FD?',
+        options: [
+          'Never allowed legally',
+          'Only after 5 years',
+          'Yes, up to 80-90% value',
+          'Only for senior citizens'
+        ],
+        correctAnswer: 2,
+        hint: 'FDs can be used as collateral!'
+      },
+      {
+        question: 'What type of interest does a savings account typically earn?',
+        options: [
+          'Very high interest (10%+)',
+          'No interest at all',
+          'Variable negative interest',
+          'Low but stable interest (2.5-4%)'
+        ],
+        correctAnswer: 3,
+        hint: 'Interest is modest but stable!'
+      }
+    ]
+  },
+
+  // Keep individual categories for backwards compatibility (deprecated)
   'SAVINGS_AC': {
     category: 'SAVINGS_AC',
     title: 'Savings Account',
