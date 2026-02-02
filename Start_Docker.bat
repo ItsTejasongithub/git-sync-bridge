@@ -54,7 +54,7 @@ echo [3/5] Restoring database from backup...
 echo.
 
 REM Restore the database
-powershell -Command "Get-Content backups/BullRun_DB_backup.sql | docker exec -i bullrun_postgres psql -U postgres -d BullRun_GameDB_PGSQL"
+powershell -Command "Get-Content backups/BullRun_DB_backup.sql | docker exec -i bullrun_game_postgres psql -U postgres -d BullRun_GameDB_PGSQL"
 
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Failed to restore database!
@@ -70,13 +70,13 @@ echo.
 echo [4/5] Verifying tables exist...
 echo.
 
-docker exec bullrun_postgres psql -U postgres -d BullRun_GameDB_PGSQL -c "\dt"
+docker exec bullrun_game_postgres psql -U postgres -d BullRun_GameDB_PGSQL -c "\dt"
 
 echo.
 echo [5/5] Checking data integrity...
 echo.
 
-docker exec bullrun_postgres psql -U postgres -d BullRun_GameDB_PGSQL -c "SELECT COUNT(*) as total_records FROM asset_prices;"
+docker exec bullrun_game_postgres psql -U postgres -d BullRun_GameDB_PGSQL -c "SELECT COUNT(*) as total_records FROM asset_prices;"
 
 echo.
 echo ================================================
@@ -92,13 +92,13 @@ echo  Host: localhost
 echo  Port: 5432
 echo  Database: BullRun_GameDB_PGSQL
 echo  Username: postgres
-echo  Password: BullRun2024!
+echo  Password: Tej@BOSS
 echo ------------------------------------------------
 echo.
 echo ------------------------------------------------
 echo  CONNECTION STRING:
 echo ------------------------------------------------
-echo  postgres://postgres:BullRun2024!@localhost:5432/BullRun_GameDB_PGSQL
+echo  postgres://postgres:Tej@BOSS@localhost:5432/BullRun_GameDB_PGSQL
 echo ------------------------------------------------
 echo.
 echo ------------------------------------------------
