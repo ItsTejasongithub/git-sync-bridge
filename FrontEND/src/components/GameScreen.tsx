@@ -278,7 +278,115 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const isAssetUnlockingNow = (checkName: string): boolean => {
     // PRIORITY 1: Use assetUnlockSchedule if available (new system)
     if (gameState.assetUnlockSchedule) {
-      // Check if this asset is unlocking in the current year/month
+      // For MUTUAL_FUND and INDEX_FUND: These are calendar-year based unlocks where
+      // the actual fund data availability (firstMonth) may differ from Month 1.
+      // Quiz should trigger at the EXACT month when the first fund becomes available.
+      if (checkName === 'MUTUAL_FUND') {
+        // Check if mutual fund unlock is scheduled for ANY year up to current
+        let isScheduledForCurrentCalendarYear = false;
+        for (let year = 1; year <= currentYear; year++) {
+          const unlocks = gameState.assetUnlockSchedule[year];
+          if (unlocks) {
+            for (const unlock of unlocks) {
+              if (unlock.assetType === 'MUTUAL_FUND' && unlock.calendarYear === calendarYear) {
+                isScheduledForCurrentCalendarYear = true;
+                break;
+              }
+            }
+          }
+          if (isScheduledForCurrentCalendarYear) break;
+        }
+
+        if (isScheduledForCurrentCalendarYear && selectedAssets?.mutualFunds && selectedAssets.mutualFunds.length > 0) {
+          // Find the earliest available mutual fund's first month
+          let earliestYear = 9999;
+          let earliestMonth = 12;
+          for (const fundName of selectedAssets.mutualFunds) {
+            const fundData = ASSET_TIMELINE_DATA[fundName];
+            if (fundData) {
+              if (fundData.firstYear < earliestYear ||
+                (fundData.firstYear === earliestYear && fundData.firstMonth < earliestMonth)) {
+                earliestYear = fundData.firstYear;
+                earliestMonth = fundData.firstMonth;
+              }
+            }
+          }
+          // Quiz triggers at the EXACT moment the first fund becomes available
+          if (earliestYear !== 9999) {
+            return calendarYear === earliestYear && gameState.currentMonth === earliestMonth;
+          }
+        }
+        return false;
+      }
+
+      if (checkName === 'INDEX_FUND') {
+        // Check if index fund unlock is scheduled for ANY year up to current
+        let isScheduledForCurrentCalendarYear = false;
+        for (let year = 1; year <= currentYear; year++) {
+          const unlocks = gameState.assetUnlockSchedule[year];
+          if (unlocks) {
+            for (const unlock of unlocks) {
+              if (unlock.assetType === 'INDEX_FUND' && unlock.calendarYear === calendarYear) {
+                isScheduledForCurrentCalendarYear = true;
+                break;
+              }
+            }
+          }
+          if (isScheduledForCurrentCalendarYear) break;
+        }
+
+        if (isScheduledForCurrentCalendarYear && selectedAssets?.indexFunds && selectedAssets.indexFunds.length > 0) {
+          // Find the earliest available index fund's first month
+          let earliestYear = 9999;
+          let earliestMonth = 12;
+          for (const fundName of selectedAssets.indexFunds) {
+            const fundData = ASSET_TIMELINE_DATA[fundName];
+            if (fundData) {
+              if (fundData.firstYear < earliestYear ||
+                (fundData.firstYear === earliestYear && fundData.firstMonth < earliestMonth)) {
+                earliestYear = fundData.firstYear;
+                earliestMonth = fundData.firstMonth;
+              }
+            }
+          }
+          // Quiz triggers at the EXACT moment the first fund becomes available
+          if (earliestYear !== 9999) {
+            return calendarYear === earliestYear && gameState.currentMonth === earliestMonth;
+          }
+        }
+        return false;
+      }
+
+      // For REITs: Calendar-year based unlock where data availability may differ from Month 1
+      // EMBASSY starts March 2019, MINDSPACE starts August 2020
+      if (checkName === 'REIT' || checkName === 'EMBASSY' || checkName === 'MINDSPACE') {
+        const reitName = selectedAssets?.reit || 'EMBASSY';
+        const reitData = ASSET_TIMELINE_DATA[reitName];
+        if (!reitData) return false;
+
+        // Check if REIT unlock is scheduled in the schedule
+        let isScheduledForThisReit = false;
+        for (let year = 1; year <= currentYear; year++) {
+          const unlocks = gameState.assetUnlockSchedule[year];
+          if (unlocks) {
+            for (const unlock of unlocks) {
+              if (unlock.category === 'REIT' && unlock.assetType === reitName) {
+                isScheduledForThisReit = true;
+                break;
+              }
+            }
+          }
+          if (isScheduledForThisReit) break;
+        }
+
+        if (isScheduledForThisReit) {
+          // Quiz triggers at the EXACT moment the REIT data becomes available
+          return calendarYear === reitData.firstYear && gameState.currentMonth === reitData.firstMonth;
+        }
+        return false;
+      }
+
+      // For other assets: Check if unlocking at Month 1 of the scheduled year
       const currentUnlocks = gameState.assetUnlockSchedule[currentYear];
       if (currentUnlocks && gameState.currentMonth === 1) { // Assets unlock at month 1 of their year
         for (const unlock of currentUnlocks) {
@@ -312,44 +420,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           if (checkName === 'INDIAN_STOCKS' && unlock.category === 'STOCKS') {
             return true;
           }
-          // Special handling for REITs
-          if (checkName === 'REIT' && unlock.category === 'REIT') {
-            return true;
-          }
-          if ((checkName === 'EMBASSY' || checkName === 'MINDSPACE') && unlock.category === 'REIT') {
-            return true;
-          }
           // Special handling for commodities
           if (checkName === 'COMMODITY' && unlock.category === 'COMMODITIES') {
             return true;
-          }
-          // Special handling for index and mutual funds
-          // IMPORTANT: Only trigger quiz when at least ONE fund is actually available
-          if (checkName === 'INDEX_FUND' && unlock.assetType === 'INDEX_FUND') {
-            // Check if any index fund is available NOW
-            if (selectedAssets?.indexFunds && selectedAssets.indexFunds.length > 0) {
-              const hasAvailableFund = selectedAssets.indexFunds.some((fundName) => {
-                const fundTimeline = ASSET_TIMELINE_DATA[fundName];
-                if (!fundTimeline) return false;
-                if (calendarYear > fundTimeline.firstYear) return true;
-                if (calendarYear === fundTimeline.firstYear && gameState.currentMonth >= fundTimeline.firstMonth) return true;
-                return false;
-              });
-              if (hasAvailableFund) return true;
-            }
-          }
-          if (checkName === 'MUTUAL_FUND' && unlock.assetType === 'MUTUAL_FUND') {
-            // Check if any mutual fund is available NOW
-            if (selectedAssets?.mutualFunds && selectedAssets.mutualFunds.length > 0) {
-              const hasAvailableFund = selectedAssets.mutualFunds.some((fundName) => {
-                const fundTimeline = ASSET_TIMELINE_DATA[fundName];
-                if (!fundTimeline) return false;
-                if (calendarYear > fundTimeline.firstYear) return true;
-                if (calendarYear === fundTimeline.firstYear && gameState.currentMonth >= fundTimeline.firstMonth) return true;
-                return false;
-              });
-              if (hasAvailableFund) return true;
-            }
           }
         }
       }
