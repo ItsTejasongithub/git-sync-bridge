@@ -548,8 +548,24 @@
 .player-name {
   font-size: 20px;
   font-weight: 700;
-  color: #333;
+  color: #1a1a1a;
   margin-bottom: 5px;
+}
+
+/* Rank-specific player name colors with good contrast */
+.leaderboard-row.rank-1 .player-name {
+  color: #B8860B; /* Dark goldenrod - readable gold */
+  text-shadow: 0 1px 0 rgba(255, 215, 0, 0.3);
+}
+
+.leaderboard-row.rank-2 .player-name {
+  color: #5a5a5a; /* Dark silver/gray - readable */
+  text-shadow: 0 1px 0 rgba(192, 192, 192, 0.3);
+}
+
+.leaderboard-row.rank-3 .player-name {
+  color: #8B4513; /* Saddle brown - readable bronze */
+  text-shadow: 0 1px 0 rgba(205, 127, 50, 0.3);
 }
 
 .player-networth {
