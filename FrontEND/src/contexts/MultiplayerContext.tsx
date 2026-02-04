@@ -31,7 +31,7 @@ interface MultiplayerContextType {
   // Error handling
   error: string | null;
   clearError: () => void;
-} 
+}
 
 const MultiplayerContext = createContext<MultiplayerContextType | undefined>(undefined);
 
@@ -83,7 +83,7 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
     const handleDisconnect = () => {
       setIsConnected(false);
       setPlayerId(null);
-    }; 
+    };
 
     const handleError = (message: string) => {
       setError(message);
@@ -154,8 +154,10 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
           currentYear: server.currentYear,
           currentMonth: server.currentMonth,
           isPaused: server.isPaused,
-          pauseReason: server.pauseReason || prev.pauseReason,
-          playersWaitingForQuiz: server.playersWaitingForQuiz || prev.playersWaitingForQuiz,
+          // Use nullish coalescing (??) to properly handle null values
+          pauseReason: server.pauseReason !== undefined ? server.pauseReason : prev.pauseReason,
+          playersWaitingForQuiz: server.playersWaitingForQuiz ?? prev.playersWaitingForQuiz,
+          playersWaitingForIntro: server.playersWaitingForIntro ?? prev.playersWaitingForIntro,
           assetUnlockSchedule: server.assetUnlockSchedule || prev.assetUnlockSchedule,
           yearlyQuotes: server.yearlyQuotes || prev.yearlyQuotes,
           // Do NOT overwrite: pocketCash, holdings, fixedDeposits, savingsAccount, selectedAssets
@@ -163,14 +165,21 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
       });
     };
 
-    const handleGamePaused = (data: { reason: 'quiz' | 'manual'; playersWaitingForQuiz?: string[] }) => {
+    const handleGamePaused = (data: { reason: 'quiz' | 'manual' | 'intro'; playersWaitingForQuiz?: string[]; playersWaitingForIntro?: string[] }) => {
       setGameState(prev => {
         if (!prev) return prev;
         return {
           ...prev,
           isPaused: true,
           pauseReason: data.reason,
-          playersWaitingForQuiz: data.playersWaitingForQuiz || [],
+          // CRITICAL FIX: Preserve previous values if not provided in the event
+          // This prevents quiz events from accidentally clearing intro waiting list
+          playersWaitingForQuiz: data.playersWaitingForQuiz !== undefined
+            ? data.playersWaitingForQuiz
+            : (prev.playersWaitingForQuiz || []),
+          playersWaitingForIntro: data.playersWaitingForIntro !== undefined
+            ? data.playersWaitingForIntro
+            : (prev.playersWaitingForIntro || []),
         };
       });
     };
@@ -246,8 +255,11 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
                 portfolioBreakdown: pl.portfolioBreakdown || {
                   cash: 0,
                   savings: 0,
+                  fixedDeposits: 0,
                   gold: 0,
                   funds: 0,
+                  indexFunds: 0,
+                  mutualFunds: 0,
                   stocks: 0,
                   crypto: 0,
                   commodities: 0,
@@ -272,8 +284,11 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
               portfolioBreakdown: pl.portfolioBreakdown || match.portfolioBreakdown || {
                 cash: 0,
                 savings: 0,
+                fixedDeposits: 0,
                 gold: 0,
                 funds: 0,
+                indexFunds: 0,
+                mutualFunds: 0,
                 stocks: 0,
                 crypto: 0,
                 commodities: 0,
@@ -368,8 +383,11 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
               portfolioBreakdown: pl.portfolioBreakdown || {
                 cash: 0,
                 savings: 0,
+                fixedDeposits: 0,
                 gold: 0,
                 funds: 0,
+                indexFunds: 0,
+                mutualFunds: 0,
                 stocks: 0,
                 crypto: 0,
                 commodities: 0,
@@ -393,8 +411,11 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
             portfolioBreakdown: pl.portfolioBreakdown || match.portfolioBreakdown || {
               cash: 0,
               savings: 0,
+              fixedDeposits: 0,
               gold: 0,
               funds: 0,
+              indexFunds: 0,
+              mutualFunds: 0,
               stocks: 0,
               crypto: 0,
               commodities: 0,
@@ -469,8 +490,11 @@ export const MultiplayerProvider: React.FC<MultiplayerProviderProps> = ({ childr
             portfolioBreakdown: {
               cash: 0,
               savings: 0,
+              fixedDeposits: 0,
               gold: 0,
               funds: 0,
+              indexFunds: 0,
+              mutualFunds: 0,
               stocks: 0,
               crypto: 0,
               commodities: 0,

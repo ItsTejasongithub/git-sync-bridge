@@ -392,6 +392,9 @@ export const useGameState = (isMultiplayer: boolean = false) => {
     const eventsCountToUse = adminSettings?.eventsCount || 3;
     const soloLifeEvents = generateLifeEvents(eventsCountToUse, assetUnlockSchedule);
 
+    // Start game paused if intro/quiz is enabled (so intro can show before timer starts)
+    const shouldStartPaused = adminSettings?.enableQuiz !== false;
+
     setGameState({
       mode: 'solo',
       isStarted: true,
@@ -403,7 +406,7 @@ export const useGameState = (isMultiplayer: boolean = false) => {
       fixedDeposits: [],
       holdings: initialHoldings,
       gameStartTime: Date.now(),
-      isPaused: false,
+      isPaused: shouldStartPaused, // Start paused if intro should show
       selectedAssets,
       adminSettings,
       assetUnlockSchedule,

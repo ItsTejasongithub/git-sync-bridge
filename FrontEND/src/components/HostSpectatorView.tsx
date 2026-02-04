@@ -67,6 +67,7 @@ export const HostSpectatorView: React.FC = () => {
           <div className="logo-container">
             <img src="/BullRun_Icon.png" alt="Bull Run Logo" className="game-logo" />
           </div>
+          <p className="developer-credit">Developed by 10xTechClub</p>
           <h2 className="leaderboard-title">🏆 LEADERBOARD</h2>
         </div>
 
@@ -115,14 +116,19 @@ export const HostSpectatorView: React.FC = () => {
                   <div className="player-name">{player.name}</div>
                   <div className="player-networth">{formatCurrency(player.networth)}</div>
                   <div className="player-status">
-                    {gameState.pauseReason === 'quiz' && gameState.playersWaitingForQuiz.includes(player.id) ? (
+                    {/* Check intro status first */}
+                    {gameState.playersWaitingForIntro?.includes(player.id) ? (
+                      <span className="status-badge intro-pending">📖 In Intro</span>
+                    ) : gameState.pauseReason === 'intro' ? (
+                      <span className="status-badge intro-done">✅ Ready</span>
+                    ) : gameState.pauseReason === 'quiz' && gameState.playersWaitingForQuiz?.includes(player.id) ? (
                       <span className="status-badge quiz-pending">📝 In Quiz</span>
                     ) : gameState.pauseReason === 'quiz' ? (
                       <span className="status-badge quiz-done">✅ Done</span>
-                    ) : player.quizStatus.currentQuiz ? (
+                    ) : player.quizStatus?.currentQuiz ? (
                       <span className="status-badge quiz-active">📝 Quiz</span>
                     ) : (
-                      <span className="status-badge quiz-ready">In Game</span>
+                      <span className="status-badge playing">🎮 Playing</span>
                     )}
                   </div>
                   <div

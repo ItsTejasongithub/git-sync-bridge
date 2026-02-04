@@ -260,10 +260,11 @@ export class GameSyncManager {
       quizCategory,
     });
 
-    // Broadcast pause state
+    // Broadcast pause state - include BOTH waiting lists to prevent clearing
     this.io.to(room.id).emit('gamePaused', {
       reason: 'quiz',
       playersWaitingForQuiz: room.gameState.playersWaitingForQuiz,
+      playersWaitingForIntro: room.gameState.playersWaitingForIntro || [],
     });
 
   }
@@ -286,13 +287,46 @@ export class GameSyncManager {
     if (shouldResume) {
       this.io.to(room.id).emit('gameResumed');
     } else {
-      // Still waiting for others
+      // Still waiting for others - include BOTH waiting lists to prevent clearing
       this.io.to(room.id).emit('gamePaused', {
         reason: 'quiz',
         playersWaitingForQuiz: room.gameState.playersWaitingForQuiz,
+        playersWaitingForIntro: room.gameState.playersWaitingForIntro || [],
       });
     }
   }
+
+  // Handle intro completed by a player
+  handleIntroCompleted(socket: Socket, playerId: string): void {
+    const room = this.roomManager.getRoomByPlayerId(playerId);
+    if (!room) return;
+
+    console.log(`🎬 Intro completed by player: ${playerId}`);
+    console.log(`   Before: playersWaitingForIntro =`, room.gameState.playersWaitingForIntro);
+
+    // Mark intro as completed for this player
+    const shouldResume = this.roomManager.markIntroCompleted(playerId);
+
+    console.log(`   After: playersWaitingForIntro =`, room.gameState.playersWaitingForIntro);
+    console.log(`   shouldResume =`, shouldResume);
+
+    // Notify all players that this player completed the intro
+    this.io.to(room.id).emit('introCompletedByPlayer', {
+      playerId,
+    });
+
+    // If all players completed intro, resume game
+    if (shouldResume) {
+      this.io.to(room.id).emit('gameResumed');
+    } else {
+      // Still waiting for others - broadcast pause state with waiting players
+      this.io.to(room.id).emit('gamePaused', {
+        reason: 'intro',
+        playersWaitingForIntro: room.gameState.playersWaitingForIntro,
+      });
+    }
+  }
+
 
   // Handle manual pause/resume toggle
   handleTogglePause(socket: Socket, roomId: string): void {
@@ -303,8 +337,11 @@ export class GameSyncManager {
       if (!room) return;
 
       if (room.gameState.isPaused) {
+        // Include BOTH waiting lists to prevent clearing
         this.io.to(roomId).emit('gamePaused', {
           reason: 'manual',
+          playersWaitingForQuiz: room.gameState.playersWaitingForQuiz || [],
+          playersWaitingForIntro: room.gameState.playersWaitingForIntro || [],
         });
       } else {
         this.io.to(roomId).emit('gameResumed');

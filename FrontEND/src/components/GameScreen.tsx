@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { GameState } from '../types';
 import { SavingsAccountCard } from './SavingsAccountCard';
 import { FixedDepositCard } from './FixedDepositCard';
 import { TradeableAssetCard } from './TradeableAssetCard';
 import { AssetEducationModal } from './AssetEducationModal';
+import { GameIntroPopup } from './GameIntroPopup';
 import { MultiplayerLeaderboardSidebar } from './MultiplayerLeaderboardSidebar';
 import GameEndScreen from './GameEndScreen';
 import { LifeEventPopup } from './LifeEventPopup';
@@ -34,6 +35,7 @@ interface GameScreenProps {
   showPauseButton?: boolean; // Control visibility of pause button (host/admin only)
   onReturnToMenu?: () => void; // Return to main menu from end screen
   leaderboardData?: Array<{ playerId: string; playerName: string; networth: number; portfolioBreakdown?: any; }>;
+  roomPlayers?: Array<{ id: string; name: string; isHost: boolean; isReady: boolean; networth: number; portfolioBreakdown: any; quizStatus: any; }>; // Full player list from room
   isTransacting?: boolean; // When true, disable buy/sell UI to avoid duplicate transactions
   playerName?: string; // Player name for logging
   playerAge?: number; // Player age for logging
@@ -60,6 +62,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   showPauseButton = true,
   onReturnToMenu,
   leaderboardData,
+  roomPlayers,
   isTransacting = false,
   playerName,
   playerAge,
@@ -81,6 +84,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const [showEducationModal, setShowEducationModal] = useState(false);
   const [currentQuizCategory, setCurrentQuizCategory] = useState<string | null>(null);
   const [quizEnabled, setQuizEnabled] = useState(true); // Track if quiz should be shown
+
+  // Game intro popup state
+  const [showIntroPopup, setShowIntroPopup] = useState(false);
+  const [introCompleted, setIntroCompleted] = useState(false);
+
+  // CRITICAL FIX: Use ref to backup intro completion state
+  // This prevents multiplayer state updates from resetting the intro completed status
+  const introCompletedRef = useRef(false);
 
   // Net worth tooltip uses same wrapper/hover behavior as pocket tooltip
   // (No manual positioning required)
@@ -153,6 +164,77 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
     loadFDRates();
   }, []);
+
+  // CRITICAL FIX: Restore introCompleted state from ref if it was reset
+  // This can happen when multiplayer state updates cause unexpected re-renders
+  useEffect(() => {
+    if (introCompletedRef.current && !introCompleted) {
+      setIntroCompleted(true);
+    }
+  }, [introCompleted]);
+
+  // Show game intro popup at the start of the game (if quiz is enabled)
+  useEffect(() => {
+    // Only show intro if:
+    // 1. Game just started (year 1, month 1 or 2)
+    // 2. Intro hasn't been completed yet (check BOTH state and ref)
+    // 3. Quiz is enabled in admin settings
+    const isQuizEnabled = adminSettings?.enableQuiz !== false;
+    const isGameStart = currentYear === 1 && gameState.currentMonth <= 2;
+    const hasCompletedIntro = introCompleted || introCompletedRef.current;
+
+    // Show intro popup if conditions are met
+    if (isGameStart && !hasCompletedIntro && isQuizEnabled && !showIntroPopup) {
+      setShowIntroPopup(true);
+    }
+  }, [currentYear, gameState.currentMonth, introCompleted, adminSettings, showIntroPopup]);
+
+  // SEPARATE useEffect to ensure game stays paused while intro is showing
+  // This runs whenever pause state changes to catch any accidental unpause
+  useEffect(() => {
+    // Keep game paused while intro popup is showing (solo mode only)
+    // Check BOTH state and ref for completion status
+    const hasCompletedIntro = introCompleted || introCompletedRef.current;
+    if (showIntroPopup && !hasCompletedIntro && !showLeaderboard && !gameState.isPaused) {
+      onTogglePause();
+    }
+  }, [showIntroPopup, introCompleted, showLeaderboard, gameState.isPaused, onTogglePause]);
+
+  // In multiplayer, close intro popup when ALL players have completed intro
+  // NOTE: We check playersWaitingForIntro.length === 0 instead of !isPaused
+  // because the banking quiz may pause the game immediately after intro completes,
+  // causing a race condition where isPaused is true again before popup closes
+  useEffect(() => {
+    const hasCompletedIntro = introCompleted || introCompletedRef.current;
+    const allPlayersCompletedIntro = !gameState.playersWaitingForIntro ||
+                                      gameState.playersWaitingForIntro.length === 0;
+
+    if (showLeaderboard && hasCompletedIntro && allPlayersCompletedIntro && showIntroPopup) {
+      setShowIntroPopup(false);
+    }
+  }, [showLeaderboard, introCompleted, gameState.playersWaitingForIntro, showIntroPopup]);
+
+
+  // Handle intro completion
+  const handleIntroComplete = () => {
+    // CRITICAL FIX: Set both state AND ref to ensure completion persists
+    // across any re-renders caused by multiplayer state updates
+    setIntroCompleted(true);
+    introCompletedRef.current = true;
+
+    // In multiplayer, notify server that intro is complete
+    if (showLeaderboard) {
+      socketService.introCompleted();
+      // Don't close popup yet - keep it open to show waiting screen
+      // It will close automatically when server sends gameResumed event
+    } else {
+      // In solo mode, close popup and resume game immediately
+      setShowIntroPopup(false);
+      if (gameState.isPaused) {
+        onTogglePause();
+      }
+    }
+  };
 
   // Check if asset category is unlocked based on the assetUnlockSchedule
   // This ensures both solo and multiplayer modes use the same unlock logic
@@ -575,6 +657,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       return;
     }
 
+    // IMPORTANT: Wait for intro popup to be completed before showing any quiz
+    // This ensures players read the intro tutorial first
+    // Check BOTH state and ref for completion status
+    if (!introCompleted && !introCompletedRef.current) {
+      return;
+    }
+
     // Build list of categories to check for quiz unlock
     // BANKING = Savings + FD combined (one quiz at Year 1)
     // INDEX_FUND and MUTUAL_FUND are separate (unlock at different calendar years)
@@ -624,7 +713,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         }
       }
     }
-  }, [currentYear, gameState.currentMonth, gameState.completedQuizzes, isAssetUnlockingNow, gameState.isPaused, onTogglePause, onQuizStarted, selectedAssets, showEducationModal, adminSettings]);
+  }, [currentYear, gameState.currentMonth, gameState.completedQuizzes, isAssetUnlockingNow, gameState.isPaused, onTogglePause, onQuizStarted, selectedAssets, showEducationModal, adminSettings, introCompleted]);
 
   // Handle quiz completion
   const handleQuizComplete = () => {
@@ -831,6 +920,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           <div className="logo-banner">
             <h1 className="game-logo">BULL RUN</h1>
           </div>
+          <p className="developer-credit">Developed by 10xTechClub</p>
         </div>
 
         <div className="sidebar-scrollable">
@@ -1314,9 +1404,43 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           )}
         </div>
       </div>
+      {/* Game Intro Popup - Shows at game start */}
+      <GameIntroPopup
+        isOpen={showIntroPopup}
+        onComplete={handleIntroComplete}
+        hasCompletedIntro={introCompleted || introCompletedRef.current}
+        isMultiplayer={showLeaderboard}
+        isWaitingForOthers={
+          (introCompleted || introCompletedRef.current) &&
+          showLeaderboard &&
+          // Show waiting if game is paused for intro
+          // When everyone completes, pauseReason changes to null or 'quiz', closing the waiting screen
+          gameState.pauseReason === 'intro'
+        }
+        waitingForPlayers={
+          gameState.playersWaitingForIntro?.map(id => {
+            // Try roomPlayers first, then fall back to leaderboardData
+            const player = roomPlayers?.find(p => p.id === id) ||
+              leaderboardData?.find(p => p.playerId === id);
+            return {
+              id,
+              name: player?.name || (player as any)?.playerName || 'Player'
+            };
+          }) || []
+        }
+        completedPlayers={
+          // Use roomPlayers if available, otherwise use leaderboardData
+          (roomPlayers || leaderboardData?.map(p => ({ id: p.playerId, name: p.playerName, isHost: false, isReady: false, networth: p.networth, portfolioBreakdown: p.portfolioBreakdown, quizStatus: { currentQuiz: null, isCompleted: false } })) || [])
+            .filter(p => !gameState.playersWaitingForIntro?.includes(roomPlayers ? p.id : (p as any).playerId || p.id))
+            .map(p => ({
+              id: roomPlayers ? p.id : (p as any).playerId || p.id,
+              name: roomPlayers ? p.name : (p as any).playerName || p.name
+            }))
+        }
+      />
       {/* Education Quiz Modal / Unlock Notification */}
       <AssetEducationModal
-        isOpen={showEducationModal}
+        isOpen={showEducationModal && !showIntroPopup && (gameState.pauseReason !== 'intro')}
         content={currentQuizCategory ? getEducationContent(currentQuizCategory) : null}
         questionIndex={currentQuizCategory && gameState.quizQuestionIndices ? gameState.quizQuestionIndices[currentQuizCategory] : undefined}
         onComplete={handleQuizComplete}

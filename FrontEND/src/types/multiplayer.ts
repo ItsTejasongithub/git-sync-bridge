@@ -13,8 +13,11 @@ export interface PlayerInfo {
 export interface PortfolioBreakdown {
   cash: number;
   savings: number;
+  fixedDeposits: number;
   gold: number;
   funds: number;
+  indexFunds: number;
+  mutualFunds: number;
   stocks: number;
   crypto: number;
   commodities: number;
@@ -29,10 +32,11 @@ export interface QuizStatus {
 export interface MultiplayerGameState {
   isStarted: boolean;
   isPaused: boolean;
-  pauseReason: 'quiz' | 'manual' | null;
+  pauseReason: 'quiz' | 'manual' | 'intro' | null;
   currentYear: number;
   currentMonth: number;
   playersWaitingForQuiz: string[];
+  playersWaitingForIntro?: string[];
 
   // Optional fields for syncing initial game content
   selectedAssets?: any;

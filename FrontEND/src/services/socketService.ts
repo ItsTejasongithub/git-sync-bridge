@@ -26,7 +26,7 @@ interface ServerToClientEvents {
   playerLeft: (data: { playerId: string }) => void;
   gameStarted: (data: { gameState: MultiplayerGameState; adminSettings: AdminSettings }) => void;
   gameStateUpdate: (data: { gameState: MultiplayerGameState }) => void;
-  gamePaused: (data: { reason: 'quiz' | 'manual'; playersWaitingForQuiz?: string[] }) => void;
+  gamePaused: (data: { reason: 'quiz' | 'manual' | 'intro'; playersWaitingForQuiz?: string[]; playersWaitingForIntro?: string[] }) => void;
   gameResumed: () => void;
   gameEnded: (data: { finalYear: number; finalMonth: number }) => void;
   timeProgression: (data: { year: number; month: number }) => void;
@@ -35,6 +35,9 @@ interface ServerToClientEvents {
   leaderboardUpdate: (data: { players: PlayerInfo[] }) => void;
   quizTriggered: (data: { playerId: string; quizCategory: string }) => void;
   quizCompleted: (data: { playerId: string; quizCategory: string }) => void;
+  // Game intro sync events
+  introStatusUpdate: (data: { playersWaitingForIntro: string[]; playersCompletedIntro: string[] }) => void;
+  allPlayersIntroComplete: () => void;
   lifeEventTriggered: (data: { event: any; postPocketCash?: number }) => void;
   adminSettingsUpdated: (data: { adminSettings: AdminSettings }) => void;
   error: (data: { message: string }) => void;
@@ -54,6 +57,8 @@ interface ClientToServerEvents {
   updatePlayerState: (data: { networth: number; portfolioBreakdown: PortfolioBreakdown }) => void;
   quizStarted: (data: { quizCategory: string }) => void;
   quizFinished: (data: { quizCategory: string }) => void;
+  // Game intro sync
+  introCompleted: () => void;
   // Secure price broadcast events
   requestKeyExchange: (callback: (response: { success: boolean; data?: KeyExchangeData; error?: string }) => void) => void;
   submitNetworth: (data: { networth: number; portfolioBreakdown: PortfolioBreakdown; holdings: any }, callback: (response: { valid: boolean; serverNetworth?: number; error?: string }) => void) => void;
@@ -141,6 +146,9 @@ class SocketService {
     this.socket.on('finalLeaderboard', (data) => this.emit('finalLeaderboard', data));
     this.socket.on('quizTriggered', (data) => this.emit('quizTriggered', data));
     this.socket.on('quizCompleted', (data) => this.emit('quizCompleted', data));
+    // Game intro sync events
+    this.socket.on('introStatusUpdate', (data) => this.emit('introStatusUpdate', data));
+    this.socket.on('allPlayersIntroComplete', () => this.emit('allPlayersIntroComplete'));
     this.socket.on('lifeEventTriggered', (data) => {
       this.emit('lifeEventTriggered', data);
     });
@@ -283,6 +291,12 @@ class SocketService {
   quizFinished(quizCategory: string): void {
     if (this.socket) {
       this.socket.emit('quizFinished', { quizCategory });
+    }
+  }
+
+  introCompleted(): void {
+    if (this.socket) {
+      this.socket.emit('introCompleted');
     }
   }
 

@@ -252,6 +252,13 @@ export const PlayerGameWrapper: React.FC = () => {
   const playerName = currentPlayer?.name || 'Unknown Player';
   const roomId = roomInfo?.roomId;
 
+  // Merge multiplayer-specific properties (pauseReason, playersWaitingForIntro) into the local gameState
+  // so GameScreen can show the "waiting for others" screen during intro
+  const mergedGameState = {
+    ...(frozenGameState || gameState),
+    pauseReason: multiplayerGameState.pauseReason,
+    playersWaitingForIntro: multiplayerGameState.playersWaitingForIntro,
+  };
 
   return (
     <div className="player-game-wrapper">
@@ -265,7 +272,7 @@ export const PlayerGameWrapper: React.FC = () => {
 
       {/* Main Game Screen (reuse from solo) */}
       <GameScreen
-        gameState={frozenGameState || gameState}
+        gameState={mergedGameState}
         onDeposit={depositToSavings}
         onWithdraw={withdrawFromSavings}
         onCreateFD={createFixedDeposit}
@@ -280,6 +287,7 @@ export const PlayerGameWrapper: React.FC = () => {
         showLeaderboard={true}
         showPauseButton={false}
         leaderboardData={transformedLeaderboard}
+        roomPlayers={roomInfo.players}
         // Pass transaction state so asset cards can disable while a transaction is pending
         isTransacting={isTransactionPending}
         // Pass player info for logging

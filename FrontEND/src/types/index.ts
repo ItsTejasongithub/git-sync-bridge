@@ -39,6 +39,10 @@ export interface GameState {
   quizQuestionIndices?: { [category: string]: number }; // Random question index per category for this session
   // Solo mode uses an array of life events; multiplayer stores per-player events on server and emits triggers
   lifeEvents?: LifeEvent[];
+  // Multiplayer-specific properties
+  pauseReason?: 'quiz' | 'manual' | 'intro' | null;
+  playersWaitingForIntro?: string[];
+  playersWaitingForQuiz?: string[];
 }
 
 export interface SelectedAssets {

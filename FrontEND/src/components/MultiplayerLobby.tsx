@@ -84,7 +84,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ onBack }) =>
             ← BACK
           </button>
 
-          <img src="/Indian_Game_LOGO.jpeg" alt="BullRun Logo" className="lobby-logo" />
+          <img src="/BullRunNewLogo.png" alt="BullRun Logo" className="lobby-logo" />
           <h1 className="lobby-title">MULTIPLAYER MODE</h1>
 
           {!isConnected && (
@@ -217,28 +217,18 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ onBack }) =>
             </div>
           </div>
 
-          {/* Global Settings Info */}
+          {/* Game Rules */}
           <div className="settings-info">
-            <h2>Game Settings</h2>
-            {loadingSettings ? (
-              <p className="loading-text">Loading global settings...</p>
-            ) : adminSettings ? (
-              <div className="settings-summary">
-                <p>✓ Using global admin settings</p>
-                <p className="settings-detail">
-                  {adminSettings.selectedCategories.length} asset categories enabled
-                </p>
-                <p className="settings-detail-small">
-                  Initial Cash: ₹{adminSettings.initialPocketCash.toLocaleString('en-IN')} |
-                  Recurring: ₹{adminSettings.recurringIncome.toLocaleString('en-IN')}
-                </p>
-                <p className="settings-note">
-                  Settings are managed globally by admins
-                </p>
-              </div>
-            ) : (
-              <p className="error-text">Failed to load settings</p>
-            )}
+            <h2>How to Play Bull Run</h2>
+            <div className="settings-summary">
+              <p className="settings-detail"> <strong>Goal:</strong> Build the highest net worth in 20 game years</p>
+              <p className="settings-detail"> <strong>Invest:</strong> Buy & sell stocks, gold, mutual funds & more</p>
+              <p className="settings-detail"> <strong>Grow:</strong> New assets unlock as the game progresses</p>
+              <p className="settings-detail"> <strong>Learn:</strong> Answer quizzes to earn bonus income</p>
+              <p className="settings-note">
+                Tip: Diversify your portfolio and watch for market trends!
+              </p>
+            </div>
           </div>
 
           {/* Waiting message */}

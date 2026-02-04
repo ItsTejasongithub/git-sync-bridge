@@ -52,6 +52,7 @@ export class RoomManager {
       currentYear: 1,
       currentMonth: 1,
       playersWaitingForQuiz: [],
+      playersWaitingForIntro: [],
     };
 
     const room: Room = {
@@ -195,6 +196,28 @@ export class RoomManager {
     room.gameState.currentYear = 1;
     room.gameState.currentMonth = 1;
 
+    // Only initialize intro tracking and pause game if quiz is enabled
+    if (adminSettings.enableQuiz !== false) {
+      // Initialize playersWaitingForIntro with all non-host players
+      // Game will be paused until all players complete the intro
+      const allPlayers = Array.from(room.players.values());
+      const nonHostPlayers = allPlayers.filter(p => !p.isHost);
+      room.gameState.playersWaitingForIntro = nonHostPlayers.map(p => p.id);
+
+      console.log(`🎬 Game started - Intro tracking initialized:`);
+      console.log(`   Total players: ${allPlayers.length}`);
+      console.log(`   Non-host players waiting for intro: ${nonHostPlayers.length}`);
+      console.log(`   playersWaitingForIntro:`, room.gameState.playersWaitingForIntro);
+
+      // Pause game for intro
+      room.gameState.isPaused = true;
+      room.gameState.pauseReason = 'intro';
+    } else {
+      // If quiz is disabled, don't show intro - clear the waiting list
+      room.gameState.playersWaitingForIntro = [];
+      console.log(`🎬 Game started - Quiz disabled, skipping intro`);
+    }
+
     return { success: true };
   }
 
@@ -291,6 +314,46 @@ export class RoomManager {
 
     // If no more players waiting for quiz, resume game
     const shouldResume = room.gameState.playersWaitingForQuiz.length === 0;
+
+    if (shouldResume) {
+      room.gameState.isPaused = false;
+      room.gameState.pauseReason = null;
+    }
+
+    return shouldResume;
+  }
+
+
+  // Intro management
+  markIntroCompleted(playerId: string): boolean {
+    const room = this.getRoomByPlayerId(playerId);
+    if (!room) {
+      console.log(`   ❌ markIntroCompleted: room not found for player ${playerId}`);
+      return false;
+    }
+
+    const player = room.players.get(playerId);
+    if (!player) {
+      console.log(`   ❌ markIntroCompleted: player ${playerId} not found in room`);
+      return false;
+    }
+
+    console.log(`   📋 markIntroCompleted: player ${player.name} (${playerId})`);
+
+    // Remove player from waiting list
+    if (!room.gameState.playersWaitingForIntro) {
+      room.gameState.playersWaitingForIntro = [];
+    }
+
+    const beforeCount = room.gameState.playersWaitingForIntro.length;
+    room.gameState.playersWaitingForIntro = room.gameState.playersWaitingForIntro.filter(
+      id => id !== playerId
+    );
+    const afterCount = room.gameState.playersWaitingForIntro.length;
+    console.log(`   📋 Removed from waiting list: ${beforeCount} -> ${afterCount}`);
+
+    // If no more players waiting for intro, resume game
+    const shouldResume = room.gameState.playersWaitingForIntro.length === 0;
 
     if (shouldResume) {
       room.gameState.isPaused = false;

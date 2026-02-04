@@ -13,7 +13,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartSolo, onStartMulti })
       <AdminSettingsButton />
 
       <div className="menu-content">
-        <img src="/Indian_Game_LOGO.jpeg" alt="BullRun Logo" className="game-logo-img" />
+
+        <img src="/BullRunNewLogo.png" alt="BullRun Logo" className="game-logo-img" />
         <h1 className="game-title">BULL RUN</h1>
         <p className="game-subtitle">A Financial Investment Journey</p>
 
@@ -26,13 +27,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartSolo, onStartMulti })
           </button>
         </div>
 
-        <div className="menu-info">
-          <h3>Game Rules:</h3>
-          <ul>
-            <li>Play through 20 years of investing </li>
-            <li>Unlock new investment options progressively</li>
-          </ul>
-        </div>
+
       </div>
     </div>
   );

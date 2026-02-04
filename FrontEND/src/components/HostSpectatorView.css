@@ -39,6 +39,18 @@
   text-transform: uppercase;
 }
 
+.host-spectator-view .developer-credit {
+  font-family: 'Cormorant Garamond', 'Playfair Display', serif;
+  font-size: 12px;
+  font-weight: 500;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  margin: 4px 0;
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+}
+
 @keyframes logoGlow {
 
   0%,
@@ -1220,7 +1232,7 @@
 
 .host-spectator-view .player-name {
   flex: 2;
-  font-size: 1.5em;
+  font-size: 2.5em;
   color: #e2e8f0;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -1300,6 +1312,37 @@
   background: rgba(168, 85, 247, 0.15);
   color: #a855f7;
   border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+
+.intro-pending {
+  background: rgba(251, 146, 60, 0.15);
+  color: #fb923c;
+  border: 1px solid rgba(251, 146, 60, 0.3);
+}
+
+.intro-done {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.intro-active {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.intro-ready {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.playing {
+  background: rgba(151, 14, 214, 0.315);
+  color: #a8d1cc;
+  border: 1px solid rgba(5, 248, 187, 0.3);
 }
 
 .player-expand {

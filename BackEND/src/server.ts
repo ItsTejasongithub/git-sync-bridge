@@ -391,6 +391,14 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     gameSyncManager.handleQuizCompleted(socket, playerId, data.quizCategory);
   });
 
+  // Intro completed
+  socket.on('introCompleted', () => {
+    const playerId = socket.data.playerId;
+    if (!playerId) return;
+
+    gameSyncManager.handleIntroCompleted(socket, playerId);
+  });
+
   // === Secure Price Broadcast Handlers ===
 
   // Key exchange request

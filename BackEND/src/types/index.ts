@@ -82,10 +82,11 @@ export interface LifeEvent {
 export interface GameState {
   isStarted: boolean;
   isPaused: boolean;
-  pauseReason: 'quiz' | 'manual' | null;
+  pauseReason: 'quiz' | 'manual' | 'intro' | null;
   currentYear: number;
   currentMonth: number;
   playersWaitingForQuiz: string[]; // Player IDs who haven't completed quiz
+  playersWaitingForIntro?: string[]; // Player IDs who haven't completed intro
 
   // Optional multiplayer initialization data (sync cards/quotes across clients)
   selectedAssets?: any;
@@ -108,7 +109,7 @@ export interface ServerToClientEvents {
   // Game events
   gameStarted: (data: { gameState: GameState; adminSettings: AdminSettings }) => void;
   gameStateUpdate: (data: { gameState: GameState }) => void;
-  gamePaused: (data: { reason: 'quiz' | 'manual'; playersWaitingForQuiz?: string[] }) => void;
+  gamePaused: (data: { reason: 'quiz' | 'manual' | 'intro'; playersWaitingForQuiz?: string[]; playersWaitingForIntro?: string[] }) => void;
   gameResumed: () => void;
   gameEnded: (data: { finalYear: number; finalMonth: number }) => void;
   timeProgression: (data: { year: number; month: number }) => void;
@@ -119,6 +120,9 @@ export interface ServerToClientEvents {
   // Quiz events
   quizTriggered: (data: { playerId: string; quizCategory: string }) => void;
   quizCompleted: (data: { playerId: string; quizCategory: string }) => void;
+
+  // Intro events
+  introCompletedByPlayer: (data: { playerId: string }) => void;
 
   // Life events
   lifeEventTriggered: (data: { event: LifeEvent; postPocketCash?: number }) => void;
@@ -167,6 +171,9 @@ export interface ClientToServerEvents {
   // Quiz events
   quizStarted: (data: { quizCategory: string }) => void;
   quizFinished: (data: { quizCategory: string }) => void;
+
+  // Intro events
+  introCompleted: () => void;
 
   // === Secure Price Broadcast Events ===
 
