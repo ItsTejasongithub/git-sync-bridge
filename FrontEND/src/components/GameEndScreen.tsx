@@ -416,7 +416,7 @@ const GameEndScreen: React.FC<GameEndScreenProps> = ({
                 {formatCurrency(finalNetworth)}
               </div>
               <div className={`profit-display ${profit >= 0 ? 'positive' : 'negative'}`}>
-                <span className="profit-label">Total Profit:</span>
+                <span className="profit-label">Total P&L:</span>
                 <span className="profit-amount">
                   {profit >= 0 ? '+' : ''}{formatCurrency(profit)}
                 </span>
