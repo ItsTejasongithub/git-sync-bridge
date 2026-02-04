@@ -67,3 +67,5 @@ nul
 # Backup files
 backups/
 *.sql
+
+test-multiplayer/
