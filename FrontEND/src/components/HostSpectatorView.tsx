@@ -10,16 +10,16 @@ export const HostSpectatorView: React.FC = () => {
   if (!roomInfo || !gameState) return null;
 
   const formatCurrency = (amount: number): string => {
-    const [integerPart, decimalPart] = amount.toFixed(2).split('.');
-    let lastThree = integerPart.substring(integerPart.length - 3);
-    const otherNumbers = integerPart.substring(0, integerPart.length - 3);
+    const rounded = Math.round(amount).toString();
+    let lastThree = rounded.substring(rounded.length - 3);
+    const otherNumbers = rounded.substring(0, rounded.length - 3);
 
     if (otherNumbers !== '') {
       lastThree = ',' + lastThree;
     }
 
     const formatted = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + lastThree;
-    return `₹${formatted}.${decimalPart}`;
+    return `₹${formatted}`;
   };
 
   const getPortfolioPercentage = (player: PlayerInfo, category: keyof PlayerInfo['portfolioBreakdown']): number => {

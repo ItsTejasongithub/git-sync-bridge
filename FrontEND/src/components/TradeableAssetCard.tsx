@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AssetHolding } from '../types';
 import { MiniChart } from './MiniChart';
 import { getAssetInfo } from '../utils/stockInfo';
-import { formatIndianNumber } from '../utils/constants';
+import { formatIndianNumber, formatIndianNumberWithDecimal } from '../utils/constants';
 import './AssetCard.css';
 import './StockTooltip.css';
 
@@ -199,7 +199,7 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
       {/* Row 2: Current Price (left) & Price Change % (right) */}
       <div className="row-2-price-change">
         <span className={`current-price-large ${isPositive ? 'positive' : 'negative'}`}>
-          ₹{formatIndianNumber(currentPrice)}
+          ₹{isStock ? formatIndianNumberWithDecimal(currentPrice) : formatIndianNumber(currentPrice)}
         </span>
         {/* show unit if provided */}
         {unit && <small className="price-unit">{unit}</small>}
@@ -232,7 +232,7 @@ export const TradeableAssetCard: React.FC<TradeableAssetCardProps> = ({
 
           <div className="stat-item">
             <span className="stat-label">Avg</span>
-            <span className="stat-value">{holding.avgPrice > 0 ? `₹${formatIndianNumber(holding.avgPrice)}` : '--'}</span>
+            <span className="stat-value">{holding.avgPrice > 0 ? `₹${isStock ? formatIndianNumberWithDecimal(holding.avgPrice) : formatIndianNumber(holding.avgPrice)}` : '--'}</span>
           </div>
 
         </div>

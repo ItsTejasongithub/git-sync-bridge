@@ -188,3 +188,22 @@ export const formatIndianNumber = (num: number): string => {
 
   return formatted;
 };
+
+// Utility function to format stock prices with 1 decimal place
+// Used for stocks where penny stock changes (0.1, 0.6, etc.) matter
+export const formatIndianNumberWithDecimal = (num: number): string => {
+  const absNum = Math.abs(num);
+  const fixed = absNum.toFixed(1); // Keep 1 decimal place
+  const [integerPart, decimalPart] = fixed.split('.');
+
+  // Indian numbering system: last 3 digits, then groups of 2
+  const lastThree = integerPart.slice(-3);
+  const otherNumbers = integerPart.slice(0, -3);
+
+  let formatted = lastThree;
+  if (otherNumbers !== '') {
+    formatted = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + lastThree;
+  }
+
+  return `${formatted}.${decimalPart}`;
+};
