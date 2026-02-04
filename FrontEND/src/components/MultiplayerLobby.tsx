@@ -128,7 +128,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ onBack }) =>
                 placeholder="Enter your name"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                maxLength={20}
+                maxLength={15}
               />
               <div className="form-buttons">
                 <button onClick={handleCreateRoom} disabled={!playerName.trim()}>
@@ -147,7 +147,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ onBack }) =>
                 placeholder="Enter your name"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                maxLength={20}
+                maxLength={15}
               />
               <input
                 type="text"
