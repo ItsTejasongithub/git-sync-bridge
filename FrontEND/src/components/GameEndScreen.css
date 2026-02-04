@@ -545,8 +545,8 @@
   flex: 1;
 }
 
-.player-name {
-  font-size: 20px;
+.game-end-screen .player-name {
+  font-size: 26px;
   font-weight: 700;
   color: #1a1a1a;
   margin-bottom: 5px;

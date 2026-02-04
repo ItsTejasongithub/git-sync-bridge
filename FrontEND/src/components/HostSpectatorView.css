@@ -1218,9 +1218,9 @@
   gap: 24px;
 }
 
-.player-name {
+.host-spectator-view .player-name {
   flex: 2;
-  font-size: 1.15em;
+  font-size: 1.5em;
   color: #e2e8f0;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -1230,23 +1230,23 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
-.rank-1 .player-name {
+.host-spectator-view .rank-1 .player-name {
   color: #ffe08a;
   text-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
 }
 
-.rank-2 .player-name {
+.host-spectator-view .rank-2 .player-name {
   color: #e8e8e8;
   text-shadow: 0 2px 8px rgba(192, 192, 192, 0.4);
 }
 
-.rank-3 .player-name {
+.host-spectator-view .rank-3 .player-name {
   color: #f4c8a0;
   text-shadow: 0 2px 8px rgba(205, 127, 50, 0.4);
 }
 
 /* Players ranked 4th and below - light cyan/blue for better visibility */
-.leaderboard-card:not(.rank-1):not(.rank-2):not(.rank-3) .player-name {
+.host-spectator-view .leaderboard-card:not(.rank-1):not(.rank-2):not(.rank-3) .player-name {
   color: #93c5fd;
   text-shadow: 0 2px 8px rgba(147, 197, 253, 0.3);
 }
