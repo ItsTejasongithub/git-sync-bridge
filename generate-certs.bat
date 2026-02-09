@@ -14,17 +14,21 @@ cd /d "%SCRIPT_DIR%"
 
 REM Check if mkcert is installed
 where mkcert >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] mkcert is not installed!
-    echo.
-    echo Install it using Chocolatey (run PowerShell as Admin):
-    echo   choco install mkcert -y
-    echo.
-    echo Or download from: https://github.com/FiloSottile/mkcert/releases
-    echo.
-    pause
-    exit /b 1
-)
+if errorlevel 1 goto :no_mkcert
+goto :mkcert_ok
+
+:no_mkcert
+echo [ERROR] mkcert is not installed!
+echo.
+echo Install it using Chocolatey (run PowerShell as Admin):
+echo   choco install mkcert -y
+echo.
+echo Or download from: https://github.com/FiloSottile/mkcert/releases
+echo.
+pause
+exit /b 1
+
+:mkcert_ok
 
 echo [1/3] Installing local CA (one-time setup)...
 mkcert -install
@@ -50,7 +54,7 @@ if not exist "BackEND\certs" mkdir "BackEND\certs"
 REM Generate certificates
 mkcert -cert-file "BackEND\certs\cert.pem" -key-file "BackEND\certs\key.pem" !IP! localhost 127.0.0.1 ::1
 
-if %ERRORLEVEL% NEQ 0 (
+if errorlevel 1 (
     echo.
     echo [ERROR] Failed to generate certificates!
     pause

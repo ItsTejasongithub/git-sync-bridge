@@ -111,50 +111,60 @@ REM STEP 5: Generate HTTPS Certificates (mkcert)
 REM ========================================
 echo [5/8] Checking HTTPS certificates...
 
-if not exist "BackEND\certs\cert.pem" (
-    echo Certificates not found. Generating with mkcert...
-    echo.
+if exist "BackEND\certs\cert.pem" goto :certs_exist
 
-    REM Check if mkcert is installed
-    where mkcert >nul 2>nul
-    if !ERRORLEVEL! NEQ 0 (
-        echo [ERROR] mkcert is not installed!
-        echo.
-        echo Install it using Chocolatey (run PowerShell as Admin):
-        echo   choco install mkcert -y
-        echo.
-        echo Or run generate-certs.bat after installing mkcert.
-        echo.
-        pause
-        exit /b 1
-    )
+echo Certificates not found. Generating with mkcert...
+echo.
 
-    REM Install local CA (safe to run multiple times)
-    mkcert -install >nul 2>&1
+REM Check if mkcert is installed
+where mkcert >nul 2>nul
+if errorlevel 1 goto :no_mkcert_start
+goto :mkcert_ok_start
 
-    REM Create certs directory
-    if not exist "BackEND\certs" mkdir "BackEND\certs"
+:no_mkcert_start
+echo [ERROR] mkcert is not installed!
+echo.
+echo Install it using Chocolatey (run PowerShell as Admin):
+echo   choco install mkcert -y
+echo.
+echo Or run generate-certs.bat after installing mkcert.
+echo.
+pause
+exit /b 1
 
-    REM Generate certificates for detected IP + localhost
-    mkcert -cert-file "BackEND\certs\cert.pem" -key-file "BackEND\certs\key.pem" !IP! localhost 127.0.0.1 ::1
+:mkcert_ok_start
+REM Install local CA (safe to run multiple times)
+mkcert -install >nul 2>&1
 
-    if !ERRORLEVEL! NEQ 0 (
-        echo [ERROR] Failed to generate certificates!
-        echo Run generate-certs.bat manually for more details.
-        pause
-        exit /b 1
-    )
+REM Create certs directory
+if not exist "BackEND\certs" mkdir "BackEND\certs"
 
-    REM Copy rootCA for client distribution
-    for /f "tokens=*" %%a in ('mkcert -CAROOT') do set "CAROOT=%%a"
-    if exist "!CAROOT!\rootCA.pem" (
-        copy "!CAROOT!\rootCA.pem" "BackEND\certs\rootCA.pem" >nul
-    )
+REM Generate certificates for detected IP + localhost
+mkcert -cert-file "BackEND\certs\cert.pem" -key-file "BackEND\certs\key.pem" !IP! localhost 127.0.0.1 ::1
 
-    echo Certificates generated!
-) else (
-    echo HTTPS certificates found.
+if errorlevel 1 goto :cert_gen_failed
+goto :cert_gen_ok
+
+:cert_gen_failed
+echo [ERROR] Failed to generate certificates!
+echo Run generate-certs.bat manually for more details.
+pause
+exit /b 1
+
+:cert_gen_ok
+REM Copy rootCA for client distribution
+for /f "tokens=*" %%a in ('mkcert -CAROOT') do set "CAROOT=%%a"
+if exist "!CAROOT!\rootCA.pem" (
+    copy "!CAROOT!\rootCA.pem" "BackEND\certs\rootCA.pem" >nul
 )
+
+echo Certificates generated!
+goto :certs_done
+
+:certs_exist
+echo HTTPS certificates found.
+
+:certs_done
 echo.
 
 REM ========================================
