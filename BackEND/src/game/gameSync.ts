@@ -96,17 +96,14 @@ export class GameSyncManager {
       // Store prices for validation
       this.roomPrices.set(roomId, validPrices);
 
-      // Encrypt and broadcast
+      // Encrypt and broadcast (include plaintext for HTTP clients without Web Crypto API)
       const encrypted = encryptPriceData(roomId, validPrices);
-      if (encrypted) {
-        this.io.to(roomId).emit('priceTick', {
-          year: gameYear,
-          month: gameMonth,
-          encrypted,
-        });
-      } else {
-        console.error(`❌ Room ${roomId}: Failed to encrypt price data`);
-      }
+      this.io.to(roomId).emit('priceTick', {
+        year: gameYear,
+        month: gameMonth,
+        encrypted: encrypted || undefined,
+        prices: validPrices,
+      });
     } catch (error) {
       console.error(`❌ Room ${roomId}: Failed to broadcast price tick:`, error);
     }

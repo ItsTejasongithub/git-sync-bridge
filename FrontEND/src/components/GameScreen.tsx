@@ -116,37 +116,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   // Request key exchange when joining a multiplayer game
   useEffect(() => {
     if (showLeaderboard && !socketService.isUsingServerPrices()) {
-      // SECURITY: Key exchange is MANDATORY for multiplayer
       socketService.requestKeyExchange().then((result) => {
-        if (result.success) {
-        } else {
-          // FAIL HARD - encryption is required for multiplayer
-          console.error('❌ CRITICAL SECURITY ERROR: Key exchange failed');
-          console.error('   Encrypted prices are unavailable. This is a fatal error in multiplayer mode.');
-          console.error('   Ensure PostgreSQL is running and market data is initialized on the server.');
-
-          // Block game execution
-          alert(
-            'SECURITY ERROR: Unable to establish encrypted connection.\n\n' +
-            'Multiplayer mode requires encrypted price data from the server.\n\n' +
-            'This game cannot continue. Please contact the game host.\n\n' +
-            'Technical details:\n' +
-            '- Key exchange failed\n' +
-            '- PostgreSQL may not be running\n' +
-            '- Market data may not be initialized'
-          );
-
-          // Return to menu if possible
-          if (onReturnToMenu) {
-            setTimeout(() => onReturnToMenu(), 1000);
-          }
+        if (!result.success) {
+          // Key exchange failed but server sends plaintext prices as fallback
+          console.warn('Key exchange failed, using plaintext server prices');
         }
       }).catch((err) => {
-        console.error('❌ Key exchange error:', err);
-        alert('Failed to establish secure connection. Returning to menu.');
-        if (onReturnToMenu) {
-          setTimeout(() => onReturnToMenu(), 1000);
-        }
+        console.warn('Key exchange error, using plaintext server prices:', err.message);
       });
     }
   }, [showLeaderboard]);

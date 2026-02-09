@@ -42,7 +42,7 @@ interface ServerToClientEvents {
   adminSettingsUpdated: (data: { adminSettings: AdminSettings }) => void;
   error: (data: { message: string }) => void;
   // Secure price broadcast events
-  priceTick: (data: { year: number; month: number; encrypted: EncryptedPayload }) => void;
+  priceTick: (data: { year: number; month: number; encrypted?: EncryptedPayload; prices?: { [symbol: string]: number } }) => void;
   keyExchangeResponse: (data: KeyExchangeData) => void;
   networthValidation: (data: { valid: boolean; serverNetworth: number; clientNetworth: number; deviation: number }) => void;
   fetchFinalLeaderboardFromDB: (data: { roomId: string }) => void;
@@ -154,24 +154,32 @@ class SocketService {
     });
     this.socket.on('adminSettingsUpdated', (data) => this.emit('adminSettingsUpdated', data));
 
-    // === Secure Price Broadcast Event Handlers ===
+    // === Price Broadcast Event Handlers ===
 
-    // Handle encrypted price ticks from server
+    // Handle price ticks from server (encrypted or plaintext)
     this.socket.on('priceTick', async (data) => {
-      if (!isDecryptionInitialized()) {
-        return;
+      let prices: { [symbol: string]: number } | null = null;
+
+      // Try encrypted decryption first
+      if (data.encrypted && isDecryptionInitialized()) {
+        try {
+          prices = await decryptPriceData(data.encrypted);
+        } catch (error) {
+          // Decryption failed, fall through to plaintext
+        }
       }
 
-      try {
-        const prices = await decryptPriceData(data.encrypted);
-        if (prices) {
-          priceStore.updatePrices(prices);
-          this.emit('pricesUpdated', { year: data.year, month: data.month, prices });
-        } else {
-          console.error('❌ Decryption returned null prices');
+      // Fallback to plaintext prices (for HTTP clients without Web Crypto API)
+      if (!prices && data.prices) {
+        prices = data.prices;
+        if (!priceStore.isEnabled()) {
+          priceStore.enable();
         }
-      } catch (error) {
-        console.error('❌ Failed to decrypt price tick:', error);
+      }
+
+      if (prices) {
+        priceStore.updatePrices(prices);
+        this.emit('pricesUpdated', { year: data.year, month: data.month, prices });
       }
     });
 
@@ -182,8 +190,11 @@ class SocketService {
         priceStore.enable();
         this.emit('keyExchangeComplete', data);
       } catch (error) {
-        console.error('Failed to initialize decryption:', error);
-        this.emit('keyExchangeError', error);
+        // Key exchange failed (likely no Web Crypto API on HTTP)
+        // Plaintext prices from priceTick will be used instead
+        console.warn('Crypto unavailable, using plaintext prices from server');
+        priceStore.enable();
+        this.emit('keyExchangeComplete', data);
       }
     });
 
@@ -374,7 +385,7 @@ class SocketService {
    * Check if server prices are being used
    */
   isUsingServerPrices(): boolean {
-    return isDecryptionInitialized() && priceStore.isEnabled();
+    return priceStore.isEnabled();
   }
 
   /**
