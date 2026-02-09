@@ -42,7 +42,7 @@ interface ServerToClientEvents {
   adminSettingsUpdated: (data: { adminSettings: AdminSettings }) => void;
   error: (data: { message: string }) => void;
   // Secure price broadcast events
-  priceTick: (data: { year: number; month: number; encrypted?: EncryptedPayload; prices?: { [symbol: string]: number } }) => void;
+  priceTick: (data: { year: number; month: number; encrypted: EncryptedPayload }) => void;
   keyExchangeResponse: (data: KeyExchangeData) => void;
   networthValidation: (data: { valid: boolean; serverNetworth: number; clientNetworth: number; deviation: number }) => void;
   fetchFinalLeaderboardFromDB: (data: { roomId: string }) => void;
@@ -156,30 +156,21 @@ class SocketService {
 
     // === Price Broadcast Event Handlers ===
 
-    // Handle price ticks from server (encrypted or plaintext)
+    // Handle encrypted price ticks from server
     this.socket.on('priceTick', async (data) => {
-      let prices: { [symbol: string]: number } | null = null;
-
-      // Try encrypted decryption first
-      if (data.encrypted && isDecryptionInitialized()) {
-        try {
-          prices = await decryptPriceData(data.encrypted);
-        } catch (error) {
-          // Decryption failed, fall through to plaintext
-        }
+      if (!isDecryptionInitialized()) {
+        console.warn('Received price tick but decryption not initialized');
+        return;
       }
 
-      // Fallback to plaintext prices (for HTTP clients without Web Crypto API)
-      if (!prices && data.prices) {
-        prices = data.prices;
-        if (!priceStore.isEnabled()) {
-          priceStore.enable();
+      try {
+        const prices = await decryptPriceData(data.encrypted);
+        if (prices) {
+          priceStore.updatePrices(prices);
+          this.emit('pricesUpdated', { year: data.year, month: data.month, prices });
         }
-      }
-
-      if (prices) {
-        priceStore.updatePrices(prices);
-        this.emit('pricesUpdated', { year: data.year, month: data.month, prices });
+      } catch (error) {
+        console.error('Failed to decrypt price tick:', error);
       }
     });
 

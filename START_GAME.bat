@@ -5,7 +5,7 @@ color 0A
 
 echo.
 echo BULLRUN - Game Server Launcher
-echo Docker + npm Development
+echo Docker + npm + HTTPS (mkcert)
 echo.
 
 REM Get the script directory
@@ -15,7 +15,7 @@ cd /d "%SCRIPT_DIR%"
 REM ========================================
 REM STEP 1: Check Docker
 REM ========================================
-echo [1/7] Checking Docker...
+echo [1/8] Checking Docker...
 docker --version >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Docker is not installed or not running!
@@ -34,7 +34,7 @@ echo.
 REM ========================================
 REM STEP 2: Check Node.js
 REM ========================================
-echo [2/7] Checking Node.js...
+echo [2/8] Checking Node.js...
 where node >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Node.js is not installed!
@@ -50,7 +50,7 @@ echo.
 REM ========================================
 REM STEP 3: Start Docker Services
 REM ========================================
-echo [3/7] Starting Docker services (Database)...
+echo [3/8] Starting Docker services (Database)...
 docker compose up -d
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Failed to start Docker containers!
@@ -64,7 +64,7 @@ echo.
 REM ========================================
 REM STEP 4: Smart IP Detection
 REM ========================================
-echo [4/7] Detecting network...
+echo [4/8] Detecting network...
 
 REM Try to get IP (prefer 192.168.0.67, fallback to any 192.168.x.x)
 set "IP="
@@ -107,16 +107,67 @@ echo Network: !IP!
 echo.
 
 REM ========================================
-REM STEP 5: Configure Frontend
+REM STEP 5: Generate HTTPS Certificates (mkcert)
 REM ========================================
-echo [5/7] Configuring frontend...
-echo VITE_SERVER_URL=http://!IP!:3001 > FrontEND\.env.local
+echo [5/8] Checking HTTPS certificates...
+
+if not exist "BackEND\certs\cert.pem" (
+    echo Certificates not found. Generating with mkcert...
+    echo.
+
+    REM Check if mkcert is installed
+    where mkcert >nul 2>nul
+    if !ERRORLEVEL! NEQ 0 (
+        echo [ERROR] mkcert is not installed!
+        echo.
+        echo Install it using Chocolatey (run PowerShell as Admin):
+        echo   choco install mkcert -y
+        echo.
+        echo Or run generate-certs.bat after installing mkcert.
+        echo.
+        pause
+        exit /b 1
+    )
+
+    REM Install local CA (safe to run multiple times)
+    mkcert -install >nul 2>&1
+
+    REM Create certs directory
+    if not exist "BackEND\certs" mkdir "BackEND\certs"
+
+    REM Generate certificates for detected IP + localhost
+    mkcert -cert-file "BackEND\certs\cert.pem" -key-file "BackEND\certs\key.pem" !IP! localhost 127.0.0.1 ::1
+
+    if !ERRORLEVEL! NEQ 0 (
+        echo [ERROR] Failed to generate certificates!
+        echo Run generate-certs.bat manually for more details.
+        pause
+        exit /b 1
+    )
+
+    REM Copy rootCA for client distribution
+    for /f "tokens=*" %%a in ('mkcert -CAROOT') do set "CAROOT=%%a"
+    if exist "!CAROOT!\rootCA.pem" (
+        copy "!CAROOT!\rootCA.pem" "BackEND\certs\rootCA.pem" >nul
+    )
+
+    echo Certificates generated!
+) else (
+    echo HTTPS certificates found.
+)
 echo.
 
 REM ========================================
-REM STEP 6: Install Dependencies
+REM STEP 6: Configure Frontend
 REM ========================================
-echo [6/7] Checking dependencies...
+echo [6/8] Configuring frontend...
+echo VITE_SERVER_URL=https://!IP!:3001 > FrontEND\.env.local
+echo.
+
+REM ========================================
+REM STEP 7: Install Dependencies
+REM ========================================
+echo [7/8] Checking dependencies...
 
 if not exist "BackEND\node_modules\" (
     echo Installing BackEND...
@@ -136,9 +187,9 @@ echo Dependencies OK
 echo.
 
 REM ========================================
-REM STEP 7: Start Servers
+REM STEP 8: Start Servers
 REM ========================================
-echo [7/7] Starting servers...
+echo [8/8] Starting servers...
 
 cd BackEND
 start /MIN "BackEND-Server" cmd /k "title BackEND Server && color 0B && npm run dev"
@@ -157,7 +208,7 @@ REM ========================================
 REM Open Browser
 REM ========================================
 echo [BROWSER] Opening game...
-start http://localhost:5173
+start https://localhost:5173
 timeout /t 1 /nobreak >nul
 
 REM ========================================
@@ -166,21 +217,23 @@ REM ========================================
 cls
 color 0A
 echo.
-echo BULLRUN - SERVER RUNNING
+echo BULLRUN - SERVER RUNNING (HTTPS)
 echo.
 echo PLAY THE GAME:
-echo   This Computer:   http://localhost:5173
-echo   Network Friends: http://!IP!:5173
+echo   This Computer:   https://localhost:5173
+echo   Network Friends: https://!IP!:5173
 echo.
 echo SERVER STATUS:
 echo   Database:   PostgreSQL (Docker)
-echo   BackEND:    HTTP Port 3001
-echo   FrontEND:   HTTP Port 5173
+echo   BackEND:    HTTPS Port 3001
+echo   FrontEND:   HTTPS Port 5173
+echo   Encryption: AES-256-GCM (Secure)
 echo.
 echo HOW TO USE:
-echo   1. Share http://!IP!:5173 with friends
+echo   1. Share https://!IP!:5173 with friends
 echo   2. Everyone on SAME WiFi
-echo   3. To stop: Run STOP_GAME.bat
+echo   3. Client PCs: Run INSTALL_CA_CLIENT.bat once (to trust certificates)
+echo   4. To stop: Run STOP_GAME.bat
 echo.
 if not "!IP!"=="192.168.0.67" (
     echo TIP: Set Static IP 192.168.0.67

@@ -113,16 +113,19 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     isMultiplayer: showLeaderboard,
   });
 
-  // Request key exchange when joining a multiplayer game
+  // Request key exchange when joining a multiplayer game (REQUIRED for encrypted prices)
   useEffect(() => {
     if (showLeaderboard && !socketService.isUsingServerPrices()) {
       socketService.requestKeyExchange().then((result) => {
         if (!result.success) {
-          // Key exchange failed but server sends plaintext prices as fallback
-          console.warn('Key exchange failed, using plaintext server prices');
+          console.error('Key exchange failed:', result.error);
+          alert('Failed to establish secure connection with server. Please ensure you are using HTTPS. Returning to menu.');
+          if (onReturnToMenu) onReturnToMenu();
         }
       }).catch((err) => {
-        console.warn('Key exchange error, using plaintext server prices:', err.message);
+        console.error('Key exchange error:', err.message);
+        alert('Failed to establish secure connection with server. Please ensure you are using HTTPS. Returning to menu.');
+        if (onReturnToMenu) onReturnToMenu();
       });
     }
   }, [showLeaderboard]);

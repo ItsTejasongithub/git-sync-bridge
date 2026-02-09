@@ -145,8 +145,7 @@ export interface ServerToClientEvents {
   priceTick: (data: {
     year: number;
     month: number;
-    encrypted?: EncryptedPayload;
-    prices?: { [symbol: string]: number };
+    encrypted: EncryptedPayload;
   }) => void;
 
   // Key exchange response (sent once when client requests)
