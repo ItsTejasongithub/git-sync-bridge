@@ -52,10 +52,31 @@ export async function initPostgresPool(): Promise<Pool> {
     const result = await client.query('SELECT NOW() as now');
     client.release();
 
-    // Log database info
-    const tableCheck = await pool.query(`
-      SELECT COUNT(*) as count FROM asset_prices
+    // Verify market data tables exist and have data
+    const tableExists = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables WHERE table_name = 'asset_prices'
+      ) AS exists
     `);
+
+    if (!tableExists.rows[0].exists) {
+      pool = null;
+      throw new Error(
+        'Table "asset_prices" not found. Please restore the database backup:\n' +
+        '   docker exec -i bullrun_game_postgres psql -U postgres -d BullRun_GameDB_PGSQL < backups/backup_BullRun_GameDB_PGSQL.sql'
+      );
+    }
+
+    const tableCheck = await pool.query('SELECT COUNT(*) as count FROM asset_prices');
+    const count = parseInt(tableCheck.rows[0].count, 10);
+    if (count === 0) {
+      pool = null;
+      throw new Error(
+        'Table "asset_prices" is empty — no market data found.\n' +
+        '   Please restore the database backup:\n' +
+        '   docker exec -i bullrun_game_postgres psql -U postgres -d BullRun_GameDB_PGSQL < backups/backup_BullRun_GameDB_PGSQL.sql'
+      );
+    }
 
     return pool;
   } catch (error) {
