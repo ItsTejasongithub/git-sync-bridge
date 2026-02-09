@@ -4,7 +4,7 @@ services:
     image: postgres:15
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Tej@BOSS
+      POSTGRES_PASSWORD: TejBOSS2024
       POSTGRES_DB: BullRun_GameDB_PGSQL
     ports:
       - "5432:5432"
