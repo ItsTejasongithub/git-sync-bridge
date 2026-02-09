@@ -1,8 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
-import { createServer } from 'https';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
 import { RoomManager } from './rooms/roomManager';
@@ -29,16 +27,7 @@ const log = () => { };
 
 const app = express();
 
-// Load SSL certificates for HTTPS (required for Web Crypto API on LAN)
-// Use process.cwd() for reliable path resolution in both dev (tsx) and prod (node)
-const certsDir = join(process.cwd(), 'certs');
-console.log('Loading SSL certificates from:', certsDir);
-const httpsOptions = {
-  key: readFileSync(join(certsDir, 'key.pem')),
-  cert: readFileSync(join(certsDir, 'cert.pem')),
-};
-const httpServer = createServer(httpsOptions, app);
-console.log('HTTPS server configured');
+const httpServer = createServer(app);
 
 // CORS configuration for local network
 app.use(cors());
@@ -505,8 +494,8 @@ async function startServer() {
 
     httpServer.listen(PORT as number, '0.0.0.0', () => {
       console.log('\n🚀 Server started successfully!');
-      console.log(`   HTTPS: https://${localIP}:${PORT}`);
-      console.log(`   Local: https://localhost:${PORT}`);
+      console.log(`   Network: http://${localIP}:${PORT}`);
+      console.log(`   Local: http://localhost:${PORT}`);
       console.log(`   PostgreSQL: Connected on port ${process.env.POSTGRES_PORT || 5432}\n`);
     });
   } catch (error) {
