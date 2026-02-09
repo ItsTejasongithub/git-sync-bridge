@@ -107,10 +107,10 @@ echo Network: !IP!
 echo.
 
 REM ========================================
-REM STEP 5: Configure Frontend (HTTPS for Web Crypto API)
+REM STEP 5: Configure Frontend
 REM ========================================
 echo [5/7] Configuring frontend...
-echo VITE_SERVER_URL=https://!IP!:3001 > FrontEND\.env.local
+echo VITE_SERVER_URL=http://!IP!:3001 > FrontEND\.env.local
 echo.
 
 REM ========================================
@@ -154,10 +154,10 @@ echo [INIT] Initializing...
 timeout /t 4 /nobreak >nul
 
 REM ========================================
-REM Open Browser (HTTPS)
+REM Open Browser
 REM ========================================
 echo [BROWSER] Opening game...
-start https://localhost:5173
+start http://localhost:5173
 timeout /t 1 /nobreak >nul
 
 REM ========================================
@@ -166,22 +166,21 @@ REM ========================================
 cls
 color 0A
 echo.
-echo BULLRUN - SERVER RUNNING (HTTPS)
+echo BULLRUN - SERVER RUNNING
 echo.
 echo PLAY THE GAME:
-echo   This Computer:   https://localhost:5173
-echo   Network Friends: https://!IP!:5173
+echo   This Computer:   http://localhost:5173
+echo   Network Friends: http://!IP!:5173
 echo.
 echo SERVER STATUS:
-echo   Database:   PostgreSQL (Docker) ✓
-echo   BackEND:    HTTPS Port 3001 ✓
-echo   FrontEND:   HTTPS Port 5173 ✓
+echo   Database:   PostgreSQL (Docker)
+echo   BackEND:    HTTP Port 3001
+echo   FrontEND:   HTTP Port 5173
 echo.
 echo HOW TO USE:
-echo   1. Share https://!IP!:5173 with friends
+echo   1. Share http://!IP!:5173 with friends
 echo   2. Everyone on SAME WiFi
-echo   3. Accept certificate warning in browser (first time)
-echo   4. To stop: Run STOP_GAME.bat
+echo   3. To stop: Run STOP_GAME.bat
 echo.
 if not "!IP!"=="192.168.0.67" (
     echo TIP: Set Static IP 192.168.0.67
